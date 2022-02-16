@@ -89,12 +89,14 @@ RedfishResourceProvisioningResource (
 EFI_STATUS
 RedfishResourceConsumeResource (
   IN     EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL    *This,
-  IN     CHAR8                                   *Uri
+  IN     CHAR8                                     *Uri
   )
 {
   REDFISH_RESOURCE_COMMON_PRIVATE *Private;
   EFI_STATUS                    Status;
   REDFISH_RESPONSE              Response;
+  UINTN                         Index;
+  CHAR8                         *Etag;
 
   if (This == NULL || IS_EMPTY_STRING (Uri)) {
     return EFI_INVALID_PARAMETER;
@@ -119,7 +121,21 @@ RedfishResourceConsumeResource (
   Private->Json = JsonDumpString (RedfishJsonInPayload (Private->Payload), EDKII_JSON_COMPACT);
   ASSERT (Private->Json != NULL);
 
-  Status = RedfishConsumeResourceCommon (Private, Private->Json);
+  //
+  // Find etag in HTTP response header
+  //
+  Etag = NULL;
+  if (Response.StatusCode != NULL && *Response.StatusCode == HTTP_STATUS_200_OK) {
+    if (Response.HeaderCount > 0) {
+      for (Index = 0; Index < Response.HeaderCount; Index++) {
+        if (AsciiStrnCmp (Response.Headers[Index].FieldName, "ETag", 4) == 0) {
+          Etag = AllocateCopyPool (AsciiStrSize (Response.Headers[Index].FieldValue), Response.Headers[Index].FieldValue);
+        }
+      }
+    }
+  }
+
+  Status = RedfishConsumeResourceCommon (Private, Private->Json, Etag);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, failed to consume resource from: %a %r\n", __FUNCTION__, Uri, Status));
   }
