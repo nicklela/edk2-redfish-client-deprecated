@@ -13,10 +13,22 @@ CHAR8 MemoryEmptyJson[] = "{\"@odata.id\": \"\", \"@odata.type\": \"#ComputerSys
 
 REDFISH_RESOURCE_COMMON_PRIVATE *mRedfishResourcePrivate = NULL;
 
+/**
+  Consume resource from given URI.
+
+  @param[in]   This                Pointer to REDFISH_RESOURCE_COMMON_PRIVATE instance.
+  @param[in]   Json                The JSON to consume.
+  @param[in]   HeaderEtag          The Etag string returned in HTTP header.
+
+  @retval EFI_SUCCESS              Value is returned successfully.
+  @retval Others                   Some error happened.
+
+**/
 EFI_STATUS
 RedfishConsumeResourceCommon (
   IN  REDFISH_RESOURCE_COMMON_PRIVATE *Private,
-  IN  CHAR8                         *MemoryJson
+  IN  CHAR8                           *Json,
+  IN  CHAR8                           *HeaderEtag OPTIONAL
   )
 {
   EFI_STATUS                    Status;
@@ -26,12 +38,12 @@ RedfishConsumeResourceCommon (
   CHAR8                         *Arraykey;
   CHAR8                         *EtagInDb;
 
-  if (Private == NULL || IS_EMPTY_STRING (MemoryJson)) {
+  if (Private == NULL || IS_EMPTY_STRING (Json)) {
     return EFI_INVALID_PARAMETER;
   }
 
-  Memory= NULL;
-  MemoryCs = NULL;
+  ComputerSystem = NULL;
+  ComputerSystemCs = NULL;
   ConfigureLang = NULL;
   Arraykey = NULL;
   EtagInDb = NULL;
@@ -39,8 +51,8 @@ RedfishConsumeResourceCommon (
   Status = Private->JsonStructProtocol->ToStructure (
                                           Private->JsonStructProtocol,
                                           NULL,
-                                          MemoryJson,
-                                          (EFI_REST_JSON_STRUCTURE_HEADER **)&Memory
+                                          Json,
+                                          (EFI_REST_JSON_STRUCTURE_HEADER **)&ComputerSystem
                                           );
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, ToStructure() failed: %r\n", __FUNCTION__, Status));
@@ -53,8 +65,8 @@ RedfishConsumeResourceCommon (
   // Check ETAG to see if we need to consume it
   //
   EtagInDb = GetEtagWithUri (Private->Uri);
-  if (EtagInDb != NULL && MemoryCs->odata_etag != NULL) {
-    if (AsciiStrCmp (EtagInDb, MemoryCs->odata_etag) == 0) {
+  if (EtagInDb != NULL && HeaderEtag != NULL) {
+    if (AsciiStrCmp (EtagInDb, HeaderEtag) == 0) {
       //
       // No change
       //
@@ -81,7 +93,7 @@ RedfishConsumeResourceCommon (
     //
     ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "SystemType", Arraykey);
     if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettings (RESOURCE_SCHEMA_FULL, ConfigureLang, ComputerSystemCs->SystemType);
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->SystemType);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -101,7 +113,7 @@ RedfishConsumeResourceCommon (
     //
     ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "AssetTag", Arraykey);
     if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettings (RESOURCE_SCHEMA_FULL, ConfigureLang, ComputerSystemCs->AssetTag);
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->AssetTag);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -121,7 +133,7 @@ RedfishConsumeResourceCommon (
     //
     ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "Manufacturer", Arraykey);
     if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettings (RESOURCE_SCHEMA_FULL, ConfigureLang, ComputerSystemCs->Manufacturer);
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Manufacturer);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -141,7 +153,7 @@ RedfishConsumeResourceCommon (
     //
     ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "Model", Arraykey);
     if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettings (RESOURCE_SCHEMA_FULL, ConfigureLang, ComputerSystemCs->Model);
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Model);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -161,7 +173,7 @@ RedfishConsumeResourceCommon (
     //
     ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "SKU", Arraykey);
     if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettings (RESOURCE_SCHEMA_FULL, ConfigureLang, ComputerSystemCs->SKU);
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->SKU);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -181,7 +193,7 @@ RedfishConsumeResourceCommon (
     //
     ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "SerialNumber", Arraykey);
     if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettings (RESOURCE_SCHEMA_FULL, ConfigureLang, ComputerSystemCs->SerialNumber);
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->SerialNumber);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -201,7 +213,7 @@ RedfishConsumeResourceCommon (
     //
     ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "PartNumber", Arraykey);
     if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettings (RESOURCE_SCHEMA_FULL, ConfigureLang, ComputerSystemCs->PartNumber);
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->PartNumber);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -221,7 +233,7 @@ RedfishConsumeResourceCommon (
     //
     ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "HostName", Arraykey);
     if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettings (RESOURCE_SCHEMA_FULL, ConfigureLang, ComputerSystemCs->HostName);
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->HostName);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -241,7 +253,7 @@ RedfishConsumeResourceCommon (
     //
     ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "IndicatorLED", Arraykey);
     if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettings (RESOURCE_SCHEMA_FULL, ConfigureLang, ComputerSystemCs->IndicatorLED);
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->IndicatorLED);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -261,7 +273,7 @@ RedfishConsumeResourceCommon (
     //
     ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "PowerState", Arraykey);
     if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettings (RESOURCE_SCHEMA_FULL, ConfigureLang, ComputerSystemCs->PowerState);
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->PowerState);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -281,7 +293,7 @@ RedfishConsumeResourceCommon (
     //
     ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "Boot/BootSourceOverrideTarget", Arraykey);
     if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettings (RESOURCE_SCHEMA_FULL, ConfigureLang, ComputerSystemCs->Boot->BootSourceOverrideTarget);
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->BootSourceOverrideTarget);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -301,7 +313,7 @@ RedfishConsumeResourceCommon (
     //
     ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "Boot/BootSourceOverrideEnabled", Arraykey);
     if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettings (RESOURCE_SCHEMA_FULL, ConfigureLang, ComputerSystemCs->Boot->BootSourceOverrideEnabled);
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->BootSourceOverrideEnabled);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -321,7 +333,7 @@ RedfishConsumeResourceCommon (
     //
     ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "Boot/UefiTargetBootSourceOverride", Arraykey);
     if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettings (RESOURCE_SCHEMA_FULL, ConfigureLang, ComputerSystemCs->Boot->UefiTargetBootSourceOverride);
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->UefiTargetBootSourceOverride);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -341,7 +353,7 @@ RedfishConsumeResourceCommon (
     //
     ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "Boot/BootSourceOverrideMode", Arraykey);
     if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettings (RESOURCE_SCHEMA_FULL, ConfigureLang, ComputerSystemCs->Boot->BootSourceOverrideMode);
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->BootSourceOverrideMode);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -361,7 +373,7 @@ RedfishConsumeResourceCommon (
     //
     ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "BiosVersion", Arraykey);
     if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettings (RESOURCE_SCHEMA_FULL, ConfigureLang, ComputerSystemCs->BiosVersion);
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->BiosVersion);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -381,7 +393,7 @@ RedfishConsumeResourceCommon (
     //
     ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "ProcessorSummary/Count", Arraykey);
     if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA_FULL, ConfigureLang, (UINTN)*ComputerSystemCs->ProcessorSummary->Count);
+      Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*ComputerSystemCs->ProcessorSummary->Count);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -401,7 +413,7 @@ RedfishConsumeResourceCommon (
     //
     ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "ProcessorSummary/Model", Arraykey);
     if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettings (RESOURCE_SCHEMA_FULL, ConfigureLang, ComputerSystemCs->ProcessorSummary->Model);
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->ProcessorSummary->Model);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -421,7 +433,7 @@ RedfishConsumeResourceCommon (
     //
     ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "MemorySummary/TotalSystemMemoryGiB", Arraykey);
     if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA_FULL, ConfigureLang, (UINTN)*ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB);
+      Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -441,7 +453,7 @@ RedfishConsumeResourceCommon (
     //
     ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "MemorySummary/MemoryMirroring", Arraykey);
     if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettings (RESOURCE_SCHEMA_FULL, ConfigureLang, ComputerSystemCs->MemorySummary->MemoryMirroring);
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->MemorySummary->MemoryMirroring);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -470,14 +482,14 @@ ON_RELEASE:
 
   Private->JsonStructProtocol->DestoryStructure (
                                  Private->JsonStructProtocol,
-                                 (EFI_REST_JSON_STRUCTURE_HEADER *)Memory
+                                 (EFI_REST_JSON_STRUCTURE_HEADER *)ComputerSystem
                                  );
 
   return EFI_SUCCESS;
 }
 
 EFI_STATUS
-ProvisioningMemoryProperties (
+ProvisioningProperties (
   IN  EFI_REST_JSON_STRUCTURE_PROTOCOL  *JsonStructProtocol,
   IN  CHAR8                             *IputJson,
   IN  CHAR8                             *ResourceId,  OPTIONAL
@@ -488,12 +500,10 @@ ProvisioningMemoryProperties (
 {
   EFI_REDFISH_COMPUTERSYSTEM_V1_1_0     *ComputerSystem;
   EFI_REDFISH_COMPUTERSYSTEM_V1_1_0_CS  *ComputerSystemCs;
-  EFI_STATUS                    Status;
-  INT64                         *NumericValue;
-  INT32                         *IntegerValue;
-  BOOLEAN                       *BooleanValue;
-  CHAR8                         *AsciiStringValue;
-  BOOLEAN                       PropertyChanged;
+  EFI_STATUS                            Status;
+  INT64                                 *NumericValue;
+  CHAR8                                 *AsciiStringValue;
+  BOOLEAN                               PropertyChanged;
 
   if (JsonStructProtocol == NULL || ResultJson == NULL || IS_EMPTY_STRING (IputJson) || IS_EMPTY_STRING (ConfigureLang)) {
     return EFI_INVALID_PARAMETER;
@@ -504,12 +514,12 @@ ProvisioningMemoryProperties (
   *ResultJson = NULL;
   PropertyChanged = FALSE;
 
-  Memory = NULL;
+  ComputerSystem = NULL;
   Status = JsonStructProtocol->ToStructure (
                                  JsonStructProtocol,
                                  NULL,
                                  IputJson,
-                                 (EFI_REST_JSON_STRUCTURE_HEADER **)&Memory
+                                 (EFI_REST_JSON_STRUCTURE_HEADER **)&ComputerSystem
                                  );
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, ToStructure failure: %r\n", __FUNCTION__, Status));
@@ -521,15 +531,15 @@ ProvisioningMemoryProperties (
   //
   // ID
   //
-  if (MemoryCs->Id == NULL && !IS_EMPTY_STRING (ResourceId)) {
-    MemoryCs->Id = AllocateCopyPool (AsciiStrSize (ResourceId), ResourceId);
+  if (ComputerSystemCs->Id == NULL && !IS_EMPTY_STRING (ResourceId)) {
+    ComputerSystemCs->Id = AllocateCopyPool (AsciiStrSize (ResourceId), ResourceId);
   }
 
   //
   // Handle SYSTEMTYPE
   //
   if (PropertyChecker (ComputerSystemCs->SystemType, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "SystemType", ConfigureLang);
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"SystemType", ConfigureLang);
     if (AsciiStringValue != NULL) {
       if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->SystemType, AsciiStringValue) != 0) {
         ComputerSystemCs->SystemType = AsciiStringValue;
@@ -542,7 +552,7 @@ ProvisioningMemoryProperties (
   // Handle ASSETTAG
   //
   if (PropertyChecker (ComputerSystemCs->AssetTag, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "AssetTag", ConfigureLang);
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"AssetTag", ConfigureLang);
     if (AsciiStringValue != NULL) {
       if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->AssetTag, AsciiStringValue) != 0) {
         ComputerSystemCs->AssetTag = AsciiStringValue;
@@ -555,7 +565,7 @@ ProvisioningMemoryProperties (
   // Handle MANUFACTURER
   //
   if (PropertyChecker (ComputerSystemCs->Manufacturer, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "Manufacturer", ConfigureLang);
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Manufacturer", ConfigureLang);
     if (AsciiStringValue != NULL) {
       if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Manufacturer, AsciiStringValue) != 0) {
         ComputerSystemCs->Manufacturer = AsciiStringValue;
@@ -568,7 +578,7 @@ ProvisioningMemoryProperties (
   // Handle MODEL
   //
   if (PropertyChecker (ComputerSystemCs->Model, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "Model", ConfigureLang);
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Model", ConfigureLang);
     if (AsciiStringValue != NULL) {
       if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Model, AsciiStringValue) != 0) {
         ComputerSystemCs->Model = AsciiStringValue;
@@ -581,7 +591,7 @@ ProvisioningMemoryProperties (
   // Handle SKU
   //
   if (PropertyChecker (ComputerSystemCs->SKU, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "SKU", ConfigureLang);
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"SKU", ConfigureLang);
     if (AsciiStringValue != NULL) {
       if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->SKU, AsciiStringValue) != 0) {
         ComputerSystemCs->SKU = AsciiStringValue;
@@ -594,7 +604,7 @@ ProvisioningMemoryProperties (
   // Handle SERIALNUMBER
   //
   if (PropertyChecker (ComputerSystemCs->SerialNumber, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "SerialNumber", ConfigureLang);
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"SerialNumber", ConfigureLang);
     if (AsciiStringValue != NULL) {
       if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->SerialNumber, AsciiStringValue) != 0) {
         ComputerSystemCs->SerialNumber = AsciiStringValue;
@@ -607,7 +617,7 @@ ProvisioningMemoryProperties (
   // Handle PARTNUMBER
   //
   if (PropertyChecker (ComputerSystemCs->PartNumber, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "PartNumber", ConfigureLang);
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"PartNumber", ConfigureLang);
     if (AsciiStringValue != NULL) {
       if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->PartNumber, AsciiStringValue) != 0) {
         ComputerSystemCs->PartNumber = AsciiStringValue;
@@ -620,7 +630,7 @@ ProvisioningMemoryProperties (
   // Handle HOSTNAME
   //
   if (PropertyChecker (ComputerSystemCs->HostName, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "HostName", ConfigureLang);
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"HostName", ConfigureLang);
     if (AsciiStringValue != NULL) {
       if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->HostName, AsciiStringValue) != 0) {
         ComputerSystemCs->HostName = AsciiStringValue;
@@ -633,7 +643,7 @@ ProvisioningMemoryProperties (
   // Handle INDICATORLED
   //
   if (PropertyChecker (ComputerSystemCs->IndicatorLED, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "IndicatorLED", ConfigureLang);
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"IndicatorLED", ConfigureLang);
     if (AsciiStringValue != NULL) {
       if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->IndicatorLED, AsciiStringValue) != 0) {
         ComputerSystemCs->IndicatorLED = AsciiStringValue;
@@ -646,7 +656,7 @@ ProvisioningMemoryProperties (
   // Handle POWERSTATE
   //
   if (PropertyChecker (ComputerSystemCs->PowerState, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "PowerState", ConfigureLang);
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"PowerState", ConfigureLang);
     if (AsciiStringValue != NULL) {
       if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->PowerState, AsciiStringValue) != 0) {
         ComputerSystemCs->PowerState = AsciiStringValue;
@@ -659,7 +669,7 @@ ProvisioningMemoryProperties (
   // Handle BOOT->BOOTSOURCEOVERRIDETARGET
   //
   if (PropertyChecker (ComputerSystemCs->Boot->BootSourceOverrideTarget, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "Boot/BootSourceOverrideTarget", ConfigureLang);
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootSourceOverrideTarget", ConfigureLang);
     if (AsciiStringValue != NULL) {
       if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->BootSourceOverrideTarget, AsciiStringValue) != 0) {
         ComputerSystemCs->Boot->BootSourceOverrideTarget = AsciiStringValue;
@@ -672,7 +682,7 @@ ProvisioningMemoryProperties (
   // Handle BOOT->BOOTSOURCEOVERRIDEENABLED
   //
   if (PropertyChecker (ComputerSystemCs->Boot->BootSourceOverrideEnabled, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "Boot/BootSourceOverrideEnabled", ConfigureLang);
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootSourceOverrideEnabled", ConfigureLang);
     if (AsciiStringValue != NULL) {
       if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->BootSourceOverrideEnabled, AsciiStringValue) != 0) {
         ComputerSystemCs->Boot->BootSourceOverrideEnabled = AsciiStringValue;
@@ -685,7 +695,7 @@ ProvisioningMemoryProperties (
   // Handle BOOT->UEFITARGETBOOTSOURCEOVERRIDE
   //
   if (PropertyChecker (ComputerSystemCs->Boot->UefiTargetBootSourceOverride, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "Boot/UefiTargetBootSourceOverride", ConfigureLang);
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/UefiTargetBootSourceOverride", ConfigureLang);
     if (AsciiStringValue != NULL) {
       if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->UefiTargetBootSourceOverride, AsciiStringValue) != 0) {
         ComputerSystemCs->Boot->UefiTargetBootSourceOverride = AsciiStringValue;
@@ -698,7 +708,7 @@ ProvisioningMemoryProperties (
   // Handle BOOT->BOOTSOURCEOVERRIDEMODE
   //
   if (PropertyChecker (ComputerSystemCs->Boot->BootSourceOverrideMode, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "Boot/BootSourceOverrideMode", ConfigureLang);
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootSourceOverrideMode", ConfigureLang);
     if (AsciiStringValue != NULL) {
       if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->BootSourceOverrideMode, AsciiStringValue) != 0) {
         ComputerSystemCs->Boot->BootSourceOverrideMode = AsciiStringValue;
@@ -711,7 +721,7 @@ ProvisioningMemoryProperties (
   // Handle BIOSVERSION
   //
   if (PropertyChecker (ComputerSystemCs->BiosVersion, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "BiosVersion", ConfigureLang);
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"BiosVersion", ConfigureLang);
     if (AsciiStringValue != NULL) {
       if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->BiosVersion, AsciiStringValue) != 0) {
         ComputerSystemCs->BiosVersion = AsciiStringValue;
@@ -724,7 +734,7 @@ ProvisioningMemoryProperties (
   // Handle PROCESSORSUMMARY->COUNT
   //
   if (PropertyChecker (ComputerSystemCs->ProcessorSummary->Count, ProvisionMode)) {
-    NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "ProcessorSummary/Count", ConfigureLang);
+    NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"ProcessorSummary/Count", ConfigureLang);
     if (NumericValue != NULL) {
       if (ProvisionMode || *ComputerSystemCs->ProcessorSummary->Count != *NumericValue) {
         ComputerSystemCs->ProcessorSummary->Count = NumericValue;
@@ -737,7 +747,7 @@ ProvisioningMemoryProperties (
   // Handle PROCESSORSUMMARY->MODEL
   //
   if (PropertyChecker (ComputerSystemCs->ProcessorSummary->Model, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "ProcessorSummary/Model", ConfigureLang);
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"ProcessorSummary/Model", ConfigureLang);
     if (AsciiStringValue != NULL) {
       if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->ProcessorSummary->Model, AsciiStringValue) != 0) {
         ComputerSystemCs->ProcessorSummary->Model = AsciiStringValue;
@@ -750,7 +760,7 @@ ProvisioningMemoryProperties (
   // Handle MEMORYSUMMARY->TOTALSYSTEMMEMORYGIB
   //
   if (PropertyChecker (ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB, ProvisionMode)) {
-    NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "MemorySummary/TotalSystemMemoryGiB", ConfigureLang);
+    NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"MemorySummary/TotalSystemMemoryGiB", ConfigureLang);
     if (NumericValue != NULL) {
       if (ProvisionMode || *ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB != *NumericValue) {
         ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB = NumericValue;
@@ -763,7 +773,7 @@ ProvisioningMemoryProperties (
   // Handle MEMORYSUMMARY->MEMORYMIRRORING
   //
   if (PropertyChecker (ComputerSystemCs->MemorySummary->MemoryMirroring, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "MemorySummary/MemoryMirroring", ConfigureLang);
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"MemorySummary/MemoryMirroring", ConfigureLang);
     if (AsciiStringValue != NULL) {
       if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->MemorySummary->MemoryMirroring, AsciiStringValue) != 0) {
         ComputerSystemCs->MemorySummary->MemoryMirroring = AsciiStringValue;
@@ -779,7 +789,7 @@ ProvisioningMemoryProperties (
   //
   Status = JsonStructProtocol->ToJson (
                                  JsonStructProtocol,
-                                 (EFI_REST_JSON_STRUCTURE_HEADER *)Memory,
+                                 (EFI_REST_JSON_STRUCTURE_HEADER *)ComputerSystem,
                                  ResultJson
                                  );
   if (EFI_ERROR (Status)) {
@@ -792,20 +802,20 @@ ProvisioningMemoryProperties (
   //
   JsonStructProtocol->DestoryStructure (
                         JsonStructProtocol,
-                        (EFI_REST_JSON_STRUCTURE_HEADER *)Memory
+                        (EFI_REST_JSON_STRUCTURE_HEADER *)ComputerSystem
                         );
 
   return (PropertyChanged ? EFI_SUCCESS : EFI_NOT_FOUND);
 }
 
 EFI_STATUS
-ProvisioningMemoryResource (
+ProvisioningResource (
   IN  REDFISH_RESOURCE_COMMON_PRIVATE   *Private,
   IN  UINTN                             Index,
   IN  EFI_STRING                        ConfigureLang
   )
 {
-  CHAR8       *MemoryJson;
+  CHAR8       *Json;
   EFI_STATUS  Status;
   CHAR8       *NewResourceLocation;
   CHAR8       *NewKey;
@@ -819,20 +829,20 @@ ProvisioningMemoryResource (
 
   AsciiSPrint (ResourceId, sizeof (ResourceId), "%d", Index);
 
-  Status = ProvisioningMemoryProperties (
+  Status = ProvisioningProperties (
              Private->JsonStructProtocol,
              MemoryEmptyJson,
              ResourceId,
              ConfigureLang,
              TRUE,
-             &MemoryJson
+             &Json
              );
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, provisioning resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
     return Status;
   }
 
-  Status = CreatePayloadToPostResource (Private->RedfishService, Private->Payload, MemoryJson, &NewResourceLocation, &EtagStr);
+  Status = CreatePayloadToPostResource (Private->RedfishService, Private->Payload, Json, &NewResourceLocation, &EtagStr);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, post memory resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
     goto RELEASE_RESOURCE;
@@ -872,13 +882,13 @@ ProvisioningMemoryResource (
 
 RELEASE_RESOURCE:
 
-  FreePool (MemoryJson);
+  FreePool (Json);
 
   return Status;
 }
 
 EFI_STATUS
-ProvisioningMemoryResources (
+ProvisioningResources (
   IN  REDFISH_RESOURCE_COMMON_PRIVATE  *Private
   )
 {
@@ -898,7 +908,7 @@ ProvisioningMemoryResources (
 
   for (Index = 0; Index < UnifiedConfigureLangList.Count; Index++) {
     DEBUG ((DEBUG_INFO, "[%d] create memory resource from: %s\n", UnifiedConfigureLangList.List[Index].Index, UnifiedConfigureLangList.List[Index].ConfigureLang));
-    ProvisioningMemoryResource (Private, UnifiedConfigureLangList.List[Index].Index, UnifiedConfigureLangList.List[Index].ConfigureLang);
+    ProvisioningResource (Private, UnifiedConfigureLangList.List[Index].Index, UnifiedConfigureLangList.List[Index].ConfigureLang);
     FreePool (UnifiedConfigureLangList.List[Index].ConfigureLang);
   }
 
@@ -907,7 +917,7 @@ ProvisioningMemoryResources (
 
 
 EFI_STATUS
-ProvisioningMemoryExistResource (
+ProvisioningExistResource (
   IN  REDFISH_RESOURCE_COMMON_PRIVATE  *Private
   )
 {
@@ -942,7 +952,7 @@ RedfishProvisioningResourceCommon (
     return EFI_INVALID_PARAMETER;
   }
 
-  return (ResourceExist ? ProvisioningMemoryExistResource (Private) : ProvisioningMemoryResources (Private));
+  return (ResourceExist ? ProvisioningExistResource (Private) : ProvisioningResources (Private));
 }
 
 /**
@@ -1029,20 +1039,20 @@ RedfishCheckResourceCommon (
 EFI_STATUS
 RedfishUpdateResourceCommon (
   IN     REDFISH_RESOURCE_COMMON_PRIVATE  *Private,
-  IN     CHAR8                            *Json
+  IN     CHAR8                            *InputJson
   )
 {
   EFI_STATUS Status;
-  CHAR8      *MemoryJson;
+  CHAR8      *Json;
   CHAR8      *ArrayKey;
   EFI_STRING ConfigureLang;
   CHAR8      *EtagStr;
 
-  if (Private == NULL || IS_EMPTY_STRING (Json)) {
+  if (Private == NULL || IS_EMPTY_STRING (InputJson)) {
     return EFI_INVALID_PARAMETER;
   }
 
-  MemoryJson = NULL;
+  Json = NULL;
   ConfigureLang = NULL;
   ArrayKey = NULL;
 
@@ -1056,13 +1066,13 @@ RedfishUpdateResourceCommon (
     return EFI_NOT_FOUND;
   }
 
-  Status = ProvisioningMemoryProperties (
+  Status = ProvisioningProperties (
              Private->JsonStructProtocol,
-             Json,
+             InputJson,
              NULL,
              ConfigureLang,
              FALSE,
-             &MemoryJson
+             &Json
              );
   if (EFI_ERROR (Status)) {
     if (Status == EFI_NOT_FOUND) {
@@ -1077,7 +1087,7 @@ RedfishUpdateResourceCommon (
   //
   // PUT back to instance
   //
-  Status = CreatePayloadToPatchResource (Private->RedfishService, Private->Payload, MemoryJson, &EtagStr);
+  Status = CreatePayloadToPatchResource (Private->RedfishService, Private->Payload, Json, &EtagStr);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, post memory resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
   }
@@ -1092,8 +1102,8 @@ RedfishUpdateResourceCommon (
 
 ON_RELEASE:
 
-  if (MemoryJson != NULL) {
-    FreePool (MemoryJson);
+  if (Json != NULL) {
+    FreePool (Json);
   }
 
   if (ConfigureLang != NULL) {
