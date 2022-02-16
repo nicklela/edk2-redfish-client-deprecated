@@ -60,6 +60,7 @@ typedef struct _REDFISH_RESOURCE_COMMON_PRIVATE {
 
   @param[in]   This                Pointer to REDFISH_RESOURCE_COMMON_PRIVATE instance.
   @param[in]   Json                The JSON to consume.
+  @param[in]   HeaderEtag          The Etag string returned in HTTP header.
 
   @retval EFI_SUCCESS              Value is returned successfully.
   @retval Others                   Some error happened.
@@ -68,7 +69,8 @@ typedef struct _REDFISH_RESOURCE_COMMON_PRIVATE {
 EFI_STATUS
 RedfishConsumeResourceCommon (
   IN     REDFISH_RESOURCE_COMMON_PRIVATE  *Private,
-  IN     CHAR8                            *Json
+  IN     CHAR8                            *Json,
+  IN     CHAR8                            *HeaderEtag OPTIONAL
   );
 
 /**
