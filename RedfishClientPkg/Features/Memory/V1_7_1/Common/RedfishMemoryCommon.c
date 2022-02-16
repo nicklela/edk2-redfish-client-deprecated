@@ -13,10 +13,22 @@ CHAR8 MemoryEmptyJson[] = "{\"@odata.id\": \"\", \"@odata.type\": \"#Memory.v1_7
 
 REDFISH_RESOURCE_COMMON_PRIVATE *mRedfishResourcePrivate = NULL;
 
+/**
+  Consume resource from given URI.
+
+  @param[in]   This                Pointer to REDFISH_RESOURCE_COMMON_PRIVATE instance.
+  @param[in]   Json                The JSON to consume.
+  @param[in]   HeaderEtag          The Etag string returned in HTTP header.
+
+  @retval EFI_SUCCESS              Value is returned successfully.
+  @retval Others                   Some error happened.
+
+**/
 EFI_STATUS
 RedfishConsumeResourceCommon (
   IN  REDFISH_RESOURCE_COMMON_PRIVATE *Private,
-  IN  CHAR8                         *MemoryJson
+  IN  CHAR8                           *Json,
+  IN  CHAR8                           *HeaderEtag OPTIONAL
   )
 {
   EFI_STATUS                    Status;
@@ -26,7 +38,7 @@ RedfishConsumeResourceCommon (
   CHAR8                         *Arraykey;
   CHAR8                         *EtagInDb;
 
-  if (Private == NULL || IS_EMPTY_STRING (MemoryJson)) {
+  if (Private == NULL || IS_EMPTY_STRING (Json)) {
     return EFI_INVALID_PARAMETER;
   }
 
@@ -39,7 +51,7 @@ RedfishConsumeResourceCommon (
   Status = Private->JsonStructProtocol->ToStructure (
                                           Private->JsonStructProtocol,
                                           NULL,
-                                          MemoryJson,
+                                          Json,
                                           (EFI_REST_JSON_STRUCTURE_HEADER **)&Memory
                                           );
   if (EFI_ERROR (Status)) {
@@ -53,8 +65,8 @@ RedfishConsumeResourceCommon (
   // Check ETAG to see if we need to consume it
   //
   EtagInDb = GetEtagWithUri (Private->Uri);
-  if (EtagInDb != NULL && MemoryCs->odata_etag != NULL) {
-    if (AsciiStrCmp (EtagInDb, MemoryCs->odata_etag) == 0) {
+  if (EtagInDb != NULL && HeaderEtag != NULL) {
+    if (AsciiStrCmp (EtagInDb, HeaderEtag) == 0) {
       //
       // No change
       //
@@ -2039,7 +2051,7 @@ ProvisioningMemoryResource (
   IN  EFI_STRING                        ConfigureLang
   )
 {
-  CHAR8       *MemoryJson;
+  CHAR8       *Json;
   EFI_STATUS  Status;
   CHAR8       *NewResourceLocation;
   CHAR8       *NewKey;
@@ -2059,14 +2071,14 @@ ProvisioningMemoryResource (
              ResourceId,
              ConfigureLang,
              TRUE,
-             &MemoryJson
+             &Json
              );
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, provisioning resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
     return Status;
   }
 
-  Status = CreatePayloadToPostResource (Private->RedfishService, Private->Payload, MemoryJson, &NewResourceLocation, &EtagStr);
+  Status = CreatePayloadToPostResource (Private->RedfishService, Private->Payload, Json, &NewResourceLocation, &EtagStr);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, post memory resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
     goto RELEASE_RESOURCE;
@@ -2106,7 +2118,7 @@ ProvisioningMemoryResource (
 
 RELEASE_RESOURCE:
 
-  FreePool (MemoryJson);
+  FreePool (Json);
 
   return Status;
 }
@@ -2263,20 +2275,20 @@ RedfishCheckResourceCommon (
 EFI_STATUS
 RedfishUpdateResourceCommon (
   IN     REDFISH_RESOURCE_COMMON_PRIVATE  *Private,
-  IN     CHAR8                            *Json
+  IN     CHAR8                            *InputJson
   )
 {
   EFI_STATUS Status;
-  CHAR8      *MemoryJson;
+  CHAR8      *Json;
   CHAR8      *ArrayKey;
   EFI_STRING ConfigureLang;
   CHAR8      *EtagStr;
 
-  if (Private == NULL || IS_EMPTY_STRING (Json)) {
+  if (Private == NULL || IS_EMPTY_STRING (InputJson)) {
     return EFI_INVALID_PARAMETER;
   }
 
-  MemoryJson = NULL;
+  Json = NULL;
   ConfigureLang = NULL;
   ArrayKey = NULL;
 
@@ -2292,11 +2304,11 @@ RedfishUpdateResourceCommon (
 
   Status = ProvisioningMemoryProperties (
              Private->JsonStructProtocol,
-             Json,
+             InputJson,
              NULL,
              ConfigureLang,
              FALSE,
-             &MemoryJson
+             &Json
              );
   if (EFI_ERROR (Status)) {
     if (Status == EFI_NOT_FOUND) {
@@ -2311,7 +2323,7 @@ RedfishUpdateResourceCommon (
   //
   // PUT back to instance
   //
-  Status = CreatePayloadToPatchResource (Private->RedfishService, Private->Payload, MemoryJson, &EtagStr);
+  Status = CreatePayloadToPatchResource (Private->RedfishService, Private->Payload, Json, &EtagStr);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, post memory resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
   }
@@ -2326,8 +2338,8 @@ RedfishUpdateResourceCommon (
 
 ON_RELEASE:
 
-  if (MemoryJson != NULL) {
-    FreePool (MemoryJson);
+  if (Json != NULL) {
+    FreePool (Json);
   }
 
   if (ConfigureLang != NULL) {
