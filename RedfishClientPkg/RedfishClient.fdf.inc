@@ -15,6 +15,7 @@
   INF RedfishClientPkg/RedfishETagDxe/RedfishETagDxe.inf
   INF RedfishClientPkg/Features/Memory/V1_7_1/Dxe/RedfishMemoryDxe.inf
   INF RedfishClientPkg/Features/RedfishMemoryCollectionDxe/RedfishMemoryCollectionDxe.inf
+  INF RedfishClientPkg/Features/ComputerSystem/v1_1_0/Dxe/RedfishComputerSystemDxe.inf
 
   INF RedfishClientPkg/Converter/Memory/v1_7_1/RedfishMemory_V1_7_1_Dxe.inf
   INF RedfishClientPkg/Converter/MemoryCollection/RedfishMemoryCollection_Dxe.inf
