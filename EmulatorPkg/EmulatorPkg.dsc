@@ -269,7 +269,7 @@
   gEmulatorPkgTokenSpaceGuid.PcdEmuGop|L"GOP Window"
   gEmulatorPkgTokenSpaceGuid.PcdEmuFileSystem|L"."
   gEmulatorPkgTokenSpaceGuid.PcdEmuSerialPort|L"/dev/ttyS0"
-  gEmulatorPkgTokenSpaceGuid.PcdEmuNetworkInterface|L"en0"
+  gEmulatorPkgTokenSpaceGuid.PcdEmuNetworkInterface|L"5"
 
   gEmulatorPkgTokenSpaceGuid.PcdEmuCpuModel|L"Intel(R) Processor Model"
   gEmulatorPkgTokenSpaceGuid.PcdEmuCpuSpeed|L"3000"
@@ -284,7 +284,7 @@
   # Below is the MAC address of network adapter on EDK2 Emulator platform.
   # You can use ifconfig under EFI shell to get the MAC address of network adapter on EDK2 Emulator platform.
   #
-  gEfiRedfishPkgTokenSpaceGuid.PcdRedfishRestExServiceDevicePath.DevicePath|{DEVICE_PATH("MAC(000000000000,0x1)")}
+  gEfiRedfishPkgTokenSpaceGuid.PcdRedfishRestExServiceDevicePath.DevicePath|{DEVICE_PATH("MAC(14CB19687C05,0x1)")}
   gEfiRedfishPkgTokenSpaceGuid.PcdRedfishRestExServiceAccessModeInBand|False
   gEfiRedfishPkgTokenSpaceGuid.PcdRedfishDiscoverAccessModeInBand|False
 !endif
@@ -490,6 +490,7 @@
 
 !if $(REDFISH_ENABLE) == TRUE
   EmulatorPkg/Hii2RedfishMemoryDxe/Hii2RedfishMemoryDxe.inf
+  EmulatorPkg/Application/RedfishPlatformConfig/RedfishPlatformConfig.inf
 !endif
 !include RedfishPkg/Redfish.dsc.inc
 !include RedfishClientPkg/RedfishClient.dsc.inc
