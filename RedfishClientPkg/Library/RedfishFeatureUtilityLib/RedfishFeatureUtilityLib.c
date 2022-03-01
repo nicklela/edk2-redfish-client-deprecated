@@ -11,6 +11,11 @@
 
 EDKII_REDFISH_ETAG_PROTOCOL *mEtagProtocol;
 
+///
+/// This GUID is used for an EFI Variable that stores the Redfish data.
+///
+EFI_GUID mRedfishVariableGuid = {0x91c46a3d, 0xed1a, 0x477b, {0xa5, 0x33, 0x87, 0x2d, 0xcd, 0xb0, 0xfc, 0xc1}};
+
 /**
 
   Get array key by parsing the URI.
@@ -109,17 +114,17 @@ SetConfigureLangWithkey (
   //
   Status = GetVariable2 (
              VarName,
-             &gEfiCallerIdGuid,
+             &mRedfishVariableGuid,
              (VOID *)&VarData,
              NULL
              );
   if (!EFI_ERROR (Status)) {
     DEBUG ((DEBUG_INFO, "%a, remove stale data: %s\n", __FUNCTION__, VarData));
     FreePool (VarData);
-    gRT->SetVariable (VarName, &gEfiCallerIdGuid, VARIABLE_ATTRIBUTE_NV_BS, 0, NULL);
+    gRT->SetVariable (VarName, &mRedfishVariableGuid, VARIABLE_ATTRIBUTE_NV_BS, 0, NULL);
   }
 
-  return gRT->SetVariable (VarName, &gEfiCallerIdGuid, VARIABLE_ATTRIBUTE_NV_BS, StrSize (IndexString), (VOID *)&IndexString);
+  return gRT->SetVariable (VarName, &mRedfishVariableGuid, VARIABLE_ATTRIBUTE_NV_BS, StrSize (IndexString), (VOID *)&IndexString);
 }
 
 /**
@@ -161,7 +166,7 @@ GetConfigureLangByKey (
 
   Status = GetVariable2 (
              VariableName,
-             &gEfiCallerIdGuid,
+             &mRedfishVariableGuid,
              (VOID *)&CollectionIndex,
              &VariableSize
              );
@@ -1108,7 +1113,23 @@ GetSupportedSchemaVersion (
 
 /**
 
-  Return system root path. This is dummy function now.
+  Return redfish root path. It's call responsibility to release returned buffer.
+
+  @retval  NULL     Can not find redfish root path.
+  @retval  Other    Redfish root path is returned.
+
+**/
+CHAR8 *
+RedfishGetRootPath (
+  VOID
+  )
+{
+  return AllocateCopyPool (AsciiStrSize (REDFISH_ROOT_PATH), REDFISH_ROOT_PATH);
+}
+
+/**
+
+  Return system root path. It's call responsibility to release returned buffer.
 
   @retval  NULL     Can not find system root path.
   @retval  Other    System root path is returned.
@@ -1119,7 +1140,76 @@ RedfishGetSystemRootPath (
   VOID
   )
 {
-  return AllocateCopyPool (AsciiStrSize (REDFISH_SYSTEM_ROOT_PATH), REDFISH_SYSTEM_ROOT_PATH);
+  EFI_STATUS Status;
+  CHAR8      *VarData;
+  CHAR8      *SystemRootPath;
+  UINTN      PathSize;
+
+  //
+  // Check if it exists already.
+  //
+  Status = GetVariable2 (
+             SYSTEM_ID_VARIABLE_NAME,
+             &mRedfishVariableGuid,
+             (VOID *)&VarData,
+             NULL
+             );
+  if (!EFI_ERROR (Status)) {
+
+    PathSize = AsciiStrSize (VarData) + AsciiStrSize (REDFISH_SYSTEM_ROOT_PATH);
+    SystemRootPath = AllocatePool (PathSize);
+    if (SystemRootPath == NULL) {
+      return NULL;
+    }
+
+    AsciiSPrint (SystemRootPath, PathSize, "%a/%a", REDFISH_SYSTEM_ROOT_PATH, VarData);
+
+    return SystemRootPath;
+  }
+
+  return RedfishGetRootPath ();
+}
+
+/**
+
+  Set system root path.
+
+  @param[in]    SystemId         SystemId string
+
+  @retval  EFI_INVALID_PARAMETR   SystemId is NULL or EMPTY
+  @retval  EFI_SUCCESS            System ID is set
+
+**/
+EFI_STATUS
+RedfisSetSystemRootPath (
+  CHAR8 *SystemId
+  )
+{
+  EFI_STATUS Status;
+  CHAR8      *VarData;
+
+  if (IS_EMPTY_STRING (SystemId)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  //
+  // Check if it exists already.
+  //
+  Status = GetVariable2 (
+             SYSTEM_ID_VARIABLE_NAME,
+             &mRedfishVariableGuid,
+             (VOID *)&VarData,
+             NULL
+             );
+  if (!EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_INFO, "%a, remove stale data: %a\n", __FUNCTION__, VarData));
+    FreePool (VarData);
+    gRT->SetVariable (SYSTEM_ID_VARIABLE_NAME, &mRedfishVariableGuid, VARIABLE_ATTRIBUTE_NV_BS, 0, NULL);
+  }
+
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a, system ID saved: %a\n", __FUNCTION__, SystemId));
+
+  return gRT->SetVariable (SYSTEM_ID_VARIABLE_NAME, &mRedfishVariableGuid, VARIABLE_ATTRIBUTE_NV_BS, AsciiStrSize (SystemId), (VOID *)SystemId);
 }
 
 /**
