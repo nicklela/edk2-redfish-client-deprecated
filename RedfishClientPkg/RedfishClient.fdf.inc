@@ -24,4 +24,6 @@
   #
   INF RedfishClientPkg/Converter/Memory/v1_7_1/RedfishMemory_V1_7_1_Dxe.inf
   INF RedfishClientPkg/Converter/MemoryCollection/RedfishMemoryCollection_Dxe.inf
+  INF RedfishClientPkg/Converter/ComputerSystem/v1_1_0/RedfishComputerSystem_V1_1_0_Dxe.inf
+  INF RedfishClientPkg/Converter/ComputerSystemCollection/RedfishComputerSystemCollection_Dxe.inf
 !endif
