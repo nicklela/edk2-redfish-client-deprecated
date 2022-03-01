@@ -478,7 +478,7 @@ UpdateConfigLanguage (
     HiiHandle,
     StringId,
     ConfigLanguage,
-    "x-uefi-redfish-ComputerSystem.v1_16_1"
+    "x-uefi-redfish-ComputerSystem.v1_1_0"
     );
 
   return EFI_SUCCESS;
