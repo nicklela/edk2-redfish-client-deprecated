@@ -122,4 +122,20 @@ RedfishUpdateResourceCommon (
   IN     CHAR8                            *Json
   );
 
+/**
+  Identify resource from given URI.
+
+  @param[in]   This                Pointer to REDFISH_RESOURCE_COMMON_PRIVATE instance.
+  @param[in]   Json                The JSON to consume.
+
+  @retval EFI_SUCCESS              Value is returned successfully.
+  @retval Others                   Some error happened.
+
+**/
+EFI_STATUS
+RedfishIdentifyResourceCommon (
+  IN     REDFISH_RESOURCE_COMMON_PRIVATE  *Private,
+  IN     CHAR8                            *Json
+  );
+
 #endif

@@ -1027,6 +1027,82 @@ RedfishCheckResourceCommon (
 
 
 /**
+  Identify resource from given URI.
+
+  @param[in]   This                Pointer to REDFISH_RESOURCE_COMMON_PRIVATE instance.
+  @param[in]   Json                The JSON to consume.
+
+  @retval EFI_SUCCESS              Value is returned successfully.
+  @retval Others                   Some error happened.
+
+**/
+EFI_STATUS
+RedfishIdentifyResourceCommon (
+  IN     REDFISH_RESOURCE_COMMON_PRIVATE  *Private,
+  IN     CHAR8                            *Json
+  )
+{
+  EFI_STATUS                            Status;
+  EFI_REDFISH_COMPUTERSYSTEM_V1_1_0     *ComputerSystem;
+  EFI_REDFISH_COMPUTERSYSTEM_V1_1_0_CS  *ComputerSystemCs;
+  EFI_GUID                              SystemUuid;
+  EFI_GUID                              ResourceUuid;
+
+  if (Private == NULL || IS_EMPTY_STRING (Json)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  ComputerSystem = NULL;
+  ComputerSystemCs = NULL;
+
+  Status = Private->JsonStructProtocol->ToStructure (
+                                          Private->JsonStructProtocol,
+                                          NULL,
+                                          Json,
+                                          (EFI_REST_JSON_STRUCTURE_HEADER **)&ComputerSystem
+                                          );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, ToStructure() failed: %r\n", __FUNCTION__, Status));
+    return Status;
+  }
+
+  ComputerSystemCs = ComputerSystem->ComputerSystem;
+
+  if (IS_EMPTY_STRING (ComputerSystemCs->UUID)) {
+    return EFI_UNSUPPORTED;
+  }
+
+  Status = AsciiStrToGuid (ComputerSystemCs->UUID, &ResourceUuid);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, fail to get resource UUID: %r\n", __FUNCTION__, Status));
+    return Status;
+  }
+
+  Status = NetLibGetSystemGuid (&SystemUuid);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, fail to get system UUID from SMBIOS: %r\n", __FUNCTION__, Status));
+    return Status;
+  }
+
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a, Identify: System: %g Resource: %g\n", __FUNCTION__, &SystemUuid, &ResourceUuid));
+  if (CompareGuid (&ResourceUuid, &SystemUuid)) {
+    if (!IS_EMPTY_STRING (ComputerSystemCs->Id)) {
+      RedfisSetSystemRootPath (ComputerSystemCs->Id);
+    }
+    Status = EFI_SUCCESS;
+  } else {
+    Status = EFI_UNSUPPORTED;
+  }
+
+  Private->JsonStructProtocol->DestoryStructure (
+                                 Private->JsonStructProtocol,
+                                 (EFI_REST_JSON_STRUCTURE_HEADER *)ComputerSystem
+                                 );
+
+  return Status;
+}
+
+/**
   Update resource to given URI.
 
   @param[in]   This                Pointer to REDFISH_RESOURCE_COMMON_PRIVATE instance.

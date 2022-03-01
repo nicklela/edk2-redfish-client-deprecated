@@ -25,6 +25,10 @@ ProcessResource (
     return EFI_INVALID_PARAMETER;
   }
 
+  //
+  // Resource match
+  //
+
   DEBUG ((REDFISH_DEBUG_TRACE, "%a, process resource for: %a\n", __FUNCTION__, Uri));
 
   Status = GetRedfishSchemaInfo (Private->RedfishService, Private->JsonStructProtocol, Uri, &SchemaInfo);
@@ -41,6 +45,25 @@ ProcessResource (
                               );
   if (RedfishResrouceProtocol == NULL) {
     return EFI_DEVICE_ERROR;
+  }
+
+  //
+  // Check and see if this is target resource that we want to handle.
+  // Some resource is handled by other provider so we have to make sure this first.
+  //
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a Identify for %a\n", __FUNCTION__, Uri));
+  Status = RedfishResrouceProtocol->Identify (
+                                      RedfishResrouceProtocol,
+                                      Uri
+                                      );
+  if (EFI_ERROR (Status)) {
+    if (Status == EFI_UNSUPPORTED) {
+      DEBUG ((DEBUG_INFO, "%a, \"%a\" is not handled by us\n", __FUNCTION__, Uri));
+      return EFI_SUCCESS;
+    }
+
+    DEBUG ((DEBUG_ERROR, "%a, fail to identify resource: \"%a\": %r\n", __FUNCTION__, Uri, Status));
+    return Status;
   }
 
   //
@@ -257,42 +280,35 @@ CollectionHandler (
   )
 {
   EFI_STATUS  Status;
-  CHAR8       *SystemRootPath;
-  CHAR8       *PathBuffer;
+  CHAR8       *RedfishRootPath;
   UINTN       BufferSize;
 
   if (Private == NULL) {
     return EFI_INVALID_PARAMETER;
   }
 
-  SystemRootPath = NULL;
-  PathBuffer = NULL;
-
-  SystemRootPath = RedfishGetSystemRootPath ();
-  if (SystemRootPath == NULL) {
-    DEBUG ((DEBUG_ERROR, "%a, can not find system root path\n", __FUNCTION__));
-    return EFI_DEVICE_ERROR;
-  }
-
-  BufferSize = AsciiStrSize (SystemRootPath) + AsciiStrSize (REDFISH_SCHEMA_NAME);
-  PathBuffer = AllocatePool (BufferSize);
-  if (PathBuffer == NULL) {
-    Status = EFI_OUT_OF_RESOURCES;
-    goto ON_RELEASE;
-  }
-
-  AsciiSPrint (PathBuffer, BufferSize, "%a/%a", SystemRootPath, REDFISH_SCHEMA_NAME);
-
-  DEBUG ((REDFISH_DEBUG_TRACE, "%a, collection handler for %a\n", __FUNCTION__, PathBuffer));
+  RedfishRootPath = NULL;
+  Private->CollectionPath = NULL;
 
   //
   // Initialize collection path
   //
-  Private->CollectionPath = RedfishBuildPathWithSystemUuid (PathBuffer, TRUE, NULL);
+  RedfishRootPath = RedfishGetRootPath ();
+  if (RedfishRootPath == NULL) {
+    DEBUG ((DEBUG_ERROR, "%a, can not find system root path\n", __FUNCTION__));
+    return EFI_DEVICE_ERROR;
+  }
+
+  BufferSize = AsciiStrSize (RedfishRootPath) + AsciiStrSize (REDFISH_SCHEMA_NAME);
+  Private->CollectionPath = AllocatePool (BufferSize);
   if (Private->CollectionPath == NULL) {
     Status = EFI_OUT_OF_RESOURCES;
     goto ON_RELEASE;
   }
+
+  AsciiSPrint (Private->CollectionPath, BufferSize, "%a/%a", RedfishRootPath, REDFISH_SCHEMA_NAME);
+
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a, collection handler for %a\n", __FUNCTION__, Private->CollectionPath));
 
   //
   // Query collection from Redfish service.
@@ -316,12 +332,8 @@ CollectionHandler (
 
 ON_RELEASE:
 
-  if (SystemRootPath != NULL) {
-    FreePool (SystemRootPath);
-  }
-
-  if (PathBuffer != NULL) {
-    FreePool (PathBuffer);
+  if (RedfishRootPath != NULL) {
+    FreePool (RedfishRootPath);
   }
 
   ReleaseCollectionResource (Private);

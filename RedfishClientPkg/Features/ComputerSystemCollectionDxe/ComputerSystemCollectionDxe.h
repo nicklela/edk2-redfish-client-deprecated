@@ -13,6 +13,6 @@
 #include <RedfishJsonStructure/ComputerSystemCollection/EfiComputerSystemCollection.h>
 #include <RedfishCollectionCommon.h>
 
-#define REDFISH_SCHEMA_NAME             "ComputerSystemCollection"
+#define REDFISH_SCHEMA_NAME             "Systems"
 #define REDFISH_MANAGED_URI             L"/redfish/v1/systems/"
 #endif
