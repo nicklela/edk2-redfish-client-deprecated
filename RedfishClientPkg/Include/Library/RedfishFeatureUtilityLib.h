@@ -291,6 +291,19 @@ GetSupportedSchemaVersion (
 
 /**
 
+  Return redfish root path. It's call responsibility to release returned buffer.
+
+  @retval  NULL     Can not find redfish root path.
+  @retval  Other    Redfish root path is returned.
+
+**/
+CHAR8 *
+RedfishGetRootPath (
+  VOID
+  );
+
+/**
+
   Return system root path
 
   @retval  NULL     Can not find system root path.
@@ -300,6 +313,21 @@ GetSupportedSchemaVersion (
 CHAR8 *
 RedfishGetSystemRootPath (
   VOID
+  );
+
+/**
+
+  Set system root path.
+
+  @param[in]    SystemId         SystemId string
+
+  @retval  EFI_INVALID_PARAMETR   SystemId is NULL or EMPTY
+  @retval  EFI_SUCCESS            System ID is set
+
+**/
+EFI_STATUS
+RedfisSetSystemRootPath (
+  CHAR8 *SystemId
   );
 
 /**
