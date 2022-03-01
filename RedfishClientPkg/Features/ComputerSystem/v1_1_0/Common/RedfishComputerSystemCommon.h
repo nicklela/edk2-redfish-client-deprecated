@@ -12,6 +12,8 @@
 #include <RedfishJsonStructure/ComputerSystem/v1_1_0/EfiComputerSystemV1_1_0.h>
 #include <RedfishResourceCommon.h>
 
+#include <Library/NetLib.h>
+
 //
 // Schema information.
 //
@@ -20,8 +22,8 @@
 #define RESOURCE_SCHEMA_MINOR   "1"
 #define RESOURCE_SCHEMA_ERRATA  "0"
 #define RESOURCE_SCHEMA_VERSION "v1_1_0"
-#define REDPATH_ARRAY_PATTERN   L"/ComputerSystem/{.*}/"
-#define REDPATH_ARRAY_PREFIX    L"/ComputerSystem/"
+#define REDPATH_ARRAY_PATTERN   L"/Systems/{.*}/"
+#define REDPATH_ARRAY_PREFIX    L"/Systems/"
 #define RESOURCE_SCHEMA_FULL    "x-uefi-redfish-ComputerSystem.v1_1_0"
 
 #endif

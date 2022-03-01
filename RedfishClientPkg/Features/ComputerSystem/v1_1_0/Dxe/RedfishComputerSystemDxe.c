@@ -334,11 +334,83 @@ RedfishResourceCheck (
   return Status;
 }
 
+/**
+  Identify resource on given URI.
+
+  @param[in]   This                Pointer to EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL instance.
+  @param[in]   Uri                 The target URI to consume.
+
+  @retval EFI_SUCCESS              This is target resource which we want to handle.
+  @retval EFI_UNSUPPORTED          This is not the target resource.
+  @retval Others                   Some error happened.
+
+**/
+
+EFI_STATUS
+RedfishResourceIdentify (
+  IN     EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL  *This,
+  IN     CHAR8                                   *Uri
+  )
+{
+  REDFISH_RESOURCE_COMMON_PRIVATE *Private;
+  EFI_STATUS                    Status;
+  REDFISH_RESPONSE              Response;
+
+  if (This == NULL || IS_EMPTY_STRING (Uri)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Private = REDFISH_RESOURCE_COMMON_PRIVATE_DATA_FROM_RESOURCE_PROTOCOL (This);
+
+  if (Private->RedfishService == NULL) {
+    return EFI_NOT_READY;
+  }
+
+  Status = GetResourceByPath (Private->RedfishService, Uri, &Response);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, get resource from: %a failed\n", __FUNCTION__, Uri));
+    return Status;
+  }
+
+  Private->Uri = Uri;
+  Private->Payload = Response.Payload;
+  ASSERT (Private->Payload != NULL);
+
+  Private->Json = JsonDumpString (RedfishJsonInPayload (Private->Payload), EDKII_JSON_COMPACT);
+  ASSERT (Private->Json != NULL);
+
+  Status = RedfishIdentifyResourceCommon (Private, Private->Json);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, failed to identify resource from: %a %r\n", __FUNCTION__, Uri, Status));
+  }
+
+  //
+  // Release resource
+  //
+  if (Private->Payload != NULL) {
+    RedfishFreeResponse (
+      Response.StatusCode,
+      Response.HeaderCount,
+      Response.Headers,
+      Response.Payload
+      );
+    Private->Payload = NULL;
+  }
+
+  if (Private->Json != NULL) {
+    FreePool (Private->Json);
+    Private->Json = NULL;
+  }
+
+  return Status;
+}
+
 EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL mRedfishResourceConfig = {
   RedfishResourceProvisioningResource,
   RedfishResourceConsumeResource,
   RedfishResourceUpdate,
   RedfishResourceCheck,
+  RedfishResourceIdentify,
   RedfishResourceGetInfo
 };
 

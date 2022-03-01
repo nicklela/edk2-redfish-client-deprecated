@@ -86,6 +86,24 @@ EFI_STATUS
   IN     CHAR8                                   *Uri
   );
 
+/**
+  Identify resource on given URI.
+
+  @param[in]   This                Pointer to EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL instance.
+  @param[in]   Uri                 The target URI to consume.
+
+  @retval EFI_SUCCESS              This is target resource which we want to handle.
+  @retval EFI_UNSUPPORTED          This is not the target resource.
+  @retval Others                   Some error happened.
+
+**/
+typedef
+EFI_STATUS
+(EFIAPI *EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL_IDENTIFY) (
+  IN     EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL  *This,
+  IN     CHAR8                                   *Uri
+  );
+
 //
 // definition of REDFISH_SCHEMA_INFO
 //
@@ -121,6 +139,7 @@ struct _EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL {
   EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL_CONSUME      Consume;
   EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL_UPDATE       Update;
   EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL_CHECK        Check;
+  EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL_IDENTIFY     Identify;
   EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL_GET_INFO     GetInfo;
 };
 

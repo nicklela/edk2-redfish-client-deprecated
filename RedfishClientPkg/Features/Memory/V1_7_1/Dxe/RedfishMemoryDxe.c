@@ -334,11 +334,35 @@ RedfishResourceCheck (
   return Status;
 }
 
+/**
+  Identify resource on given URI.
+
+  @param[in]   This                Pointer to EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL instance.
+  @param[in]   Uri                 The target URI to consume.
+
+  @retval EFI_SUCCESS              This is target resource which we want to handle.
+  @retval EFI_UNSUPPORTED          This is not the target resource.
+  @retval Others                   Some error happened.
+
+**/
+
+EFI_STATUS
+RedfishResourceIdentify (
+  IN     EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL  *This,
+  IN     CHAR8                                   *Uri
+  )
+{
+  DEBUG ((DEBUG_INFO, "%a, no implementation for identifying: %a", __FUNCTION__, Uri));
+
+  return EFI_SUCCESS;
+}
+
 EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL mRedfishResourceConfig = {
   RedfishResourceProvisioningResource,
   RedfishResourceConsumeResource,
   RedfishResourceUpdate,
   RedfishResourceCheck,
+  RedfishResourceIdentify,
   RedfishResourceGetInfo
 };
 
