@@ -1,7 +1,7 @@
 /** @file
   Redfish feature utility library implementation
 
-  (C) Copyright 2020-2021 Hewlett Packard Enterprise Development LP<BR>
+  (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -10,11 +10,6 @@
 #include "RedfishFeatureUtilityInternal.h"
 
 EDKII_REDFISH_ETAG_PROTOCOL *mEtagProtocol;
-
-///
-/// This GUID is used for an EFI Variable that stores the Redfish data.
-///
-EFI_GUID mRedfishVariableGuid = {0x91c46a3d, 0xed1a, 0x477b, {0xa5, 0x33, 0x87, 0x2d, 0xcd, 0xb0, 0xfc, 0xc1}};
 
 /**
 
