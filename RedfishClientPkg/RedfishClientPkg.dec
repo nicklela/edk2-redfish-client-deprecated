@@ -1,7 +1,7 @@
 ## @file
 # Redfish Client Package
 #
-# (C) Copyright 2021 Hewlett Packard Enterprise Development LP<BR>
+# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP<BR>
 #
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 ##
@@ -21,6 +21,7 @@
 
 [LibraryClasses]
   RedfishFeatureUtilityLib|Include/Library/RedfishFeatureUtilityLib.h
+  RedfishResourceIdentifyLib|Include/Library/RedfishResourceIdentifyLib.h
 
 [LibraryClasses.Common.Private]
   ##  @libraryclass Redfish Helper Library
