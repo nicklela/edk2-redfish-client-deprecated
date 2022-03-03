@@ -30,15 +30,14 @@
 #include <Guid/VariableFormat.h>
 
 #include <Protocol/EdkIIRedfishETagProtocol.h>
+#include <Protocol/EdkIIRedfishResourceMapProtocol.h>
 
 #define INDEX_VARIABLE_SIZE       64
 #define INDEX_STRING_SIZE         16
 #define INDEX_STRING              L"{%d}"
 #define SCHEMA_NAME_PREFIX_OFFSET 15 // x-uefi-redfish-
-#define REDFISH_SYSTEM_ROOT_PATH  "/v1/Systems"
 #define REDFISH_ROOT_PATH         "/v1"
 #define MAX_CONF_LANG_LEN         128
-#define SYSTEM_ID_VARIABLE_NAME   L"RedfishSystemId"
 
 #define BIOS_CONFIG_TO_REDFISH_REDPATH_ARRAY_START_SIGNATURE L"{"
 #define BIOS_CONFIG_TO_REDFISH_REDPATH_ARRAY_END_SIGNATURE   L"}"

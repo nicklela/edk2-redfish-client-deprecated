@@ -9,7 +9,34 @@
 
 #include "RedfishFeatureUtilityInternal.h"
 
-EDKII_REDFISH_ETAG_PROTOCOL *mEtagProtocol;
+EDKII_REDFISH_ETAG_PROTOCOL         *mEtagProtocol = NULL;
+EDKII_REDFISH_RESOURCE_MAP_PROTOCOL *mResourceMapProtocol = NULL;
+
+
+EFI_STATUS
+RedfishLocateProtocol (
+  IN  VOID      **ProtocolInstance,
+  IN  EFI_GUID  *ProtocolGuid
+  )
+{
+  EFI_STATUS  Status;
+
+  if (ProtocolInstance == NULL || ProtocolGuid == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  if (*ProtocolInstance != NULL) {
+    return EFI_SUCCESS;
+  }
+
+  Status = gBS->LocateProtocol (
+                  ProtocolGuid,
+                  NULL,
+                  ProtocolInstance
+                  );
+  return Status;
+}
+
 
 /**
 
@@ -207,15 +234,10 @@ SetEtagWithUri (
     return EFI_INVALID_PARAMETER;
   }
 
-  if (mEtagProtocol == NULL) {
-    Status = gBS->LocateProtocol (
-                    &gEdkIIRedfishETagProtocolGuid,
-                    NULL,
-                    (VOID **)&mEtagProtocol
-                    );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
+  Status = RedfishLocateProtocol ((VOID **)&mEtagProtocol, &gEdkIIRedfishETagProtocolGuid);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, fail to locate gEdkIIRedfishETagProtocolGuid: %r\n", __FUNCTION__, Status));
+    return Status;
   }
 
   mEtagProtocol->Set (mEtagProtocol, Uri, EtagStr);
@@ -246,15 +268,10 @@ GetEtagWithUri (
     return NULL;
   }
 
-  if (mEtagProtocol == NULL) {
-    Status = gBS->LocateProtocol (
-                    &gEdkIIRedfishETagProtocolGuid,
-                    NULL,
-                    (VOID **)&mEtagProtocol
-                    );
-    if (EFI_ERROR (Status)) {
-      return NULL;
-    }
+  Status = RedfishLocateProtocol ((VOID **)&mEtagProtocol, &gEdkIIRedfishETagProtocolGuid);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, fail to locate gEdkIIRedfishETagProtocolGuid: %r\n", __FUNCTION__, Status));
+    return NULL;
   }
 
   Status = mEtagProtocol->Get (mEtagProtocol, Uri, &EtagStr);
@@ -1108,104 +1125,156 @@ GetSupportedSchemaVersion (
 
 /**
 
-  Return redfish root path. It's call responsibility to release returned buffer.
+  Return redfish URI by given config language. It's call responsibility to release returned buffer.
 
-  @retval  NULL     Can not find redfish root path.
-  @retval  Other    Redfish root path is returned.
+  @param[in]  ConfigLang    ConfigLang to search.
 
-**/
-CHAR8 *
-RedfishGetRootPath (
-  VOID
-  )
-{
-  return AllocateCopyPool (AsciiStrSize (REDFISH_ROOT_PATH), REDFISH_ROOT_PATH);
-}
-
-/**
-
-  Return system root path. It's call responsibility to release returned buffer.
-
-  @retval  NULL     Can not find system root path.
-  @retval  Other    System root path is returned.
+  @retval  NULL     Can not find redfish uri.
+  @retval  Other    redfish uri is returned.
 
 **/
 CHAR8 *
-RedfishGetSystemRootPath (
-  VOID
+RedfishGetRedfishUri (
+  IN  CHAR8 *ConfigLang
   )
 {
   EFI_STATUS Status;
-  CHAR8      *VarData;
-  CHAR8      *SystemRootPath;
-  UINTN      PathSize;
+  CHAR8      *Target;
+  CHAR8      *Found;
+  CHAR8      *TempStr;
+  UINTN      TempStrSize;
+  CHAR8      *ResultStr;
+  UINTN      ConfigLangLen;
 
-  //
-  // Check if it exists already.
-  //
-  Status = GetVariable2 (
-             SYSTEM_ID_VARIABLE_NAME,
-             &mRedfishVariableGuid,
-             (VOID *)&VarData,
-             NULL
-             );
-  if (!EFI_ERROR (Status)) {
-
-    PathSize = AsciiStrSize (VarData) + AsciiStrSize (REDFISH_SYSTEM_ROOT_PATH);
-    SystemRootPath = AllocatePool (PathSize);
-    if (SystemRootPath == NULL) {
-      return NULL;
-    }
-
-    AsciiSPrint (SystemRootPath, PathSize, "%a/%a", REDFISH_SYSTEM_ROOT_PATH, VarData);
-
-    return SystemRootPath;
+  Status = RedfishLocateProtocol ((VOID **)&mResourceMapProtocol, &gEdkIIRedfishResourceMapProtocolGuid);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, fail to locate gEdkIIRedfishResourceMapProtocolGuid: %r\n", __FUNCTION__, Status));
+    return NULL;
   }
 
-  return RedfishGetRootPath ();
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a, Get: %a\n", __FUNCTION__, ConfigLang));
+
+  Target = AsciiStrStr (ConfigLang, "{");
+  if (Target == NULL) {
+    return AllocateCopyPool (AsciiStrSize (ConfigLang), ConfigLang);
+  }
+
+  do {
+    Target += 1;
+  } while (*Target != '\0' && *Target != '}');
+
+  if (*Target == '\0') {
+    DEBUG ((DEBUG_ERROR, "%a, invalid format: %a\n", __FUNCTION__, ConfigLang));
+    return NULL;
+  }
+
+  ConfigLangLen = AsciiStrLen (ConfigLang);
+  TempStrSize = (Target - ConfigLang + 2);
+  TempStr = AllocateCopyPool (TempStrSize, ConfigLang);
+  if (TempStr == NULL) {
+    return NULL;
+  }
+  TempStr[TempStrSize - 1] = '\0';
+
+  Status = mResourceMapProtocol->Get (mResourceMapProtocol, TempStr, &Found);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, Can not find: %a\n", __FUNCTION__, TempStr));
+    return NULL;
+  }
+
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a, Found: %a\n", __FUNCTION__, Found));
+
+  TempStrSize = AsciiStrLen (Found) + (ConfigLangLen - (Target - ConfigLang + 1) + 1) + 1;
+  FreePool (TempStr);
+  TempStr = AllocateZeroPool (TempStrSize);
+  if (TempStr == NULL) {
+    return NULL;
+  }
+
+  AsciiStrCpyS (TempStr, TempStrSize, Found);
+  AsciiStrCatS (TempStr, TempStrSize, (Target + 1));
+
+  ResultStr = RedfishGetRedfishUri (TempStr);
+  FreePool (TempStr);
+
+  return ResultStr;
 }
 
 /**
 
-  Set system root path.
+  Save Redfish URI in database for further use.
 
-  @param[in]    SystemId         SystemId string
+  @param[in]    ConfigLang        ConfigLang to save
+  @param[in]    Uri               Redfish Uri to save
 
   @retval  EFI_INVALID_PARAMETR   SystemId is NULL or EMPTY
-  @retval  EFI_SUCCESS            System ID is set
+  @retval  EFI_SUCCESS            Redfish uri is saved
 
 **/
 EFI_STATUS
-RedfisSetSystemRootPath (
-  CHAR8 *SystemId
+RedfisSetRedfishUri (
+  IN    CHAR8  *ConfigLang,
+  IN    CHAR8  *Uri
   )
 {
   EFI_STATUS Status;
-  CHAR8      *VarData;
 
-  if (IS_EMPTY_STRING (SystemId)) {
+  if (IS_EMPTY_STRING (ConfigLang) || IS_EMPTY_STRING (Uri)) {
     return EFI_INVALID_PARAMETER;
   }
 
-  //
-  // Check if it exists already.
-  //
-  Status = GetVariable2 (
-             SYSTEM_ID_VARIABLE_NAME,
-             &mRedfishVariableGuid,
-             (VOID *)&VarData,
-             NULL
-             );
-  if (!EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_INFO, "%a, remove stale data: %a\n", __FUNCTION__, VarData));
-    FreePool (VarData);
-    gRT->SetVariable (SYSTEM_ID_VARIABLE_NAME, &mRedfishVariableGuid, VARIABLE_ATTRIBUTE_NV_BS, 0, NULL);
+  Status = RedfishLocateProtocol ((VOID **)&mResourceMapProtocol, &gEdkIIRedfishResourceMapProtocolGuid);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, fail to locate gEdkIIRedfishResourceMapProtocolGuid: %r\n", __FUNCTION__, Status));
+    return Status;
   }
 
-  DEBUG ((REDFISH_DEBUG_TRACE, "%a, system ID saved: %a\n", __FUNCTION__, SystemId));
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a, Saved: %a -> %a\n", __FUNCTION__, ConfigLang, Uri));
 
-  return gRT->SetVariable (SYSTEM_ID_VARIABLE_NAME, &mRedfishVariableGuid, VARIABLE_ATTRIBUTE_NV_BS, AsciiStrSize (SystemId), (VOID *)SystemId);
+  return mResourceMapProtocol->Set (mResourceMapProtocol, ConfigLang, Uri);
 }
+
+/**
+
+  Get @odata.id from give HTTP payload. It's call responsibility to release returned buffer.
+
+  @param[in]  Payload             HTTP payload
+
+  @retval     NULL                Can not find @odata.id from given payload.
+  @retval     Others              odata.id string is returned.
+
+**/
+CHAR8 *
+GetOdataId (
+  IN  REDFISH_PAYLOAD *Payload
+  )
+{
+  EDKII_JSON_VALUE *JsonValue;
+  EDKII_JSON_VALUE *OdataId;
+  CONST CHAR8      *OdataIdString;
+
+  if (Payload == NULL) {
+    return NULL;
+  }
+
+  JsonValue = RedfishJsonInPayload (Payload);
+  if (!JsonValueIsObject (JsonValue)) {
+    return NULL;
+  }
+
+  OdataId = JsonObjectGetValue (JsonValueGetObject (JsonValue), "@odata.id");
+  if (!JsonValueIsString (OdataId)) {
+    return NULL;
+  }
+
+  OdataIdString = JsonValueGetAsciiString (OdataId);
+  if (OdataIdString == NULL) {
+    return NULL;
+  }
+
+  return AllocateCopyPool (AsciiStrSize (OdataIdString), OdataIdString);
+}
+
 
 /**
 
