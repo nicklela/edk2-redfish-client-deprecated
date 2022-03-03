@@ -1,0 +1,45 @@
+## @file
+#
+#  (C) Copyright 2022 Hewlett Packard Enterprise Development LP<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION               = 0x0001000b
+  BASE_NAME                 = RedfishResourceMapDxe
+  FILE_GUID                 = F4121E32-454D-4E51-AB4B-DAA577833E95
+  MODULE_TYPE               = DXE_DRIVER
+  VERSION_STRING            = 1.0
+  ENTRY_POINT               = RedfishResourceMapDriverEntryPoint
+  UNLOAD_IMAGE              = RedfishResourceMapDriverUnload
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  RedfishPkg/RedfishPkg.dec
+  RedfishClientPkg/RedfishClientPkg.dec
+
+[Sources]
+  RedfishResourceMapDxe.h
+  RedfishResourceMapDxe.c
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  MemoryAllocationLib
+  UefiLib
+  UefiBootServicesTableLib
+  UefiRuntimeServicesTableLib
+  UefiDriverEntryPoint
+
+[Protocols]
+  gEdkIIRedfishResourceMapProtocolGuid           ## PRODUCED ##
+
+[Guids]
+  gEfiEventExitBootServicesGuid                  ## CONSUMED ##
+
+[Depex]
+  TRUE

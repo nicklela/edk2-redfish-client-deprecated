@@ -15,6 +15,7 @@
 !if $(REDFISH_CLIENT) == TRUE
   RedfishClientPkg/RedfishFeatureCoreDxe/RedfishFeatureCoreDxe.inf
   RedfishClientPkg/RedfishETagDxe/RedfishETagDxe.inf
+  RedfishClientPkg/RedfishResourceMapDxe/RedfishResourceMapDxe.inf  
   #
   # Below two modules should be pulled in by build tool.
   #
