@@ -1,7 +1,7 @@
 /** @file
   Redfish feature driver implementation - Memory
 
-  (C) Copyright 2020-2021 Hewlett Packard Enterprise Development LP<BR>
+  (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -352,9 +352,55 @@ RedfishResourceIdentify (
   IN     CHAR8                                   *Uri
   )
 {
-  DEBUG ((DEBUG_INFO, "%a, no implementation for identifying: %a", __FUNCTION__, Uri));
+  REDFISH_RESOURCE_COMMON_PRIVATE *Private;
+  EFI_STATUS                    Status;
+  REDFISH_RESPONSE              Response;
+  BOOLEAN                       Supported;
 
-  return EFI_SUCCESS;
+  if (This == NULL || IS_EMPTY_STRING (Uri)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Private = REDFISH_RESOURCE_COMMON_PRIVATE_DATA_FROM_RESOURCE_PROTOCOL (This);
+
+  if (Private->RedfishService == NULL) {
+    return EFI_NOT_READY;
+  }
+
+  Status = GetResourceByPath (Private->RedfishService, Uri, &Response);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, get resource from: %a failed\n", __FUNCTION__, Uri));
+    return Status;
+  }
+
+  Private->Uri = Uri;
+  Private->Payload = Response.Payload;
+  ASSERT (Private->Payload != NULL);
+
+  Private->Json = JsonDumpString (RedfishJsonInPayload (Private->Payload), EDKII_JSON_COMPACT);
+  ASSERT (Private->Json != NULL);
+
+  Supported = RedfishIdentifyResource (Uri, Private->Json);
+
+  //
+  // Release resource
+  //
+  if (Private->Payload != NULL) {
+    RedfishFreeResponse (
+      Response.StatusCode,
+      Response.HeaderCount,
+      Response.Headers,
+      Response.Payload
+      );
+    Private->Payload = NULL;
+  }
+
+  if (Private->Json != NULL) {
+    FreePool (Private->Json);
+    Private->Json = NULL;
+  }
+
+  return (Supported ? EFI_SUCCESS : EFI_UNSUPPORTED);
 }
 
 EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL mRedfishResourceConfig = {

@@ -1,7 +1,7 @@
 /** @file
   Redfish feature driver implementation - Memory
 
-  (C) Copyright 2020-2021 Hewlett Packard Enterprise Development LP<BR>
+  (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -355,6 +355,7 @@ RedfishResourceIdentify (
   REDFISH_RESOURCE_COMMON_PRIVATE *Private;
   EFI_STATUS                    Status;
   REDFISH_RESPONSE              Response;
+  BOOLEAN                       Supported;
 
   if (This == NULL || IS_EMPTY_STRING (Uri)) {
     return EFI_INVALID_PARAMETER;
@@ -379,10 +380,7 @@ RedfishResourceIdentify (
   Private->Json = JsonDumpString (RedfishJsonInPayload (Private->Payload), EDKII_JSON_COMPACT);
   ASSERT (Private->Json != NULL);
 
-  Status = RedfishIdentifyResourceCommon (Private, Private->Json);
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, failed to identify resource from: %a %r\n", __FUNCTION__, Uri, Status));
-  }
+  Supported = RedfishIdentifyResource (Uri, Private->Json);
 
   //
   // Release resource
@@ -402,7 +400,7 @@ RedfishResourceIdentify (
     Private->Json = NULL;
   }
 
-  return Status;
+  return (Supported ? EFI_SUCCESS : EFI_UNSUPPORTED);
 }
 
 EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL mRedfishResourceConfig = {

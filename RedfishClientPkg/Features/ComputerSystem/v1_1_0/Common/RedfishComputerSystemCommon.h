@@ -1,7 +1,7 @@
 /** @file
 
   Redfish feature driver implementation - internal header file
-  (C) Copyright 2020-2021 Hewlett Packard Enterprise Development LP<BR>
+  (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP<BR>
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
@@ -11,8 +11,6 @@
 
 #include <RedfishJsonStructure/ComputerSystem/v1_1_0/EfiComputerSystemV1_1_0.h>
 #include <RedfishResourceCommon.h>
-
-#include <Library/NetLib.h>
 
 //
 // Schema information.
