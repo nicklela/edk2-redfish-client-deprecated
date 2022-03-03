@@ -1,7 +1,7 @@
 /** @file
   Redfish feature driver common header file.
 
-  (C) Copyright 2020-2021 Hewlett Packard Enterprise Development LP<BR>
+  (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -11,8 +11,8 @@
 #define EFI_REDFISH_RESOURCE_COMMON_H_
 
 #define MAX_RED_PATH_LEN      128
-#define IS_EMPTY_STRING(a)    ((a) == NULL || (a)[0] == '\0')
-#define REDFISH_DEBUG_TRACE   DEBUG_INFO
+
+#include <RedfishBase.h>
 
 //
 // Libraries
@@ -27,6 +27,7 @@
 #include <Library/RedfishPlatformConfigLib.h>
 #include <Library/UefiLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+#include <Library/RedfishResourceIdentifyLib.h>
 
 //
 // Protocols

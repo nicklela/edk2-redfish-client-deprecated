@@ -5,7 +5,7 @@
 # by using "!include RedfishPkg/RedfisLibs.dsc.inc" to specify the library instances
 # of EDKII network library classes.
 #
-# (C) Copyright 2021 Hewlett Packard Enterprise Development LP<BR>
+# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP<BR>
 #
 #    SPDX-License-Identifier: BSD-2-Clause-Patent
 #
@@ -26,4 +26,5 @@
   RedfishPlatformConfigLib|RedfishPkg/Library/RedfishPlatformConfigLib/RedfishPlatformConfigLib.inf
   RedfishContentCodingLib|RedfishPkg/Library/RedfishContentCodingLibNull/RedfishContentCodingLibNull.inf
   ConverterCommonLib|RedfishClientPkg/ConverterLib/edk2library/ConverterCommonLib/ConverterCommonLib.inf
+  RedfishResourceIdentifyLib|RedfishClientPkg/Library/RedfishResourceIdentifyLibNull/RedfishResourceIdentifyLibNull.inf
 
