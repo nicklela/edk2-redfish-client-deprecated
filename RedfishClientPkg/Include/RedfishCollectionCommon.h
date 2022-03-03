@@ -1,7 +1,7 @@
 /** @file
   Redfish feature driver collection common header file.
 
-  (C) Copyright 2020-2021 Hewlett Packard Enterprise Development LP<BR>
+  (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -9,6 +9,8 @@
 
 #ifndef EFI_REDFISH_COLLECTION_COMMON_H_
 #define EFI_REDFISH_COLLECTION_COMMON_H_
+
+#include <RedfishBase.h>
 
 //
 // Libraries
@@ -31,9 +33,6 @@
 #include <Protocol/EdkIIRedfishFeature.h>
 #include <Protocol/RestJsonStructure.h>
 #include <Protocol/RestEx.h>
-
-#define IS_EMPTY_STRING(a)              ((a) == NULL || (a)[0] == '\0')
-#define REDFISH_DEBUG_TRACE             DEBUG_INFO
 
 typedef struct _REDFISH_COLLECTION_PRIVATE {
   EFI_REST_JSON_STRUCTURE_PROTOCOL      *JsonStructProtocol;
