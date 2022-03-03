@@ -1,7 +1,7 @@
 /** @file
   This file defines the Redfish Feature Utility Library interface.
 
-  (C) Copyright 2021 Hewlett Packard Enterprise Development LP<BR>
+  (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -291,43 +291,32 @@ GetSupportedSchemaVersion (
 
 /**
 
-  Return redfish root path. It's call responsibility to release returned buffer.
+  Return redfish URI by given config language. It's call responsibility to release returned buffer.
 
-  @retval  NULL     Can not find redfish root path.
-  @retval  Other    Redfish root path is returned.
+  @retval  NULL     Can not find redfish uri.
+  @retval  Other    redfish uri is returned.
 
 **/
 CHAR8 *
-RedfishGetRootPath (
-  VOID
+RedfishGetRedfishUri (
+  IN  CHAR8 *ConfigLang
   );
 
 /**
 
-  Return system root path
+  Save Redfish URI in database for further use.
 
-  @retval  NULL     Can not find system root path.
-  @retval  Other    System root path is returned.
-
-**/
-CHAR8 *
-RedfishGetSystemRootPath (
-  VOID
-  );
-
-/**
-
-  Set system root path.
-
-  @param[in]    SystemId         SystemId string
+  @param[in]    ConfigLang        ConfigLang to save
+  @param[in]    Uri               Redfish Uri to save
 
   @retval  EFI_INVALID_PARAMETR   SystemId is NULL or EMPTY
-  @retval  EFI_SUCCESS            System ID is set
+  @retval  EFI_SUCCESS            Redfish uri is saved
 
 **/
 EFI_STATUS
-RedfisSetSystemRootPath (
-  CHAR8 *SystemId
+RedfisSetRedfishUri (
+  IN    CHAR8  *ConfigLang,
+  IN    CHAR8  *Uri
   );
 
 /**
@@ -494,6 +483,21 @@ SetEtagWithUri (
 CHAR8 *
 GetEtagWithUri (
   IN  CHAR8      *Uri
+  );
+
+/**
+
+  Get @odata.id from give HTTP payload. It's call responsibility to release returned buffer.
+
+  @param[in]  Payload             HTTP payload
+
+  @retval     NULL                Can not find @odata.id from given payload.
+  @retval     Others              odata.id string is returned.
+
+**/
+CHAR8 *
+GetOdataId (
+  IN  REDFISH_PAYLOAD *Payload
   );
 
 #endif
