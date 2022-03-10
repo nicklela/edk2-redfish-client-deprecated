@@ -43,8 +43,8 @@
   UefiRuntimeServicesTableLib
 
 [Protocols]
-  gEdkIIRedfishETagProtocolGuid        ## CONSUMED ##
-  gEdkIIRedfishResourceMapProtocolGuid ## CONSUMED ##
+  gEdkIIRedfishETagProtocolGuid           ## CONSUMED ##
+  gEdkIIRedfishConfigLangMapProtocolGuid  ## CONSUMED ##
 
 [Pcd]
   gEfiRedfishClientPkgTokenSpaceGuid.PcdMaxRedfishSchemaStringSize

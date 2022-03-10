@@ -30,7 +30,7 @@
 #include <Guid/VariableFormat.h>
 
 #include <Protocol/EdkIIRedfishETagProtocol.h>
-#include <Protocol/EdkIIRedfishResourceMapProtocol.h>
+#include <Protocol/EdkIIRedfishConfigLangMapProtocol.h>
 
 #define INDEX_VARIABLE_SIZE       64
 #define INDEX_STRING_SIZE         16
