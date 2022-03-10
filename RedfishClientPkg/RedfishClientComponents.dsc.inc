@@ -22,7 +22,10 @@
   #
   RedfishClientPkg/Features/Memory/V1_7_1/Dxe/RedfishMemoryDxe.inf
   RedfishClientPkg/Features/RedfishMemoryCollectionDxe/RedfishMemoryCollectionDxe.inf
-  RedfishClientPkg/Features/ComputerSystem/v1_1_0/Dxe/RedfishComputerSystemDxe.inf
+  RedfishClientPkg/Features/ComputerSystem/v1_1_0/Dxe/RedfishComputerSystemDxe.inf {
+    <LibraryClasses>
+      RedfishResourceIdentifyLib|RedfishClientPkg/Library/RedfishResourceIdentifyLibComuterSystem/v1_1_0/RedfishResourceIdentifyLibComuterSystem.inf
+  }
   RedfishClientPkg/Features/ComputerSystemCollectionDxe/ComputerSystemCollectionDxe.inf
 !endif
 
@@ -34,8 +37,5 @@
   #
   RedfishClientPkg/Converter/Memory/v1_7_1/RedfishMemory_V1_7_1_Dxe.inf
   RedfishClientPkg/Converter/MemoryCollection/RedfishMemoryCollection_Dxe.inf
-  RedfishClientPkg/Converter/ComputerSystem/v1_1_0/RedfishComputerSystem_V1_1_0_Dxe.inf {
-    <LibraryClasses>
-      RedfishResourceIdentifyLib|RedfishClientPkg/Library/RedfishResourceIdentifyLibNull/RedfishResourceIdentifyLibNull.inf
-  }
+  RedfishClientPkg/Converter/ComputerSystem/v1_1_0/RedfishComputerSystem_V1_1_0_Dxe.inf
   RedfishClientPkg/Converter/ComputerSystemCollection/RedfishComputerSystemCollection_Dxe.inf
