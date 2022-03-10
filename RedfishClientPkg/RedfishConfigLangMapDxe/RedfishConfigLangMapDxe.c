@@ -53,8 +53,8 @@ ReleaseConfigLangMapRecord (
 **/
 REDFISH_CONFIG_LANG_MAP_RECORD *
 NewConfigLangMapRecord (
-  IN  CHAR8   *Uri,
-  IN  CHAR8   *ConfigLang
+  IN  EFI_STRING  Uri,
+  IN  EFI_STRING  ConfigLang
   )
 {
   REDFISH_CONFIG_LANG_MAP_RECORD *NewRecord;
@@ -69,14 +69,14 @@ NewConfigLangMapRecord (
     return NULL;
   }
 
-  Size = AsciiStrSize (Uri);
+  Size = StrSize (Uri);
   NewRecord->Uri = AllocateCopyPool (Size, Uri);
   if (NewRecord->Uri == NULL) {
     goto ON_ERROR;
   }
 
   NewRecord->Size = Size;
-  Size = AsciiStrSize (ConfigLang);
+  Size = StrSize (ConfigLang);
   NewRecord->ConfigLang = AllocateCopyPool (Size, ConfigLang);
   if (NewRecord->ConfigLang == NULL) {
     goto ON_ERROR;
@@ -108,8 +108,8 @@ ON_ERROR:
 EFI_STATUS
 AddConfigLangMapRecord (
   IN  REDFISH_CONFIG_LANG_MAP_LIST *List,
-  IN  CHAR8                        *Uri,
-  IN  CHAR8                        *ConfigLang
+  IN  EFI_STRING                   Uri,
+  IN  EFI_STRING                   ConfigLang
   )
 {
   REDFISH_CONFIG_LANG_MAP_RECORD *NewRecord;
@@ -161,22 +161,28 @@ DeleteConfigLangMapRecord (
   Search on given ListHeader for given ConfigLang string.
 
   @param[in]    ListHeader  Target list to search.
-  @param[in]    ConfigLang  Target ConfigLang to search.
+  @param[in]    Query       Target string to search.
+  @param[in]    QueryIsUri  Query string is URI string or not
 
-  @retval REDFISH_CONFIG_LANG_MAP_RECORD  Target config language map is found.
-  @retval NULL                            No config language map with given ConfigLang is found.
+  @retval REDFISH_CONFIG_LANG_MAP_RECORD  Target in map is found.
+  @retval NULL                            No target in map with given query is found.
 
 **/
 REDFISH_CONFIG_LANG_MAP_RECORD *
 FindConfigLangMapRecord (
   IN  LIST_ENTRY  *ListHeader,
-  IN  CHAR8       *ConfigLang
+  IN  EFI_STRING  Query,
+  IN  BOOLEAN     QueryIsUri
   )
 {
-  LIST_ENTRY          *List;
-  REDFISH_CONFIG_LANG_MAP_RECORD *Record;
+  LIST_ENTRY                      *List;
+  REDFISH_CONFIG_LANG_MAP_RECORD  *Record;
 
   if (IsListEmpty (ListHeader)) {
+    return NULL;
+  }
+
+  if (IS_EMPTY_STRING (Query)) {
     return NULL;
   }
 
@@ -185,8 +191,14 @@ FindConfigLangMapRecord (
   while (!IsNull (ListHeader, List)) {
     Record = REDFISH_CONFIG_LANG_MAP_RECORD_FROM_LIST (List);
 
-    if (AsciiStrCmp (Record->ConfigLang, ConfigLang) == 0) {
-      return  Record;
+    if (QueryIsUri) {
+      if (StrCmp (Record->Uri, Query) == 0) {
+        return  Record;
+      }
+    } else {
+      if (StrCmp (Record->ConfigLang, Query) == 0) {
+        return  Record;
+      }
     }
 
     List = GetNextNode (ListHeader, List);
@@ -234,7 +246,7 @@ DumpConfigLangMapList (
   while (!IsNull (&ConfigLangMapList->Listheader, List)) {
     Record = REDFISH_CONFIG_LANG_MAP_RECORD_FROM_LIST (List);
 
-    DEBUG ((DEBUG_INFO, "ConfigLang: %a Uri: %a Size: %d\n", Record->ConfigLang, Record->Uri, Record->Size));
+    DEBUG ((DEBUG_INFO, "ConfigLang: %s Uri: %s Size: %d\n", Record->ConfigLang, Record->Uri, Record->Size));
 
     List = GetNextNode (&ConfigLangMapList->Listheader, List);
   }
@@ -254,7 +266,7 @@ DumpConfigLangMapList (
 **/
 EFI_STATUS
 DumpRawBuffer (
-  IN  CHAR8    *Buffer,
+  IN  UINT8    *Buffer,
   IN  UINTN     BufferSize
   )
 {
@@ -283,7 +295,7 @@ DumpRawBuffer (
 
   @param[in]    ConfigLangMapList    The list to be released.
 
-  @retval EFI_SUCCESS             All etag is released.
+  @retval EFI_SUCCESS             All config lang is released.
   @retval EFI_INVALID_PARAMETER   ConfigLangMapList is NULL.
 
 **/
@@ -320,12 +332,12 @@ ReleaseConfigLangMapList (
 }
 
 /**
-  Save etag in list to UEFI variable.
+  Save config lang in list to UEFI variable.
 
   @param[in]    ConfigLangMapList The list to be saved.
   @param[in]    VariableName      The UEFI variable name.
 
-  @retval EFI_SUCCESS             All etag is saved.
+  @retval EFI_SUCCESS             All config lang is saved.
   @retval EFI_INVALID_PARAMETER   VariableName or ConfigLangMapList is NULL.
 
 **/
@@ -335,14 +347,14 @@ SaveConfigLangMapList (
   IN  EFI_STRING                    VariableName
   )
 {
-  LIST_ENTRY          *List;
-  REDFISH_CONFIG_LANG_MAP_RECORD *Record;
-  CHAR8               *VarData;
-  VOID                *Data;
-  CHAR8               *Seeker;
-  UINTN               VarSize;
-  UINTN               StrSize;
-  EFI_STATUS          Status;
+  LIST_ENTRY                      *List;
+  REDFISH_CONFIG_LANG_MAP_RECORD  *Record;
+  UINT8                           *VarData;
+  VOID                            *Data;
+  EFI_STRING                      Seeker;
+  UINTN                           VarSize;
+  UINTN                           StringSize;
+  EFI_STATUS                      Status;
 
   if (ConfigLangMapList == NULL || IS_EMPTY_STRING (VariableName)) {
     return EFI_INVALID_PARAMETER;
@@ -361,23 +373,23 @@ SaveConfigLangMapList (
     return EFI_OUT_OF_RESOURCES;
   }
 
-  Seeker = VarData;
+  Seeker = (EFI_STRING)VarData;
   Record = NULL;
   List = GetFirstNode (&ConfigLangMapList->Listheader);
   while (!IsNull (&ConfigLangMapList->Listheader, List)) {
     Record = REDFISH_CONFIG_LANG_MAP_RECORD_FROM_LIST (List);
 
-    StrSize = AsciiStrSize (Record->Uri);
-    CopyMem (Seeker, Record->Uri, StrSize);
+    StringSize = StrSize (Record->Uri);
+    CopyMem (Seeker, Record->Uri, StringSize);
 
-    Seeker += (StrSize - 1);
+    Seeker += (StringSize - 1);
     *Seeker = '|';
     ++Seeker;
 
-    StrSize = AsciiStrSize (Record->ConfigLang);
-    CopyMem (Seeker, Record->ConfigLang, StrSize);
+    StringSize = StrSize (Record->ConfigLang);
+    CopyMem (Seeker, Record->ConfigLang, StringSize);
 
-    Seeker += (StrSize - 1);
+    Seeker += (StringSize - 1);
     *Seeker = '\n';
 
     ++Seeker;
@@ -412,26 +424,26 @@ SaveConfigLangMapList (
 }
 
 /**
-  Read etag from UEFI variable if it exists.
+  Read config lang map from UEFI variable if it exists.
 
   @param[in]    ConfigLangMapList The list to be loaded.
   @param[in]    VariableName      The UEFI variable name.
 
-  @retval EFI_SUCCESS             All etag is read successfully.
+  @retval EFI_SUCCESS             All config lang is read successfully.
   @retval EFI_INVALID_PARAMETER   VariableName or ConfigLangMapList is NULL.
-  @retval EFI_NOT_FOUND           No etag is found on UEFI variable.
+  @retval EFI_NOT_FOUND           No config lang is found on UEFI variable.
 
 **/
 EFI_STATUS
 InitialConfigLangMapList (
-  IN  REDFISH_CONFIG_LANG_MAP_LIST   *ConfigLangMapList,
-  IN  EFI_STRING          VariableName
+  IN  REDFISH_CONFIG_LANG_MAP_LIST  *ConfigLangMapList,
+  IN  EFI_STRING                    VariableName
   )
 {
-  CHAR8     *VarData;
-  CHAR8     *UriPointer;
-  CHAR8     *ConfigLangPointer;
-  CHAR8     *Seeker;
+  UINT8      *VarData;
+  EFI_STRING UriPointer;
+  EFI_STRING ConfigLangPointer;
+  EFI_STRING Seeker;
   UINTN      VariableSize;
   EFI_STATUS Status;
 
@@ -452,15 +464,15 @@ InitialConfigLangMapList (
     return EFI_NOT_FOUND;
   }
 
-  Seeker = VarData;
-  UriPointer = VarData;
-  ConfigLangPointer = VarData;
+  Seeker = (EFI_STRING)VarData;
+  UriPointer = (EFI_STRING)VarData;
+  ConfigLangPointer = (EFI_STRING)VarData;
   while (*Seeker != '\0') {
 
     //
     // Find URI
     //
-    Seeker = AsciiStrStr (UriPointer, "|");
+    Seeker = StrStr (UriPointer, L"|");
     if (Seeker == NULL) {
       DEBUG ((DEBUG_ERROR, "%a, data corrupted\n", __FUNCTION__));
       Status = EFI_DEVICE_ERROR;
@@ -473,7 +485,7 @@ InitialConfigLangMapList (
     //
     // Find config language map
     //
-    Seeker = AsciiStrStr (ConfigLangPointer, "\n");
+    Seeker = StrStr (ConfigLangPointer, L"\n");
     if (Seeker == NULL) {
       DEBUG ((DEBUG_ERROR, "%a, data corrupted\n", __FUNCTION__));
       Status = EFI_DEVICE_ERROR;
@@ -501,40 +513,44 @@ ON_ERROR:
 }
 
 /**
-  Get URI string by given ConfigLang. It is the responsibility of the caller to free the memory allocated.
+  Get string in database by given query string.
 
   @param[in]   This                    Pointer to EDKII_REDFISH_CONFIG_LANG_MAP_PROTOCOL instance.
-  @param[in]   ConfigLang              Config language to search
-  @param[out]  Uri                     Returned URI mapping to give ConfigLang
+  @param[in]   QueryStringType         The type of given QueryString.
+  @param[in]   QueryString             Query string.
+  @param[out]  ResultString            Returned string mapping to give query string.
 
-  @retval EFI_SUCCESS                  The Uri is found successfully.
+  @retval EFI_SUCCESS                  The result is found successfully.
   @retval EFI_INVALID_PARAMETER        Invalid parameter is given.
 
 **/
 EFI_STATUS
 RedfishConfigLangMapGet (
   IN  EDKII_REDFISH_CONFIG_LANG_MAP_PROTOCOL  *This,
-  IN  CHAR8                                   *ConfigLang,
-  OUT CHAR8                                   **Uri
+  IN  REDFISH_CONFIG_LANG_MAP_GET_TYPE        QueryStringType,
+  IN  EFI_STRING                              QueryString,
+  OUT EFI_STRING                              *ResultString
   )
 {
   REDFISH_CONFIG_LANG_MAP_RECORD       *Target;
   REDFISH_CONFIG_LANG_MAP_PRIVATE_DATA *Private;
+  EFI_STRING                           Result;
 
-  if (This == NULL || IS_EMPTY_STRING (ConfigLang) || Uri == NULL) {
+  if (This == NULL || IS_EMPTY_STRING (QueryString) || ResultString == NULL || QueryStringType >= RedfishGetTypeMax) {
     return EFI_INVALID_PARAMETER;
   }
 
   Private = REDFISH_CONFIG_LANG_MAP_PRIVATE_FROM_THIS (This);
 
-  *Uri = NULL;
+  *ResultString = NULL;
 
-  Target = FindConfigLangMapRecord (&Private->ConfigLangList.Listheader, ConfigLang);
+  Target = FindConfigLangMapRecord (&Private->ConfigLangList.Listheader, QueryString, (QueryStringType == RedfishGetTypeUri));
   if (Target == NULL) {
     return EFI_NOT_FOUND;
   }
 
-  *Uri = AllocateCopyPool (AsciiStrSize (Target->Uri), Target->Uri);
+  Result = (QueryStringType == RedfishGetTypeUri ? Target->Uri : Target->ConfigLang);
+  *ResultString = AllocateCopyPool (StrSize (Result), Result);
 
   return EFI_SUCCESS;
 }
@@ -555,8 +571,8 @@ RedfishConfigLangMapGet (
 EFI_STATUS
 RedfishConfigLangMapSet (
   IN  EDKII_REDFISH_CONFIG_LANG_MAP_PROTOCOL  *This,
-  IN  CHAR8                                   *ConfigLang,
-  IN  CHAR8                                   *Uri        OPTIONAL
+  IN  EFI_STRING                              ConfigLang,
+  IN  EFI_STRING                              Uri        OPTIONAL
   )
 {
   REDFISH_CONFIG_LANG_MAP_RECORD       *Target;
@@ -570,7 +586,7 @@ RedfishConfigLangMapSet (
   Private = REDFISH_CONFIG_LANG_MAP_PRIVATE_FROM_THIS (This);
 
   Status = EFI_NOT_FOUND;
-  Target = FindConfigLangMapRecord (&Private->ConfigLangList.Listheader, ConfigLang);
+  Target = FindConfigLangMapRecord (&Private->ConfigLangList.Listheader, ConfigLang, FALSE);
   if (Target != NULL) {
     //
     // Remove old one and create new one.
