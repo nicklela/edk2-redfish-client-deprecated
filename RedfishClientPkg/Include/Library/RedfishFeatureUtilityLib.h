@@ -44,7 +44,7 @@ typedef struct {
 EFI_STATUS
 GetResourceByPath (
   IN  REDFISH_SERVICE           *Service,
-  IN  CHAR8                     *ResourcePath,
+  IN  EFI_STRING                ResourcePath,
   OUT REDFISH_RESPONSE          *Response
   );
 
@@ -85,63 +85,6 @@ EFI_STATUS
 GetArraykeyFromUri (
   IN  CHAR8   *Uri,
   OUT CHAR8   **ArrayKey
-  );
-
-/**
-
-  Keep configure language with given key in UEFI variable.
-
-  @param[in]  Schema              Schema name.
-  @param[in]  Version             Schema version.
-  @param[in]  Key                 Key string.
-  @param[in]  ConfigureLangIndex  Index value.
-
-  @retval     EFI_SUCCESS         Data is saved in UEFI variable.
-  @retval     Others              Errors occur.
-
-**/
-EFI_STATUS
-SetConfigureLangWithkey (
-  IN  CHAR8        *Schema,
-  IN  CHAR8        *Version,
-  IN  CHAR8        *Key,
-  IN  UINTN        ConfigureLangIndex
-  );
-
-/**
-
-  Find configure language with input key string.
-
-  @param[in]  Schema    Schema name.
-  @param[in]  Version   Schema version.
-  @param[in]  Property  Property name.
-  @param[in]  Key       Key string.
-
-  @retval     CHAR16 *  Corresponding configure langauge
-  @retval     NULL      No configure language is found
-
-**/
-CHAR16 *
-GetConfigureLangByKey (
-  IN  CHAR8        *Schema,
-  IN  CHAR8        *Version,
-  IN  CHAR8        *Property,
-  IN  CHAR8        *Key
-  );
-
-/**
-
-  Convert HII string value to string value in JSON format.
-
-  @param[in]  HiiStringValue  String in HII format.
-
-  @retval     CHAR8 *         String in JSON format.
-  @retval     NULL            Errors occur.
-
-**/
-CHAR8 *
-ConvertHiiStringValueToJsonStringValue (
-  IN EFI_STRING   HiiStringValue
   );
 
 /**
@@ -226,7 +169,7 @@ CreatePayloadToPostResource (
   IN  REDFISH_SERVICE *Service,
   IN  REDFISH_PAYLOAD *TargetPayload,
   IN  CHAR8           *Json,
-  OUT CHAR8           **Location,
+  OUT EFI_STRING      *Location,
   OUT CHAR8           **Etag
   );
 
@@ -291,19 +234,6 @@ GetSupportedSchemaVersion (
 
 /**
 
-  Return redfish URI by given config language. It's call responsibility to release returned buffer.
-
-  @retval  NULL     Can not find redfish uri.
-  @retval  Other    redfish uri is returned.
-
-**/
-CHAR8 *
-RedfishGetRedfishUri (
-  IN  CHAR8 *ConfigLang
-  );
-
-/**
-
   Save Redfish URI in database for further use.
 
   @param[in]    ConfigLang        ConfigLang to save
@@ -315,8 +245,8 @@ RedfishGetRedfishUri (
 **/
 EFI_STATUS
 RedfisSetRedfishUri (
-  IN    CHAR8  *ConfigLang,
-  IN    CHAR8  *Uri
+  IN    EFI_STRING  ConfigLang,
+  IN    EFI_STRING  Uri
   );
 
 /**
@@ -336,7 +266,7 @@ EFI_STATUS
 GetRedfishSchemaInfo (
   IN  REDFISH_SERVICE                   *RedfishService,
   IN  EFI_REST_JSON_STRUCTURE_PROTOCOL  *JsonStructProtocol,
-  IN  CHAR8                             *Uri,
+  IN  EFI_STRING                        Uri,
   OUT REDFISH_SCHEMA_INFO               *SchemaInfo
   );
 
@@ -467,7 +397,7 @@ PropertyChecker2Parm (
 EFI_STATUS
 SetEtagWithUri (
   IN  CHAR8       *EtagStr,
-  IN  CHAR8       *Uri
+  IN  EFI_STRING  Uri
   );
 
 /**
@@ -482,7 +412,7 @@ SetEtagWithUri (
 **/
 CHAR8 *
 GetEtagWithUri (
-  IN  CHAR8      *Uri
+  IN  EFI_STRING  Uri
   );
 
 /**
@@ -495,9 +425,53 @@ GetEtagWithUri (
   @retval     Others              odata.id string is returned.
 
 **/
-CHAR8 *
+EFI_STRING
 GetOdataId (
   IN  REDFISH_PAYLOAD *Payload
+  );
+
+/**
+
+  Return config language from given URI and prperty name. It's call responsibility to release returned buffer.
+
+  @retval  NULL     Can not find redfish uri.
+  @retval  Other    redfish uri is returned.
+
+**/
+EFI_STRING
+GetConfigureLang (
+  IN  EFI_STRING  Uri,
+  IN  CHAR8       *PropertyName
+  );
+
+/**
+
+  Return redfish URI by given config language. It's call responsibility to release returned buffer.
+
+  @param[in]  ConfigLang    ConfigLang to search.
+
+  @retval  NULL     Can not find redfish uri.
+  @retval  Other    redfish uri is returned.
+
+**/
+EFI_STRING
+RedfishGetUri (
+  IN  EFI_STRING ConfigLang
+  );
+
+/**
+
+  Convert Unicode string to Ascii string. It's call responsibility to release returned buffer.
+
+  @param[in]  UnicodeStr      Unicode string to convert.
+
+  @retval     CHAR8 *         Ascii string returned.
+  @retval     NULL            Errors occur.
+
+**/
+CHAR8 *
+StrUnicodeToAscii (
+  IN EFI_STRING   UnicodeStr
   );
 
 #endif

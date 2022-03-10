@@ -9,8 +9,8 @@
 
 #include "RedfishFeatureUtilityInternal.h"
 
-EDKII_REDFISH_ETAG_PROTOCOL         *mEtagProtocol = NULL;
-EDKII_REDFISH_RESOURCE_MAP_PROTOCOL *mResourceMapProtocol = NULL;
+EDKII_REDFISH_ETAG_PROTOCOL             *mEtagProtocol = NULL;
+EDKII_REDFISH_CONFIG_LANG_MAP_PROTOCOL  *mConfigLangMapProtocol = NULL;
 
 
 EFI_STATUS
@@ -98,121 +98,6 @@ GetArraykeyFromUri (
 
 /**
 
-  Keep configure language with given key in UEFI variable.
-
-  @param[in]  Schema              Schema name.
-  @param[in]  Version             Schema version.
-  @param[in]  Key                 Key string.
-  @param[in]  ConfigureLangIndex  Index value.
-
-  @retval     EFI_SUCCESS         Data is saved in UEFI variable.
-  @retval     Others              Errors occur.
-
-**/
-EFI_STATUS
-SetConfigureLangWithkey (
-  IN  CHAR8        *Schema,
-  IN  CHAR8        *Version,
-  IN  CHAR8        *Key,
-  IN  UINTN        ConfigureLangIndex
-  )
-{
-  CHAR16  IndexString[INDEX_STRING_SIZE];
-  CHAR16  VarName[INDEX_VARIABLE_SIZE];
-  CHAR16  *VarData;
-  EFI_STATUS Status;
-  //
-  // Variable content.
-  //
-  UnicodeSPrint (IndexString, sizeof (IndexString), INDEX_STRING, ConfigureLangIndex);
-
-  //
-  // Variable name.
-  //
-  UnicodeSPrint (VarName, sizeof (VarName), L"%a_%a_%a", Schema, Version, Key);
-
-  //
-  // Check if it exists already.
-  //
-  Status = GetVariable2 (
-             VarName,
-             &mRedfishVariableGuid,
-             (VOID *)&VarData,
-             NULL
-             );
-  if (!EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_INFO, "%a, remove stale data: %s\n", __FUNCTION__, VarData));
-    FreePool (VarData);
-    gRT->SetVariable (VarName, &mRedfishVariableGuid, VARIABLE_ATTRIBUTE_NV_BS, 0, NULL);
-  }
-
-  return gRT->SetVariable (VarName, &mRedfishVariableGuid, VARIABLE_ATTRIBUTE_NV_BS, StrSize (IndexString), (VOID *)&IndexString);
-}
-
-/**
-
-  Find configure language with input key string.
-
-  @param[in]  Schema    Schema name.
-  @param[in]  Version   Schema version.
-  @param[in]  Property  Property name.
-  @param[in]  Key       Key string.
-
-  @retval     CHAR16 *  Corresponding configure langauge
-  @retval     NULL      No configure language is found
-
-**/
-CHAR16 *
-GetConfigureLangByKey (
-  IN  CHAR8        *Schema,
-  IN  CHAR8        *Version,
-  IN  CHAR8        *Property, OPTIONAL
-  IN  CHAR8        *Key
-  )
-{
-  EFI_STATUS Status;
-  CHAR16     VariableName[64];
-  UINTN      VariableSize;
-  CHAR16     *CollectionIndex;
-  CHAR16     *ConfigureLang;
-  UINTN      ConfigureLangLen;
-
-  if (Schema == NULL || Version == NULL || Key == NULL) {
-    return NULL;
-  }
-
-  CollectionIndex = NULL;
-  ConfigureLang = NULL;
-
-  UnicodeSPrint (VariableName, 64, L"%a_%a_%a", Schema, Version, Key);
-
-  Status = GetVariable2 (
-             VariableName,
-             &mRedfishVariableGuid,
-             (VOID *)&CollectionIndex,
-             &VariableSize
-             );
-  if (EFI_ERROR (Status)) {
-    return NULL;
-  }
-
-  ConfigureLangLen = AsciiStrLen (Schema) + StrLen (CollectionIndex) + (Property == NULL ? 0 : AsciiStrLen (Property)) + 3 + 1;
-  ConfigureLang = AllocatePool (sizeof (CHAR16) * ConfigureLangLen);
-  ASSERT (ConfigureLang);
-
-  if (Property != NULL) {
-    UnicodeSPrint (ConfigureLang, sizeof (CHAR16) * ConfigureLangLen, L"/%a/%s/%a", Schema, CollectionIndex, Property);
-  } else {
-    UnicodeSPrint (ConfigureLang, sizeof (CHAR16) * ConfigureLangLen, L"/%a/%s", Schema, CollectionIndex);
-  }
-
-  FreePool (CollectionIndex);
-
-  return ConfigureLang;
-}
-
-/**
-
   Keep ETAG string and URI string in database.
 
   @param[in]  EtagStr   ETAG string.
@@ -225,10 +110,11 @@ GetConfigureLangByKey (
 EFI_STATUS
 SetEtagWithUri (
   IN  CHAR8       *EtagStr,
-  IN  CHAR8       *Uri
+  IN  EFI_STRING  Uri
   )
 {
-  EFI_STATUS                Status;
+  EFI_STATUS  Status;
+  CHAR8       *AsciiUri;
 
   if (IS_EMPTY_STRING (EtagStr) || IS_EMPTY_STRING (Uri)) {
     return EFI_INVALID_PARAMETER;
@@ -240,8 +126,15 @@ SetEtagWithUri (
     return Status;
   }
 
-  mEtagProtocol->Set (mEtagProtocol, Uri, EtagStr);
+  AsciiUri = StrUnicodeToAscii (Uri);
+  if (AsciiUri == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  mEtagProtocol->Set (mEtagProtocol, AsciiUri, EtagStr);
   mEtagProtocol->Flush (mEtagProtocol);
+
+  FreePool (AsciiUri);
 
   return EFI_SUCCESS;
 }
@@ -258,10 +151,11 @@ SetEtagWithUri (
 **/
 CHAR8 *
 GetEtagWithUri (
-  IN  CHAR8      *Uri
+  IN  EFI_STRING  Uri
   )
 {
   EFI_STATUS  Status;
+  CHAR8       *AsciiUri;
   CHAR8       *EtagStr;
 
   if (IS_EMPTY_STRING (Uri)) {
@@ -274,7 +168,15 @@ GetEtagWithUri (
     return NULL;
   }
 
-  Status = mEtagProtocol->Get (mEtagProtocol, Uri, &EtagStr);
+  AsciiUri = StrUnicodeToAscii (Uri);
+  if (AsciiUri == NULL) {
+    return NULL;
+  }
+
+  Status = mEtagProtocol->Get (mEtagProtocol, AsciiUri, &EtagStr);
+
+  FreePool (AsciiUri);
+
   if (EFI_ERROR (Status)) {
     return NULL;
   }
@@ -284,31 +186,36 @@ GetEtagWithUri (
 
 /**
 
-  Convert HII string value to string value in JSON format.
+  Convert Unicode string to Ascii string. It's call responsibility to release returned buffer.
 
-  @param[in]  HiiStringValue  String in HII format.
+  @param[in]  UnicodeStr      Unicode string to convert.
 
-  @retval     CHAR8 *         String in JSON format.
+  @retval     CHAR8 *         Ascii string returned.
   @retval     NULL            Errors occur.
 
 **/
 CHAR8 *
-ConvertHiiStringValueToJsonStringValue (
-  IN EFI_STRING   HiiStringValue
+StrUnicodeToAscii (
+  IN EFI_STRING   UnicodeStr
   )
 {
-  CHAR8 *JsonValue;
-  UINTN JsonValueSize;
+  CHAR8 *AsciiStr;
+  UINTN AsciiStrSize;
+  EFI_STATUS Status;
 
-  if (IS_EMPTY_STRING (HiiStringValue)) {
+  if (IS_EMPTY_STRING (UnicodeStr)) {
     return NULL;
   }
 
-  JsonValueSize = StrLen (HiiStringValue) + 1;
-  JsonValue = AllocatePool (JsonValueSize);
-  UnicodeStrToAsciiStrS (HiiStringValue, JsonValue, JsonValueSize);
+  AsciiStrSize = StrLen (UnicodeStr) + 1;
+  AsciiStr = AllocatePool (AsciiStrSize);
+  if (AsciiStr == NULL) {
+    return NULL;
+  }
 
-  return JsonValue;
+  Status = UnicodeStrToAsciiStrS (UnicodeStr, AsciiStr, AsciiStrSize);
+
+  return AsciiStr;
 }
 
 /**
@@ -510,14 +417,20 @@ ApplyFeatureSettingsBooleanType (
 EFI_STATUS
 GetResourceByPath (
   IN  REDFISH_SERVICE           *Service,
-  IN  CHAR8                     *ResourcePath,
+  IN  EFI_STRING                ResourcePath,
   OUT REDFISH_RESPONSE          *Response
   )
 {
-  EFI_STATUS        Status;
+  EFI_STATUS  Status;
+  CHAR8       *AsciiResourcePath;
 
   if (Service == NULL || Response == NULL || IS_EMPTY_STRING (ResourcePath)) {
     return EFI_INVALID_PARAMETER;
+  }
+
+  AsciiResourcePath = StrUnicodeToAscii (ResourcePath);
+  if (AsciiResourcePath == NULL) {
+    return EFI_OUT_OF_RESOURCES;
   }
 
   //
@@ -525,11 +438,11 @@ GetResourceByPath (
   //
   Status = RedfishGetByService (
              Service,
-             ResourcePath,
+             AsciiResourcePath,
              Response
              );
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, RedfishGetByService to %a failed: %r\n", __FUNCTION__, ResourcePath, Status));
+    DEBUG ((DEBUG_ERROR, "%a, RedfishGetByService to %a failed: %r\n", __FUNCTION__, AsciiResourcePath, Status));
     if (Response->Payload != NULL) {
       RedfishDumpPayload (Response->Payload);
       RedfishFreeResponse (
@@ -540,11 +453,13 @@ GetResourceByPath (
         );
       Response->Payload = NULL;
     }
-
-    return Status;
   }
 
-  return EFI_SUCCESS;
+  if (AsciiResourcePath != NULL) {
+    FreePool (AsciiResourcePath);
+  }
+
+  return Status;
 }
 
 /**
@@ -837,7 +752,7 @@ CreatePayloadToPostResource (
   IN  REDFISH_SERVICE *Service,
   IN  REDFISH_PAYLOAD *TargetPayload,
   IN  CHAR8           *Json,
-  OUT CHAR8           **Location,
+  OUT EFI_STRING      *Location,
   OUT CHAR8           **Etag
   )
 {
@@ -849,6 +764,8 @@ CreatePayloadToPostResource (
   EDKII_JSON_VALUE   JsonValue;
   EDKII_JSON_VALUE   OdataIdValue;
   CHAR8              *OdataIdString;
+  CHAR8              *AsciiLocation;
+  UINTN              StringSize;
 
   if (Service == NULL || TargetPayload == NULL || IS_EMPTY_STRING (Json) || Location == NULL || Etag == NULL) {
     return EFI_INVALID_PARAMETER;
@@ -873,12 +790,13 @@ CreatePayloadToPostResource (
   // per Redfish spec. the URL of new eresource will be returned in "Location" header.
   //
   *Location = NULL;
+  AsciiLocation = NULL;
   *Etag = NULL;
   if (*PostResponse.StatusCode == HTTP_STATUS_200_OK) {
     if (PostResponse.HeaderCount != 0) {
       for (Index = 0; Index < PostResponse.HeaderCount; Index++) {
         if (AsciiStrnCmp (PostResponse.Headers[Index].FieldName, "Location", 8) == 0) {
-          *Location = AllocateCopyPool (AsciiStrSize (PostResponse.Headers[Index].FieldValue), PostResponse.Headers[Index].FieldValue);
+          AsciiLocation = AllocateCopyPool (AsciiStrSize (PostResponse.Headers[Index].FieldValue), PostResponse.Headers[Index].FieldValue);
         } else if (AsciiStrnCmp (PostResponse.Headers[Index].FieldName, "ETag", 4) == 0) {
           *Etag = AllocateCopyPool (AsciiStrSize (PostResponse.Headers[Index].FieldValue), PostResponse.Headers[Index].FieldValue);
         }
@@ -893,7 +811,7 @@ CreatePayloadToPostResource (
         if (OdataIdValue != NULL) {
           OdataIdString = (CHAR8 *)JsonValueGetAsciiString (OdataIdValue);
           if (OdataIdString != NULL) {
-            *Location = AllocateCopyPool (AsciiStrSize (OdataIdString), OdataIdString);
+            AsciiLocation = AllocateCopyPool (AsciiStrSize (OdataIdString), OdataIdString);
           }
         }
 
@@ -911,7 +829,7 @@ CreatePayloadToPostResource (
   //
   // This is not expected as service does not follow spec.
   //
-  if (*Location == NULL) {
+  if (AsciiLocation == NULL) {
     Status = EFI_DEVICE_ERROR;
   }
 
@@ -927,6 +845,18 @@ CreatePayloadToPostResource (
 EXIT_FREE_JSON_VALUE:
   JsonValueFree (JsonValue);
   JsonValueFree (ResourceJsonValue);
+
+  if (AsciiLocation != NULL) {
+    StringSize = (AsciiStrLen (AsciiLocation) + 1);
+    *Location = AllocatePool (StringSize * sizeof (CHAR16));
+    if (*Location == NULL) {
+      Status = EFI_OUT_OF_RESOURCES;
+    } else {
+      Status = AsciiStrToUnicodeStrS (AsciiLocation, *Location, StringSize);
+    }
+
+    FreePool (AsciiLocation);
+  }
 
   return Status;
 }
@@ -1133,30 +1063,31 @@ GetSupportedSchemaVersion (
   @retval  Other    redfish uri is returned.
 
 **/
-CHAR8 *
-RedfishGetRedfishUri (
-  IN  CHAR8 *ConfigLang
+EFI_STRING
+RedfishGetUri (
+  IN  EFI_STRING ConfigLang
   )
 {
   EFI_STATUS Status;
-  CHAR8      *Target;
-  CHAR8      *Found;
-  CHAR8      *TempStr;
+  EFI_STRING Target;
+  EFI_STRING Found;
+  EFI_STRING TempStr;
+  EFI_STRING ResultStr;
   UINTN      TempStrSize;
-  CHAR8      *ResultStr;
+  UINTN      RemainingLen;
   UINTN      ConfigLangLen;
 
-  Status = RedfishLocateProtocol ((VOID **)&mResourceMapProtocol, &gEdkIIRedfishResourceMapProtocolGuid);
+  Status = RedfishLocateProtocol ((VOID **)&mConfigLangMapProtocol, &gEdkIIRedfishConfigLangMapProtocolGuid);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, fail to locate gEdkIIRedfishResourceMapProtocolGuid: %r\n", __FUNCTION__, Status));
+    DEBUG ((DEBUG_ERROR, "%a, fail to locate gEdkIIRedfishConfigLangMapProtocolGuid: %r\n", __FUNCTION__, Status));
     return NULL;
   }
 
-  DEBUG ((REDFISH_DEBUG_TRACE, "%a, Get: %a\n", __FUNCTION__, ConfigLang));
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a, Get: %s\n", __FUNCTION__, ConfigLang));
 
-  Target = AsciiStrStr (ConfigLang, "{");
+  Target = StrStr (ConfigLang, L"{");
   if (Target == NULL) {
-    return AllocateCopyPool (AsciiStrSize (ConfigLang), ConfigLang);
+    return AllocateCopyPool (StrSize (ConfigLang), ConfigLang);
   }
 
   do {
@@ -1164,40 +1095,110 @@ RedfishGetRedfishUri (
   } while (*Target != '\0' && *Target != '}');
 
   if (*Target == '\0') {
-    DEBUG ((DEBUG_ERROR, "%a, invalid format: %a\n", __FUNCTION__, ConfigLang));
+    DEBUG ((DEBUG_ERROR, "%a, invalid format: %s\n", __FUNCTION__, ConfigLang));
     return NULL;
   }
 
-  ConfigLangLen = AsciiStrLen (ConfigLang);
-  TempStrSize = (Target - ConfigLang + 2);
+  Target += 1;
+  ConfigLangLen = StrLen (ConfigLang);
+  RemainingLen = StrLen (Target);
+  TempStrSize = (ConfigLangLen - RemainingLen + 1) * sizeof (CHAR16);
   TempStr = AllocateCopyPool (TempStrSize, ConfigLang);
   if (TempStr == NULL) {
     return NULL;
   }
-  TempStr[TempStrSize - 1] = '\0';
+  TempStr[ConfigLangLen - RemainingLen] = '\0';
 
-  Status = mResourceMapProtocol->Get (mResourceMapProtocol, TempStr, &Found);
+  Status = mConfigLangMapProtocol->Get (
+                                     mConfigLangMapProtocol,
+                                     RedfishGetTypeConfigLang,
+                                     TempStr,
+                                     &Found
+                                     );
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, Can not find: %a\n", __FUNCTION__, TempStr));
+    DEBUG ((DEBUG_ERROR, "%a, Can not find: %s\n", __FUNCTION__, TempStr));
     return NULL;
   }
 
-  DEBUG ((REDFISH_DEBUG_TRACE, "%a, Found: %a\n", __FUNCTION__, Found));
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a, Found: %s\n", __FUNCTION__, Found));
 
-  TempStrSize = AsciiStrLen (Found) + (ConfigLangLen - (Target - ConfigLang + 1) + 1) + 1;
+  if (RemainingLen == 0) {
+    return Found;
+  }
+
+  TempStrSize = (StrLen (Found) + RemainingLen + 1) * sizeof (CHAR16);
   FreePool (TempStr);
   TempStr = AllocateZeroPool (TempStrSize);
   if (TempStr == NULL) {
     return NULL;
   }
 
-  AsciiStrCpyS (TempStr, TempStrSize, Found);
-  AsciiStrCatS (TempStr, TempStrSize, (Target + 1));
+  StrCpyS (TempStr, TempStrSize, Found);
+  StrCatS (TempStr, TempStrSize, Target);
 
-  ResultStr = RedfishGetRedfishUri (TempStr);
+  ResultStr = RedfishGetUri (TempStr);
   FreePool (TempStr);
 
   return ResultStr;
+}
+
+/**
+
+  Return config language by given URI. It's call responsibility to release returned buffer.
+
+  @param[in]  Uri   Uri to search.
+
+  @retval  NULL     Can not find redfish uri.
+  @retval  Other    redfish uri is returned.
+
+**/
+EFI_STRING
+RedfishGetConfigLanguage (
+  IN  EFI_STRING Uri
+  )
+{
+  EFI_STATUS  Status;
+  EFI_STRING  ConfigLang;
+
+  if (IS_EMPTY_STRING (Uri)) {
+    return NULL;
+  }
+
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a, search config lang for URI: %s\n", __FUNCTION__, Uri));
+
+  Status = RedfishLocateProtocol ((VOID **)&mConfigLangMapProtocol, &gEdkIIRedfishConfigLangMapProtocolGuid);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, fail to locate gEdkIIRedfishConfigLangMapProtocolGuid: %r\n", __FUNCTION__, Status));
+    return NULL;
+  }
+
+  ConfigLang = NULL;
+  Status = mConfigLangMapProtocol->Get (
+                                     mConfigLangMapProtocol,
+                                     RedfishGetTypeUri,
+                                     Uri,
+                                     &ConfigLang
+                                     );
+
+
+  return ConfigLang;
+}
+
+/**
+
+  Return config language from given URI and prperty name. It's call responsibility to release returned buffer.
+
+  @retval  NULL     Can not find redfish uri.
+  @retval  Other    redfish uri is returned.
+
+**/
+EFI_STRING
+GetConfigureLang (
+  IN  EFI_STRING Uri,
+  IN  CHAR8     *PropertyName
+  )
+{
+  return RedfishGetConfigLanguage (Uri);
 }
 
 /**
@@ -1213,8 +1214,8 @@ RedfishGetRedfishUri (
 **/
 EFI_STATUS
 RedfisSetRedfishUri (
-  IN    CHAR8  *ConfigLang,
-  IN    CHAR8  *Uri
+  IN    EFI_STRING  ConfigLang,
+  IN    EFI_STRING  Uri
   )
 {
   EFI_STATUS Status;
@@ -1223,15 +1224,15 @@ RedfisSetRedfishUri (
     return EFI_INVALID_PARAMETER;
   }
 
-  Status = RedfishLocateProtocol ((VOID **)&mResourceMapProtocol, &gEdkIIRedfishResourceMapProtocolGuid);
+  Status = RedfishLocateProtocol ((VOID **)&mConfigLangMapProtocol, &gEdkIIRedfishConfigLangMapProtocolGuid);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, fail to locate gEdkIIRedfishResourceMapProtocolGuid: %r\n", __FUNCTION__, Status));
+    DEBUG ((DEBUG_ERROR, "%a, fail to locate gEdkIIRedfishConfigLangMapProtocolGuid: %r\n", __FUNCTION__, Status));
     return Status;
   }
 
-  DEBUG ((REDFISH_DEBUG_TRACE, "%a, Saved: %a -> %a\n", __FUNCTION__, ConfigLang, Uri));
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a, Saved: %s -> %s\n", __FUNCTION__, ConfigLang, Uri));
 
-  return mResourceMapProtocol->Set (mResourceMapProtocol, ConfigLang, Uri);
+  return mConfigLangMapProtocol->Set (mConfigLangMapProtocol, ConfigLang, Uri);
 }
 
 /**
@@ -1244,14 +1245,14 @@ RedfisSetRedfishUri (
   @retval     Others              odata.id string is returned.
 
 **/
-CHAR8 *
+EFI_STRING
 GetOdataId (
   IN  REDFISH_PAYLOAD *Payload
   )
 {
   EDKII_JSON_VALUE *JsonValue;
   EDKII_JSON_VALUE *OdataId;
-  CONST CHAR8      *OdataIdString;
+  EFI_STRING       OdataIdString;
 
   if (Payload == NULL) {
     return NULL;
@@ -1267,12 +1268,12 @@ GetOdataId (
     return NULL;
   }
 
-  OdataIdString = JsonValueGetAsciiString (OdataId);
+  OdataIdString = JsonValueGetUnicodeString (OdataId);
   if (OdataIdString == NULL) {
     return NULL;
   }
 
-  return AllocateCopyPool (AsciiStrSize (OdataIdString), OdataIdString);
+  return AllocateCopyPool (StrSize (OdataIdString), OdataIdString);
 }
 
 
@@ -1293,7 +1294,7 @@ EFI_STATUS
 GetRedfishSchemaInfo (
   IN  REDFISH_SERVICE                   *RedfishService,
   IN  EFI_REST_JSON_STRUCTURE_PROTOCOL  *JsonStructProtocol,
-  IN  CHAR8                             *Uri,
+  IN  EFI_STRING                        Uri,
   OUT REDFISH_SCHEMA_INFO               *SchemaInfo
   )
 {
@@ -1309,7 +1310,7 @@ GetRedfishSchemaInfo (
 
   Status = GetResourceByPath (RedfishService, Uri, &Response);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, failed to get resource from %a %r", __FUNCTION__, Uri, Status));
+    DEBUG ((DEBUG_ERROR, "%a, failed to get resource from %s: %r", __FUNCTION__, Uri, Status));
     return Status;
   }
 
