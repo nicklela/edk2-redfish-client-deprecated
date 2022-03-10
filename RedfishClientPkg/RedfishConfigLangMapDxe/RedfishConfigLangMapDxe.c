@@ -6,22 +6,22 @@
 
 **/
 
-#include "RedfishResourceMapDxe.h"
+#include "RedfishConfigLangMapDxe.h"
 
-REDFISH_RESOURCE_MAP_PRIVATE_DATA  *mRedfishResourceMapPrivate = NULL;
+REDFISH_CONFIG_LANG_MAP_PRIVATE_DATA  *mRedfishConfigLangMapPrivate = NULL;
 
 /**
-  Release REDFISH_RESOURCE_MAP_RECORD resource
+  Release REDFISH_CONFIG_LANG_MAP_RECORD resource
 
-  @param[in]    Record    Pointer to REDFISH_RESOURCE_MAP_RECORD instance
+  @param[in]    Record    Pointer to REDFISH_CONFIG_LANG_MAP_RECORD instance
 
-  @retval EFI_SUCCESS             REDFISH_RESOURCE_MAP_RECORD is released successfully.
+  @retval EFI_SUCCESS             REDFISH_CONFIG_LANG_MAP_RECORD is released successfully.
   @retval EFI_INVALID_PARAMETER   Record is NULL
 
 **/
 EFI_STATUS
-ReleaseResourceMapRecord (
-  IN REDFISH_RESOURCE_MAP_RECORD *Record
+ReleaseConfigLangMapRecord (
+  IN REDFISH_CONFIG_LANG_MAP_RECORD *Record
   )
 {
   if (Record == NULL) {
@@ -47,24 +47,24 @@ ReleaseResourceMapRecord (
   @param[in]    Uri         The URI string matching to this ConfigLang.
   @param[in]    ConfigLang  ConfigLang string.
 
-  @retval REDFISH_RESOURCE_MAP_RECORD *   Pointer to newly created RESOURCE MAP.
-  @retval NULL                            No memory available.
+  @retval REDFISH_CONFIG_LANG_MAP_RECORD *  Pointer to newly created config language map.
+  @retval NULL                              No memory available.
 
 **/
-REDFISH_RESOURCE_MAP_RECORD *
-NewResourceMapRecord (
+REDFISH_CONFIG_LANG_MAP_RECORD *
+NewConfigLangMapRecord (
   IN  CHAR8   *Uri,
   IN  CHAR8   *ConfigLang
   )
 {
-  REDFISH_RESOURCE_MAP_RECORD *NewRecord;
-  UINTN               Size;
+  REDFISH_CONFIG_LANG_MAP_RECORD *NewRecord;
+  UINTN                          Size;
 
   if (IS_EMPTY_STRING (Uri) || IS_EMPTY_STRING (ConfigLang)) {
     return NULL;
   }
 
-  NewRecord = AllocateZeroPool (sizeof (REDFISH_RESOURCE_MAP_RECORD));
+  NewRecord = AllocateZeroPool (sizeof (REDFISH_CONFIG_LANG_MAP_RECORD));
   if (NewRecord == NULL) {
     return NULL;
   }
@@ -88,38 +88,38 @@ NewResourceMapRecord (
 ON_ERROR:
 
   if (NewRecord != NULL) {
-    ReleaseResourceMapRecord (NewRecord);
+    ReleaseConfigLangMapRecord (NewRecord);
   }
 
   return NULL;
 }
 
 /**
-  Add new RESOURCE MAP by given URI and ConfigLang string to specify List.
+  Add new config language map by given URI and ConfigLang string to specify List.
 
-  @param[in]    List        Target RESOURCE MAP list to add.
+  @param[in]    List        Target config language map list to add.
   @param[in]    Uri         The URI string matching to this ConfigLang.
   @param[in]    ConfigLang  ConfigLang string.
 
-  @retval EFI_SUCCESS   RESOURCE MAP recourd is added.
-  @retval Others        Fail to add RESOURCE MAP.
+  @retval EFI_SUCCESS   config language map recourd is added.
+  @retval Others        Fail to add config language map.
 
 **/
 EFI_STATUS
-AddResourceMapRecord (
-  IN  REDFISH_RESOURCE_MAP_LIST *List,
-  IN  CHAR8             *Uri,
-  IN  CHAR8             *ConfigLang
+AddConfigLangMapRecord (
+  IN  REDFISH_CONFIG_LANG_MAP_LIST *List,
+  IN  CHAR8                        *Uri,
+  IN  CHAR8                        *ConfigLang
   )
 {
-  REDFISH_RESOURCE_MAP_RECORD *NewRecord;
+  REDFISH_CONFIG_LANG_MAP_RECORD *NewRecord;
 
   if (List == NULL || IS_EMPTY_STRING (Uri) || IS_EMPTY_STRING (ConfigLang)) {
     return EFI_INVALID_PARAMETER;
   }
 
-  NewRecord = NewResourceMapRecord (Uri, ConfigLang);
-  if (NewResourceMapRecord == NULL) {
+  NewRecord = NewConfigLangMapRecord (Uri, ConfigLang);
+  if (NewConfigLangMapRecord == NULL) {
     return EFI_OUT_OF_RESOURCES;
   }
 
@@ -131,19 +131,19 @@ AddResourceMapRecord (
 }
 
 /**
-  Delete an RESOURCE MAP by given RESOURCE MAP instance.
+  Delete an config language map by given config language map instance.
 
-  @param[in]    List    Target RESOURCE MAP list to be removed.
+  @param[in]    List    Target config language map list to be removed.
   @param[in]    Record  Pointer to the instance to be deleted.
 
-  @retval EFI_SUCCESS   RESOURCE MAP recourd is removed.
-  @retval Others        Fail to add RESOURCE MAP.
+  @retval EFI_SUCCESS   config language map recourd is removed.
+  @retval Others        Fail to add config language map.
 
 **/
 EFI_STATUS
-DeleteResourceMapRecord (
-  IN  REDFISH_RESOURCE_MAP_LIST   *List,
-  IN  REDFISH_RESOURCE_MAP_RECORD *Record
+DeleteConfigLangMapRecord (
+  IN  REDFISH_CONFIG_LANG_MAP_LIST   *List,
+  IN  REDFISH_CONFIG_LANG_MAP_RECORD *Record
   )
 {
   if (List == NULL || Record == NULL) {
@@ -154,7 +154,7 @@ DeleteResourceMapRecord (
   --List->Count;
   List->TotalSize -= Record->Size;
 
-  return ReleaseResourceMapRecord (Record);
+  return ReleaseConfigLangMapRecord (Record);
 }
 
 /**
@@ -163,18 +163,18 @@ DeleteResourceMapRecord (
   @param[in]    ListHeader  Target list to search.
   @param[in]    ConfigLang  Target ConfigLang to search.
 
-  @retval REDFISH_RESOURCE_MAP_RECORD   Target RESOURCE MAP is found.
-  @retval NULL                          No RESOURCE MAP with given ConfigLang is found.
+  @retval REDFISH_CONFIG_LANG_MAP_RECORD  Target config language map is found.
+  @retval NULL                            No config language map with given ConfigLang is found.
 
 **/
-REDFISH_RESOURCE_MAP_RECORD *
-FindResourceMapRecord (
+REDFISH_CONFIG_LANG_MAP_RECORD *
+FindConfigLangMapRecord (
   IN  LIST_ENTRY  *ListHeader,
   IN  CHAR8       *ConfigLang
   )
 {
   LIST_ENTRY          *List;
-  REDFISH_RESOURCE_MAP_RECORD *Record;
+  REDFISH_CONFIG_LANG_MAP_RECORD *Record;
 
   if (IsListEmpty (ListHeader)) {
     return NULL;
@@ -183,7 +183,7 @@ FindResourceMapRecord (
   Record = NULL;
   List = GetFirstNode (ListHeader);
   while (!IsNull (ListHeader, List)) {
-    Record = REDFISH_RESOURCE_MAP_RECORD_FROM_LIST (List);
+    Record = REDFISH_CONFIG_LANG_MAP_RECORD_FROM_LIST (List);
 
     if (AsciiStrCmp (Record->ConfigLang, ConfigLang) == 0) {
       return  Record;
@@ -195,27 +195,27 @@ FindResourceMapRecord (
   return NULL;
 }
 
-#if RESOURCE_MAP_DEBUG_ENABLED
+#if CONFIG_LANG_MAP_DEBUG_ENABLED
 /**
-  Debug output the RESOURCE MAP list.
+  Debug output the config language map list.
 
-  @param[in]    ResourceMapList  Target list to dump
+  @param[in]    ConfigLangMapList  Target list to dump
   @param[in]    Msg       Debug message string.
 
   @retval EFI_SUCCESS             Debug dump finished.
-  @retval EFI_INVALID_PARAMETER   ResourceMapList is NULL.
+  @retval EFI_INVALID_PARAMETER   ConfigLangMapList is NULL.
 
 **/
 EFI_STATUS
-DumpResourceMapList (
-  IN  REDFISH_RESOURCE_MAP_LIST   *ResourceMapList,
-  IN  EFI_STRING          Msg
+DumpConfigLangMapList (
+  IN  REDFISH_CONFIG_LANG_MAP_LIST  *ConfigLangMapList,
+  IN  EFI_STRING                    Msg
   )
 {
   LIST_ENTRY          *List;
-  REDFISH_RESOURCE_MAP_RECORD *Record;
+  REDFISH_CONFIG_LANG_MAP_RECORD *Record;
 
-  if (ResourceMapList == NULL) {
+  if (ConfigLangMapList == NULL) {
     return EFI_INVALID_PARAMETER;
   }
 
@@ -223,20 +223,20 @@ DumpResourceMapList (
     DEBUG ((DEBUG_ERROR, "%s\n", Msg));
   }
 
-  if (IsListEmpty (&ResourceMapList->Listheader)) {
-    DEBUG ((DEBUG_INFO, "ResourceMap list is empty\n"));
+  if (IsListEmpty (&ConfigLangMapList->Listheader)) {
+    DEBUG ((DEBUG_INFO, "ConfigLangMap list is empty\n"));
     return EFI_NOT_FOUND;
   }
 
-  DEBUG ((DEBUG_INFO, "Count: %d Total Size: %d\n", ResourceMapList->Count, ResourceMapList->TotalSize));
+  DEBUG ((DEBUG_INFO, "Count: %d Total Size: %d\n", ConfigLangMapList->Count, ConfigLangMapList->TotalSize));
   Record = NULL;
-  List = GetFirstNode (&ResourceMapList->Listheader);
-  while (!IsNull (&ResourceMapList->Listheader, List)) {
-    Record = REDFISH_RESOURCE_MAP_RECORD_FROM_LIST (List);
+  List = GetFirstNode (&ConfigLangMapList->Listheader);
+  while (!IsNull (&ConfigLangMapList->Listheader, List)) {
+    Record = REDFISH_CONFIG_LANG_MAP_RECORD_FROM_LIST (List);
 
     DEBUG ((DEBUG_INFO, "ConfigLang: %a Uri: %a Size: %d\n", Record->ConfigLang, Record->Uri, Record->Size));
 
-    List = GetNextNode (&ResourceMapList->Listheader, List);
+    List = GetNextNode (&ConfigLangMapList->Listheader, List);
   }
 
   return EFI_SUCCESS;
@@ -279,39 +279,39 @@ DumpRawBuffer (
 #endif
 
 /**
-  Release all ResourceMap from list.
+  Release all ConfigLangMap from list.
 
-  @param[in]    ResourceMapList    The list to be released.
+  @param[in]    ConfigLangMapList    The list to be released.
 
   @retval EFI_SUCCESS             All etag is released.
-  @retval EFI_INVALID_PARAMETER   ResourceMapList is NULL.
+  @retval EFI_INVALID_PARAMETER   ConfigLangMapList is NULL.
 
 **/
 EFI_STATUS
-ReleaseResourceMapList (
-  IN  REDFISH_RESOURCE_MAP_LIST   *ResourceMapList
+ReleaseConfigLangMapList (
+  IN  REDFISH_CONFIG_LANG_MAP_LIST   *ConfigLangMapList
   )
 {
   LIST_ENTRY          *List;
   LIST_ENTRY          *Next;
-  REDFISH_RESOURCE_MAP_RECORD *Record;
+  REDFISH_CONFIG_LANG_MAP_RECORD *Record;
 
-  if (ResourceMapList == NULL) {
+  if (ConfigLangMapList == NULL) {
     return EFI_INVALID_PARAMETER;
   }
 
-  if (IsListEmpty (&ResourceMapList->Listheader)) {
+  if (IsListEmpty (&ConfigLangMapList->Listheader)) {
     return EFI_SUCCESS;
   }
 
   Record = NULL;
   Next = NULL;
-  List = GetFirstNode (&ResourceMapList->Listheader);
-  while (!IsNull (&ResourceMapList->Listheader, List)) {
-    Record = REDFISH_RESOURCE_MAP_RECORD_FROM_LIST (List);
-    Next = GetNextNode (&ResourceMapList->Listheader, List);
+  List = GetFirstNode (&ConfigLangMapList->Listheader);
+  while (!IsNull (&ConfigLangMapList->Listheader, List)) {
+    Record = REDFISH_CONFIG_LANG_MAP_RECORD_FROM_LIST (List);
+    Next = GetNextNode (&ConfigLangMapList->Listheader, List);
 
-    DeleteResourceMapRecord (ResourceMapList, Record);
+    DeleteConfigLangMapRecord (ConfigLangMapList, Record);
 
     List = Next;
   }
@@ -322,21 +322,21 @@ ReleaseResourceMapList (
 /**
   Save etag in list to UEFI variable.
 
-  @param[in]    ResourceMapList      The list to be saved.
-  @param[in]    VariableName  The UEFI variable name.
+  @param[in]    ConfigLangMapList The list to be saved.
+  @param[in]    VariableName      The UEFI variable name.
 
   @retval EFI_SUCCESS             All etag is saved.
-  @retval EFI_INVALID_PARAMETER   VariableName or ResourceMapList is NULL.
+  @retval EFI_INVALID_PARAMETER   VariableName or ConfigLangMapList is NULL.
 
 **/
 EFI_STATUS
-SaveResourceMapList (
-  IN  REDFISH_RESOURCE_MAP_LIST   *ResourceMapList,
-  IN  EFI_STRING          VariableName
+SaveConfigLangMapList (
+  IN  REDFISH_CONFIG_LANG_MAP_LIST  *ConfigLangMapList,
+  IN  EFI_STRING                    VariableName
   )
 {
   LIST_ENTRY          *List;
-  REDFISH_RESOURCE_MAP_RECORD *Record;
+  REDFISH_CONFIG_LANG_MAP_RECORD *Record;
   CHAR8               *VarData;
   VOID                *Data;
   CHAR8               *Seeker;
@@ -344,18 +344,18 @@ SaveResourceMapList (
   UINTN               StrSize;
   EFI_STATUS          Status;
 
-  if (ResourceMapList == NULL || IS_EMPTY_STRING (VariableName)) {
+  if (ConfigLangMapList == NULL || IS_EMPTY_STRING (VariableName)) {
     return EFI_INVALID_PARAMETER;
   }
 
-  if (IsListEmpty (&ResourceMapList->Listheader)) {
+  if (IsListEmpty (&ConfigLangMapList->Listheader)) {
     return EFI_SUCCESS;
   }
 
   //
-  // Caculate the total size we need to keep ResourceMap list.
+  // Caculate the total size we need to keep ConfigLangMap list.
   //
-  VarSize = ResourceMapList->TotalSize + 1; // terminator character
+  VarSize = ConfigLangMapList->TotalSize + 1; // terminator character
   VarData = AllocateZeroPool (VarSize);
   if (VarData == NULL) {
     return EFI_OUT_OF_RESOURCES;
@@ -363,9 +363,9 @@ SaveResourceMapList (
 
   Seeker = VarData;
   Record = NULL;
-  List = GetFirstNode (&ResourceMapList->Listheader);
-  while (!IsNull (&ResourceMapList->Listheader, List)) {
-    Record = REDFISH_RESOURCE_MAP_RECORD_FROM_LIST (List);
+  List = GetFirstNode (&ConfigLangMapList->Listheader);
+  while (!IsNull (&ConfigLangMapList->Listheader, List)) {
+    Record = REDFISH_CONFIG_LANG_MAP_RECORD_FROM_LIST (List);
 
     StrSize = AsciiStrSize (Record->Uri);
     CopyMem (Seeker, Record->Uri, StrSize);
@@ -382,12 +382,12 @@ SaveResourceMapList (
 
     ++Seeker;
 
-    List = GetNextNode (&ResourceMapList->Listheader, List);;
+    List = GetNextNode (&ConfigLangMapList->Listheader, List);;
   }
 
   *Seeker = '\0';
 
-#if RESOURCE_MAP_DEBUG_ENABLED
+#if CONFIG_LANG_MAP_DEBUG_ENABLED
   DumpRawBuffer (VarData, VarSize);
 #endif
 
@@ -414,17 +414,17 @@ SaveResourceMapList (
 /**
   Read etag from UEFI variable if it exists.
 
-  @param[in]    ResourceMapList      The list to be loaded.
-  @param[in]    VariableName  The UEFI variable name.
+  @param[in]    ConfigLangMapList The list to be loaded.
+  @param[in]    VariableName      The UEFI variable name.
 
   @retval EFI_SUCCESS             All etag is read successfully.
-  @retval EFI_INVALID_PARAMETER   VariableName or ResourceMapList is NULL.
+  @retval EFI_INVALID_PARAMETER   VariableName or ConfigLangMapList is NULL.
   @retval EFI_NOT_FOUND           No etag is found on UEFI variable.
 
 **/
 EFI_STATUS
-InitialResourceMapList (
-  IN  REDFISH_RESOURCE_MAP_LIST   *ResourceMapList,
+InitialConfigLangMapList (
+  IN  REDFISH_CONFIG_LANG_MAP_LIST   *ConfigLangMapList,
   IN  EFI_STRING          VariableName
   )
 {
@@ -435,7 +435,7 @@ InitialResourceMapList (
   UINTN      VariableSize;
   EFI_STATUS Status;
 
-  if (ResourceMapList == NULL || IS_EMPTY_STRING (VariableName)) {
+  if (ConfigLangMapList == NULL || IS_EMPTY_STRING (VariableName)) {
     return EFI_INVALID_PARAMETER;
   }
 
@@ -471,7 +471,7 @@ InitialResourceMapList (
     ConfigLangPointer = ++Seeker;
 
     //
-    // Find RESOURCE MAP
+    // Find config language map
     //
     Seeker = AsciiStrStr (ConfigLangPointer, "\n");
     if (Seeker == NULL) {
@@ -482,13 +482,13 @@ InitialResourceMapList (
 
     *Seeker = '\0';
 
-    AddResourceMapRecord (ResourceMapList, UriPointer, ConfigLangPointer);
+    AddConfigLangMapRecord (ConfigLangMapList, UriPointer, ConfigLangPointer);
 
     UriPointer = ++Seeker;
   }
 
-#if RESOURCE_MAP_DEBUG_ENABLED
-  DumpResourceMapList (ResourceMapList, L"Initial ResourceMap List from Variable");
+#if CONFIG_LANG_MAP_DEBUG_ENABLED
+  DumpConfigLangMapList (ConfigLangMapList, L"Initial ConfigLangMap List from Variable");
 #endif
 
   Status = EFI_SUCCESS;
@@ -503,7 +503,7 @@ ON_ERROR:
 /**
   Get URI string by given ConfigLang. It is the responsibility of the caller to free the memory allocated.
 
-  @param[in]   This                    Pointer to EDKII_REDFISH_RESOURCE_MAP_PROTOCOL instance.
+  @param[in]   This                    Pointer to EDKII_REDFISH_CONFIG_LANG_MAP_PROTOCOL instance.
   @param[in]   ConfigLang              Config language to search
   @param[out]  Uri                     Returned URI mapping to give ConfigLang
 
@@ -512,24 +512,24 @@ ON_ERROR:
 
 **/
 EFI_STATUS
-RedfishResourceMapGet (
-  IN  EDKII_REDFISH_RESOURCE_MAP_PROTOCOL *This,
-  IN  CHAR8                               *ConfigLang,
-  OUT CHAR8                               **Uri
+RedfishConfigLangMapGet (
+  IN  EDKII_REDFISH_CONFIG_LANG_MAP_PROTOCOL  *This,
+  IN  CHAR8                                   *ConfigLang,
+  OUT CHAR8                                   **Uri
   )
 {
-  REDFISH_RESOURCE_MAP_RECORD       *Target;
-  REDFISH_RESOURCE_MAP_PRIVATE_DATA *Private;
+  REDFISH_CONFIG_LANG_MAP_RECORD       *Target;
+  REDFISH_CONFIG_LANG_MAP_PRIVATE_DATA *Private;
 
   if (This == NULL || IS_EMPTY_STRING (ConfigLang) || Uri == NULL) {
     return EFI_INVALID_PARAMETER;
   }
 
-  Private = REDFISH_RESOURCE_MAP_PRIVATE_FROM_THIS (This);
+  Private = REDFISH_CONFIG_LANG_MAP_PRIVATE_FROM_THIS (This);
 
   *Uri = NULL;
 
-  Target = FindResourceMapRecord (&Private->ResourceList.Listheader, ConfigLang);
+  Target = FindConfigLangMapRecord (&Private->ConfigLangList.Listheader, ConfigLang);
   if (Target == NULL) {
     return EFI_NOT_FOUND;
   }
@@ -543,7 +543,7 @@ RedfishResourceMapGet (
 /**
   Save URI string which maps to given ConfigLang.
 
-  @param[in]   This                Pointer to EDKII_REDFISH_RESOURCE_MAP_PROTOCOL instance.
+  @param[in]   This                Pointer to EDKII_REDFISH_CONFIG_LANG_MAP_PROTOCOL instance.
   @param[in]   ConfigLang          Config language to set
   @param[in]   Uri                 Uri which is mapping to give ConfigLang. If Uri is NULL,
                                    the record will be removed.
@@ -553,29 +553,29 @@ RedfishResourceMapGet (
 
 **/
 EFI_STATUS
-RedfishResourceMapSet (
-  IN  EDKII_REDFISH_RESOURCE_MAP_PROTOCOL   *This,
-  IN  CHAR8                                 *ConfigLang,
-  IN  CHAR8                                 *Uri        OPTIONAL
+RedfishConfigLangMapSet (
+  IN  EDKII_REDFISH_CONFIG_LANG_MAP_PROTOCOL  *This,
+  IN  CHAR8                                   *ConfigLang,
+  IN  CHAR8                                   *Uri        OPTIONAL
   )
 {
-  REDFISH_RESOURCE_MAP_RECORD       *Target;
-  REDFISH_RESOURCE_MAP_PRIVATE_DATA *Private;
+  REDFISH_CONFIG_LANG_MAP_RECORD       *Target;
+  REDFISH_CONFIG_LANG_MAP_PRIVATE_DATA *Private;
   EFI_STATUS                        Status;
 
   if (This == NULL || IS_EMPTY_STRING (ConfigLang)) {
     return EFI_INVALID_PARAMETER;
   }
 
-  Private = REDFISH_RESOURCE_MAP_PRIVATE_FROM_THIS (This);
+  Private = REDFISH_CONFIG_LANG_MAP_PRIVATE_FROM_THIS (This);
 
   Status = EFI_NOT_FOUND;
-  Target = FindResourceMapRecord (&Private->ResourceList.Listheader, ConfigLang);
+  Target = FindConfigLangMapRecord (&Private->ConfigLangList.Listheader, ConfigLang);
   if (Target != NULL) {
     //
     // Remove old one and create new one.
     //
-    Status = DeleteResourceMapRecord (&Private->ResourceList, Target);
+    Status = DeleteConfigLangMapRecord (&Private->ConfigLangList, Target);
   }
 
   //
@@ -585,35 +585,35 @@ RedfishResourceMapSet (
     return Status;
   }
 
-  return AddResourceMapRecord (&Private->ResourceList, Uri, ConfigLang);
+  return AddConfigLangMapRecord (&Private->ConfigLangList, Uri, ConfigLang);
 }
 
 /**
   Refresh the resource map database and save database to variable.
 
-  @param[in]   This                Pointer to EDKII_REDFISH_RESOURCE_MAP_PROTOCOL instance.
+  @param[in]   This                Pointer to EDKII_REDFISH_CONFIG_LANG_MAP_PROTOCOL instance.
 
   @retval EFI_SUCCESS              This handler has been stoped successfully.
   @retval Others                   Some error happened.
 
 **/
 EFI_STATUS
-RedfishResourceMapFlush (
-  IN  EDKII_REDFISH_RESOURCE_MAP_PROTOCOL    *This
+RedfishConfigLangMapFlush (
+  IN  EDKII_REDFISH_CONFIG_LANG_MAP_PROTOCOL    *This
   )
 {
-  REDFISH_RESOURCE_MAP_PRIVATE_DATA *Private;
+  REDFISH_CONFIG_LANG_MAP_PRIVATE_DATA *Private;
   EFI_STATUS                Status;
 
   if (This == NULL) {
     return EFI_INVALID_PARAMETER;
   }
 
-  Private = REDFISH_RESOURCE_MAP_PRIVATE_FROM_THIS (This);
+  Private = REDFISH_CONFIG_LANG_MAP_PRIVATE_FROM_THIS (This);
 
-  Status = SaveResourceMapList (&Private->ResourceList, Private->VariableName);
+  Status = SaveConfigLangMapList (&Private->ConfigLangList, Private->VariableName);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, save ResourceMap list to variable: %s failed: %r\n", __FUNCTION__, Private->VariableName, Status));
+    DEBUG ((DEBUG_ERROR, "%a, save ConfigLangMap list to variable: %s failed: %r\n", __FUNCTION__, Private->VariableName, Status));
   }
 
   return Status;
@@ -628,7 +628,7 @@ RedfishResourceMapFlush (
 **/
 VOID
 EFIAPI
-RedfishResourceMapOnExitBootService (
+RedfishConfigLangMapOnExitBootService (
   IN  EFI_EVENT  Event,
   OUT VOID       *Context
   )
@@ -636,7 +636,7 @@ RedfishResourceMapOnExitBootService (
   //
   // Memory is about to be released. Keep list into variable.
   //
-  RedfishResourceMapFlush (&mRedfishResourceMapPrivate->Protocol);
+  RedfishConfigLangMapFlush (&mRedfishConfigLangMapPrivate->Protocol);
 }
 
 /**
@@ -650,36 +650,36 @@ RedfishResourceMapOnExitBootService (
 **/
 EFI_STATUS
 EFIAPI
-RedfishResourceMapDriverUnload (
+RedfishConfigLangMapDriverUnload (
   IN EFI_HANDLE  ImageHandle
   )
 {
   EFI_STATUS  Status;
 
-  if (mRedfishResourceMapPrivate != NULL) {
+  if (mRedfishConfigLangMapPrivate != NULL) {
 
     Status = gBS->UninstallProtocolInterface (
-                    mRedfishResourceMapPrivate->ImageHandle,
-                    &gEdkIIRedfishResourceMapProtocolGuid,
-                    (VOID*)&mRedfishResourceMapPrivate->Protocol
+                    mRedfishConfigLangMapPrivate->ImageHandle,
+                    &gEdkIIRedfishConfigLangMapProtocolGuid,
+                    (VOID*)&mRedfishConfigLangMapPrivate->Protocol
                     );
     if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "%a, can not uninstall gEdkIIRedfishResourceMapProtocolGuid: %r\n", __FUNCTION__, Status));
+      DEBUG ((DEBUG_ERROR, "%a, can not uninstall gEdkIIRedfishConfigLangMapProtocolGuid: %r\n", __FUNCTION__, Status));
       ASSERT (FALSE);
     }
 
-    ReleaseResourceMapList (&mRedfishResourceMapPrivate->ResourceList);
+    ReleaseConfigLangMapList (&mRedfishConfigLangMapPrivate->ConfigLangList);
 
-    if (mRedfishResourceMapPrivate->VariableName != NULL) {
-      FreePool (mRedfishResourceMapPrivate->VariableName);
+    if (mRedfishConfigLangMapPrivate->VariableName != NULL) {
+      FreePool (mRedfishConfigLangMapPrivate->VariableName);
     }
 
-    if (mRedfishResourceMapPrivate->Event != NULL) {
-      gBS->CloseEvent (mRedfishResourceMapPrivate->Event);
+    if (mRedfishConfigLangMapPrivate->Event != NULL) {
+      gBS->CloseEvent (mRedfishConfigLangMapPrivate->Event);
     }
 
-    FreePool (mRedfishResourceMapPrivate);
-    mRedfishResourceMapPrivate = NULL;
+    FreePool (mRedfishConfigLangMapPrivate);
+    mRedfishConfigLangMapPrivate = NULL;
   }
 
 
@@ -687,12 +687,12 @@ RedfishResourceMapDriverUnload (
 }
 
 //
-// EDKII_REDFISH_RESOURCE_MAP_PROTOCOL.
+// EDKII_REDFISH_CONFIG_LANG_MAP_PROTOCOL.
 //
-EDKII_REDFISH_RESOURCE_MAP_PROTOCOL mRedfishResourceMapProtocol = {
-  RedfishResourceMapGet,
-  RedfishResourceMapSet,
-  RedfishResourceMapFlush
+EDKII_REDFISH_CONFIG_LANG_MAP_PROTOCOL mRedfishConfigLangMapProtocol = {
+  RedfishConfigLangMapGet,
+  RedfishConfigLangMapSet,
+  RedfishConfigLangMapFlush
 };
 
 /**
@@ -708,35 +708,35 @@ EDKII_REDFISH_RESOURCE_MAP_PROTOCOL mRedfishResourceMapProtocol = {
 **/
 EFI_STATUS
 EFIAPI
-RedfishResourceMapDriverEntryPoint (
+RedfishConfigLangMapDriverEntryPoint (
   IN EFI_HANDLE        ImageHandle,
   IN EFI_SYSTEM_TABLE  *SystemTable
   )
 {
   EFI_STATUS    Status;
 
-  mRedfishResourceMapPrivate = AllocateZeroPool (sizeof (REDFISH_RESOURCE_MAP_PRIVATE_DATA));
-  if (mRedfishResourceMapPrivate == NULL) {
+  mRedfishConfigLangMapPrivate = AllocateZeroPool (sizeof (REDFISH_CONFIG_LANG_MAP_PRIVATE_DATA));
+  if (mRedfishConfigLangMapPrivate == NULL) {
     return EFI_OUT_OF_RESOURCES;
   }
 
-  InitializeListHead (&mRedfishResourceMapPrivate->ResourceList.Listheader);
-  mRedfishResourceMapPrivate->VariableName = AllocateCopyPool (StrSize (RESOURCE_MAP_VARIABLE_NAME), RESOURCE_MAP_VARIABLE_NAME);
-  if (mRedfishResourceMapPrivate->VariableName == NULL) {
+  InitializeListHead (&mRedfishConfigLangMapPrivate->ConfigLangList.Listheader);
+  mRedfishConfigLangMapPrivate->VariableName = AllocateCopyPool (StrSize (CONFIG_LANG_MAP_VARIABLE_NAME), CONFIG_LANG_MAP_VARIABLE_NAME);
+  if (mRedfishConfigLangMapPrivate->VariableName == NULL) {
     goto ON_ERROR;
   }
 
-  mRedfishResourceMapPrivate->ImageHandle = ImageHandle;
-  CopyMem (&mRedfishResourceMapPrivate->Protocol, &mRedfishResourceMapProtocol, sizeof (EDKII_REDFISH_RESOURCE_MAP_PROTOCOL));
+  mRedfishConfigLangMapPrivate->ImageHandle = ImageHandle;
+  CopyMem (&mRedfishConfigLangMapPrivate->Protocol, &mRedfishConfigLangMapProtocol, sizeof (EDKII_REDFISH_CONFIG_LANG_MAP_PROTOCOL));
 
   Status = gBS->InstallProtocolInterface (
                   &ImageHandle,
-                  &gEdkIIRedfishResourceMapProtocolGuid,
+                  &gEdkIIRedfishConfigLangMapProtocolGuid,
                   EFI_NATIVE_INTERFACE,
-                  (VOID*)&mRedfishResourceMapPrivate->Protocol
+                  (VOID*)&mRedfishConfigLangMapPrivate->Protocol
                   );
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, can not install gEdkIIRedfishResourceMapProtocolGuid: %r\n", __FUNCTION__, Status));
+    DEBUG ((DEBUG_ERROR, "%a, can not install gEdkIIRedfishConfigLangMapProtocolGuid: %r\n", __FUNCTION__, Status));
     ASSERT (FALSE);
     goto ON_ERROR;
   }
@@ -747,10 +747,10 @@ RedfishResourceMapDriverEntryPoint (
   Status = gBS->CreateEventEx (
                   EVT_NOTIFY_SIGNAL,
                   TPL_CALLBACK,
-                  RedfishResourceMapOnExitBootService,
+                  RedfishConfigLangMapOnExitBootService,
                   NULL,
                   &gEfiEventExitBootServicesGuid,
-                  &mRedfishResourceMapPrivate->Event
+                  &mRedfishConfigLangMapPrivate->Event
                   );
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a: Fail to register Exit Boot Service event.", __FUNCTION__));
@@ -760,16 +760,16 @@ RedfishResourceMapDriverEntryPoint (
   //
   // Read existing record from variable.
   //
-  Status = InitialResourceMapList (&mRedfishResourceMapPrivate->ResourceList, mRedfishResourceMapPrivate->VariableName);
+  Status = InitialConfigLangMapList (&mRedfishConfigLangMapPrivate->ConfigLangList, mRedfishConfigLangMapPrivate->VariableName);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_INFO, "%a, Initial ResourceMap List: %r\n", __FUNCTION__, Status));
+    DEBUG ((DEBUG_INFO, "%a, Initial ConfigLangMap List: %r\n", __FUNCTION__, Status));
   }
 
   return EFI_SUCCESS;
 
 ON_ERROR:
 
-  RedfishResourceMapDriverUnload (ImageHandle);
+  RedfishConfigLangMapDriverUnload (ImageHandle);
 
   return Status;
 }
