@@ -13,13 +13,23 @@
 typedef struct _EDKII_REDFISH_CONFIG_LANG_MAP_PROTOCOL EDKII_REDFISH_CONFIG_LANG_MAP_PROTOCOL;
 
 /**
-  Get URI string by given ConfigLang
+ Definition of REDFISH_CONFIG_LANG_MAP_GET_TYPE
+ **/
+typedef enum {
+  RedfishGetTypeUri = 0,
+  RedfishGetTypeConfigLang,
+  RedfishGetTypeMax
+} REDFISH_CONFIG_LANG_MAP_GET_TYPE;
+
+/**
+  Get string in database by given query string.
 
   @param[in]   This                    Pointer to EDKII_REDFISH_CONFIG_LANG_MAP_PROTOCOL instance.
-  @param[in]   ConfigLang              Config language to search
-  @param[out]  Uri                     Returned URI mapping to give ConfigLang
+  @param[in]   QueryStringType         The type of given QueryString.
+  @param[in]   QueryString             Query string.
+  @param[out]  ResultString            Returned string mapping to give query string.
 
-  @retval EFI_SUCCESS                  The Uri is found successfully.
+  @retval EFI_SUCCESS                  The result is found successfully.
   @retval EFI_INVALID_PARAMETER        Invalid parameter is given.
 
 **/
@@ -27,8 +37,9 @@ typedef
 EFI_STATUS
 (EFIAPI *EDKII_REDFISH_CONFIG_LANG_MAP_PROTOCOL_GET) (
   IN  EDKII_REDFISH_CONFIG_LANG_MAP_PROTOCOL  *This,
-  IN  CHAR8                                   *ConfigLang,
-  OUT CHAR8                                   **Uri
+  IN  REDFISH_CONFIG_LANG_MAP_GET_TYPE        QueryStringType,
+  IN  EFI_STRING                              QueryString,
+  OUT EFI_STRING                              *ResultString
   );
 
 /**
@@ -47,8 +58,8 @@ typedef
 EFI_STATUS
 (EFIAPI *EDKII_REDFISH_CONFIG_LANG_MAP_PROTOCOL_SET) (
   IN  EDKII_REDFISH_CONFIG_LANG_MAP_PROTOCOL  *This,
-  IN  CHAR8                                   *ConfigLang,
-  IN  CHAR8                                   *Uri        OPTIONAL
+  IN  EFI_STRING                              ConfigLang,
+  IN  EFI_STRING                              Uri        OPTIONAL
   );
 
 /**

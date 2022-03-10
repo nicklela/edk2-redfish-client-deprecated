@@ -38,8 +38,8 @@
 //
 typedef struct {
   LIST_ENTRY  List;
-  CHAR8       *Uri;
-  CHAR8       *ConfigLang;
+  EFI_STRING  Uri;
+  EFI_STRING  ConfigLang;
   UINTN       Size;
 } REDFISH_CONFIG_LANG_MAP_RECORD;
 
