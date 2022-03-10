@@ -44,7 +44,7 @@ typedef struct _REDFISH_RESOURCE_COMMON_PRIVATE {
   EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL  RedfishResourceConfig;
   EDKII_REDFISH_CONFIG_HANDLER_PROTOCOL   ConfigHandler;
   EFI_EVENT                               Event;
-  CHAR8                                   *Uri;
+  EFI_STRING                              Uri;
   CHAR8                                   *Json;
   REDFISH_PAYLOAD                         Payload;
 } REDFISH_RESOURCE_COMMON_PRIVATE;

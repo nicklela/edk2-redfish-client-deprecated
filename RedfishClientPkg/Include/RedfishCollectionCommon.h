@@ -34,12 +34,14 @@
 #include <Protocol/RestJsonStructure.h>
 #include <Protocol/RestEx.h>
 
+#define REDFISH_MAX_COLLECTION_INDEX_LEN  8
+
 typedef struct _REDFISH_COLLECTION_PRIVATE {
   EFI_REST_JSON_STRUCTURE_PROTOCOL      *JsonStructProtocol;
   EDKII_REDFISH_FEATURE_PROTOCOL        *FeatureProtocol;
   REDFISH_SERVICE                       RedfishService;
   EDKII_REDFISH_CONFIG_HANDLER_PROTOCOL ConfigHandler;
-  CHAR8                                 *CollectionPath;
+  EFI_STRING                            CollectionPath;
   CHAR8                                 *CollectionJson;
   REDFISH_PAYLOAD                       CollectionPayload;
   REDFISH_RESPONSE                      RedResponse;

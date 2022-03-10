@@ -1,7 +1,7 @@
 /** @file
   This file defines the EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL interface.
 
-  (C) Copyright 2021 Hewlett Packard Enterprise Development LP<BR>
+  (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -29,7 +29,7 @@ typedef
 EFI_STATUS
 (EFIAPI *EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL_PROVISIONING) (
   IN     EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL  *This,
-  IN     CHAR8                                   *Uri,
+  IN     EFI_STRING                              Uri,
   IN     BOOLEAN                                 HttpPostMode
   );
 
@@ -47,7 +47,7 @@ typedef
 EFI_STATUS
 (EFIAPI *EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL_CONSUME) (
   IN     EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL  *This,
-  IN     CHAR8                                   *Uri
+  IN     EFI_STRING                              Uri
   );
 
 
@@ -65,7 +65,7 @@ typedef
 EFI_STATUS
 (EFIAPI *EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL_UPDATE) (
   IN     EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL  *This,
-  IN     CHAR8                                   *Uri
+  IN     EFI_STRING                              Uri
   );
 
 
@@ -83,7 +83,7 @@ typedef
 EFI_STATUS
 (EFIAPI *EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL_CHECK) (
   IN     EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL  *This,
-  IN     CHAR8                                   *Uri
+  IN     EFI_STRING                              Uri
   );
 
 /**
@@ -101,7 +101,7 @@ typedef
 EFI_STATUS
 (EFIAPI *EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL_IDENTIFY) (
   IN     EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL  *This,
-  IN     CHAR8                                   *Uri
+  IN     EFI_STRING                              Uri
   );
 
 //
