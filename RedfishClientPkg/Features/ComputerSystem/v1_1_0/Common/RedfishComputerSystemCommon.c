@@ -35,7 +35,6 @@ RedfishConsumeResourceCommon (
   EFI_REDFISH_COMPUTERSYSTEM_V1_1_0     *ComputerSystem;
   EFI_REDFISH_COMPUTERSYSTEM_V1_1_0_CS  *ComputerSystemCs;
   EFI_STRING                    ConfigureLang;
-  CHAR8                         *Arraykey;
   CHAR8                         *EtagInDb;
 
   if (Private == NULL || IS_EMPTY_STRING (Json)) {
@@ -45,7 +44,6 @@ RedfishConsumeResourceCommon (
   ComputerSystem = NULL;
   ComputerSystemCs = NULL;
   ConfigureLang = NULL;
-  Arraykey = NULL;
   EtagInDb = NULL;
 
   Status = Private->JsonStructProtocol->ToStructure (
@@ -76,22 +74,13 @@ RedfishConsumeResourceCommon (
   }
 
   //
-  // Find array key from URI
-  //
-  Status = GetArraykeyFromUri (Private->Uri, &Arraykey);
-  if (EFI_ERROR (Status)) {
-    ASSERT (FALSE);
-    return Status;
-  }
-
-  //
   // Handle SYSTEMTYPE
   //
   if (ComputerSystemCs->SystemType != NULL) {
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "SystemType", Arraykey);
+    ConfigureLang = GetConfigureLang (Private->Uri, "SystemType");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->SystemType);
       if (EFI_ERROR (Status)) {
@@ -100,7 +89,7 @@ RedfishConsumeResourceCommon (
 
       FreePool (ConfigureLang);
     } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for key: %a\n", __FUNCTION__, Arraykey));
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
     }
   }
 
@@ -111,7 +100,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "AssetTag", Arraykey);
+    ConfigureLang = GetConfigureLang (Private->Uri, "AssetTag");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->AssetTag);
       if (EFI_ERROR (Status)) {
@@ -120,7 +109,7 @@ RedfishConsumeResourceCommon (
 
       FreePool (ConfigureLang);
     } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for key: %a\n", __FUNCTION__, Arraykey));
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
     }
   }
 
@@ -131,7 +120,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "Manufacturer", Arraykey);
+    ConfigureLang = GetConfigureLang (Private->Uri, "Manufacturer");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Manufacturer);
       if (EFI_ERROR (Status)) {
@@ -140,7 +129,7 @@ RedfishConsumeResourceCommon (
 
       FreePool (ConfigureLang);
     } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for key: %a\n", __FUNCTION__, Arraykey));
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
     }
   }
 
@@ -151,7 +140,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "Model", Arraykey);
+    ConfigureLang = GetConfigureLang (Private->Uri, "Model");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Model);
       if (EFI_ERROR (Status)) {
@@ -160,7 +149,7 @@ RedfishConsumeResourceCommon (
 
       FreePool (ConfigureLang);
     } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for key: %a\n", __FUNCTION__, Arraykey));
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
     }
   }
 
@@ -171,7 +160,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "SKU", Arraykey);
+    ConfigureLang = GetConfigureLang (Private->Uri, "SKU");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->SKU);
       if (EFI_ERROR (Status)) {
@@ -180,7 +169,7 @@ RedfishConsumeResourceCommon (
 
       FreePool (ConfigureLang);
     } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for key: %a\n", __FUNCTION__, Arraykey));
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
     }
   }
 
@@ -191,7 +180,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "SerialNumber", Arraykey);
+    ConfigureLang = GetConfigureLang (Private->Uri, "SerialNumber");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->SerialNumber);
       if (EFI_ERROR (Status)) {
@@ -200,7 +189,7 @@ RedfishConsumeResourceCommon (
 
       FreePool (ConfigureLang);
     } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for key: %a\n", __FUNCTION__, Arraykey));
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
     }
   }
 
@@ -211,7 +200,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "PartNumber", Arraykey);
+    ConfigureLang = GetConfigureLang (Private->Uri, "PartNumber");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->PartNumber);
       if (EFI_ERROR (Status)) {
@@ -220,7 +209,7 @@ RedfishConsumeResourceCommon (
 
       FreePool (ConfigureLang);
     } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for key: %a\n", __FUNCTION__, Arraykey));
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
     }
   }
 
@@ -231,7 +220,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "HostName", Arraykey);
+    ConfigureLang = GetConfigureLang (Private->Uri, "HostName");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->HostName);
       if (EFI_ERROR (Status)) {
@@ -240,7 +229,7 @@ RedfishConsumeResourceCommon (
 
       FreePool (ConfigureLang);
     } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for key: %a\n", __FUNCTION__, Arraykey));
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
     }
   }
 
@@ -251,7 +240,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "IndicatorLED", Arraykey);
+    ConfigureLang = GetConfigureLang (Private->Uri, "IndicatorLED");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->IndicatorLED);
       if (EFI_ERROR (Status)) {
@@ -260,7 +249,7 @@ RedfishConsumeResourceCommon (
 
       FreePool (ConfigureLang);
     } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for key: %a\n", __FUNCTION__, Arraykey));
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
     }
   }
 
@@ -271,7 +260,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "PowerState", Arraykey);
+    ConfigureLang = GetConfigureLang (Private->Uri, "PowerState");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->PowerState);
       if (EFI_ERROR (Status)) {
@@ -280,7 +269,7 @@ RedfishConsumeResourceCommon (
 
       FreePool (ConfigureLang);
     } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for key: %a\n", __FUNCTION__, Arraykey));
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
     }
   }
 
@@ -291,7 +280,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "Boot/BootSourceOverrideTarget", Arraykey);
+    ConfigureLang = GetConfigureLang (Private->Uri, "Boot/BootSourceOverrideTarget");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->BootSourceOverrideTarget);
       if (EFI_ERROR (Status)) {
@@ -300,7 +289,7 @@ RedfishConsumeResourceCommon (
 
       FreePool (ConfigureLang);
     } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for key: %a\n", __FUNCTION__, Arraykey));
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
     }
   }
 
@@ -311,7 +300,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "Boot/BootSourceOverrideEnabled", Arraykey);
+    ConfigureLang = GetConfigureLang (Private->Uri, "Boot/BootSourceOverrideEnabled");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->BootSourceOverrideEnabled);
       if (EFI_ERROR (Status)) {
@@ -320,7 +309,7 @@ RedfishConsumeResourceCommon (
 
       FreePool (ConfigureLang);
     } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for key: %a\n", __FUNCTION__, Arraykey));
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
     }
   }
 
@@ -331,7 +320,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "Boot/UefiTargetBootSourceOverride", Arraykey);
+    ConfigureLang = GetConfigureLang (Private->Uri, "Boot/UefiTargetBootSourceOverride");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->UefiTargetBootSourceOverride);
       if (EFI_ERROR (Status)) {
@@ -340,7 +329,7 @@ RedfishConsumeResourceCommon (
 
       FreePool (ConfigureLang);
     } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for key: %a\n", __FUNCTION__, Arraykey));
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
     }
   }
 
@@ -351,7 +340,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "Boot/BootSourceOverrideMode", Arraykey);
+    ConfigureLang = GetConfigureLang (Private->Uri, "Boot/BootSourceOverrideMode");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->BootSourceOverrideMode);
       if (EFI_ERROR (Status)) {
@@ -360,7 +349,7 @@ RedfishConsumeResourceCommon (
 
       FreePool (ConfigureLang);
     } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for key: %a\n", __FUNCTION__, Arraykey));
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
     }
   }
 
@@ -371,7 +360,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "BiosVersion", Arraykey);
+    ConfigureLang = GetConfigureLang (Private->Uri, "BiosVersion");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->BiosVersion);
       if (EFI_ERROR (Status)) {
@@ -380,7 +369,7 @@ RedfishConsumeResourceCommon (
 
       FreePool (ConfigureLang);
     } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for key: %a\n", __FUNCTION__, Arraykey));
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
     }
   }
 
@@ -391,7 +380,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "ProcessorSummary/Count", Arraykey);
+    ConfigureLang = GetConfigureLang (Private->Uri, "ProcessorSummary/Count");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*ComputerSystemCs->ProcessorSummary->Count);
       if (EFI_ERROR (Status)) {
@@ -400,7 +389,7 @@ RedfishConsumeResourceCommon (
 
       FreePool (ConfigureLang);
     } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for key: %a\n", __FUNCTION__, Arraykey));
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
     }
   }
 
@@ -411,7 +400,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "ProcessorSummary/Model", Arraykey);
+    ConfigureLang = GetConfigureLang (Private->Uri, "ProcessorSummary/Model");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->ProcessorSummary->Model);
       if (EFI_ERROR (Status)) {
@@ -420,7 +409,7 @@ RedfishConsumeResourceCommon (
 
       FreePool (ConfigureLang);
     } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for key: %a\n", __FUNCTION__, Arraykey));
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
     }
   }
 
@@ -431,7 +420,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "MemorySummary/TotalSystemMemoryGiB", Arraykey);
+    ConfigureLang = GetConfigureLang (Private->Uri, "MemorySummary/TotalSystemMemoryGiB");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB);
       if (EFI_ERROR (Status)) {
@@ -440,7 +429,7 @@ RedfishConsumeResourceCommon (
 
       FreePool (ConfigureLang);
     } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for key: %a\n", __FUNCTION__, Arraykey));
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
     }
   }
 
@@ -451,7 +440,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, "MemorySummary/MemoryMirroring", Arraykey);
+    ConfigureLang = GetConfigureLang (Private->Uri, "MemorySummary/MemoryMirroring");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->MemorySummary->MemoryMirroring);
       if (EFI_ERROR (Status)) {
@@ -460,7 +449,7 @@ RedfishConsumeResourceCommon (
 
       FreePool (ConfigureLang);
     } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for key: %a\n", __FUNCTION__, Arraykey));
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
     }
   }
 
@@ -474,10 +463,6 @@ ON_RELEASE:
   //
   if (EtagInDb != NULL) {
     FreePool (EtagInDb);
-  }
-
-  if (Arraykey != NULL) {
-    FreePool (Arraykey);
   }
 
   Private->JsonStructProtocol->DestoryStructure (
@@ -817,11 +802,9 @@ ProvisioningResource (
 {
   CHAR8       *Json;
   EFI_STATUS  Status;
-  CHAR8       *NewResourceLocation;
-  CHAR8       *NewKey;
+  EFI_STRING  NewResourceLocation;
   CHAR8       *EtagStr;
   CHAR8       ResourceId[16];
-  CHAR8       NewUri[255];
 
   if (IS_EMPTY_STRING (ConfigureLang) || Private == NULL) {
     return EFI_INVALID_PARAMETER;
@@ -848,41 +831,32 @@ ProvisioningResource (
     goto RELEASE_RESOURCE;
   }
 
-  NewUri[0] = '\0';
+  ASSERT (NewResourceLocation != NULL);
 
   //
   // Keep location of new resource.
   //
   if (NewResourceLocation != NULL) {
-    //
-    // Find key
-    //
-    NewKey = AsciiStrStr (NewResourceLocation, RESOURCE_SCHEMA);
-    if (NewKey != NULL) {
-      NewKey += 6;
-      //
-      // skip '/'
-      //
-      if (NewKey[0] == '/') {
-        NewKey++;
-      }
-      SetConfigureLangWithkey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, NewKey, Index);
-      AsciiSPrint (NewUri, sizeof (NewUri), "%a[%a]", Private->Uri, NewKey);
-      FreePool (NewResourceLocation);
-    }
+    RedfisSetRedfishUri (ConfigureLang, NewResourceLocation);
   }
 
   //
   // Handle Etag
   //
   if (EtagStr != NULL) {
-    SetEtagWithUri (EtagStr, NewUri);
+    SetEtagWithUri (EtagStr, NewResourceLocation);
     FreePool (EtagStr);
   }
 
 RELEASE_RESOURCE:
 
-  FreePool (Json);
+  if (NewResourceLocation != NULL) {
+    FreePool (NewResourceLocation);
+  }
+
+  if (Json != NULL) {
+    FreePool (Json);
+  }
 
   return Status;
 }
@@ -977,7 +951,6 @@ RedfishCheckResourceCommon (
   UINTN      Count;
   EFI_STRING Property;
   CHAR8      *PropertyAscii;
-  UINTN      BuffSize;
   CHAR8      *Match;
 
   if (Private == NULL || IS_EMPTY_STRING (Json)) {
@@ -1002,11 +975,13 @@ RedfishCheckResourceCommon (
       continue;
     }
 
-    DEBUG ((DEBUG_INFO, "[%d] check resource from: %s\n", Index, Property));
+    DEBUG ((DEBUG_INFO, "%a, [%d] check resource from: %s\n", __FUNCTION__, Index, Property));
 
-    BuffSize = StrLen (Property) + 1;
-    PropertyAscii = AllocatePool (BuffSize);
-    UnicodeStrToAsciiStrS (Property, PropertyAscii, BuffSize);
+    PropertyAscii = StrUnicodeToAscii (Property);
+    if (PropertyAscii == NULL) {
+      DEBUG ((DEBUG_ERROR, "%a, StrUnicodeToAscii failed\n", __FUNCTION__));
+      continue;
+    }
 
     //
     // check to see if it is partial match.
@@ -1014,7 +989,7 @@ RedfishCheckResourceCommon (
     Match = AsciiStrStr (Json, PropertyAscii);
     if (Match == NULL || AsciiStrnCmp (Match, PropertyAscii, AsciiStrLen (PropertyAscii)) != 0) {
       Status = EFI_NOT_FOUND;
-      DEBUG ((DEBUG_ERROR, "%a, property %a is missing\n", __FUNCTION__, PropertyAscii));
+      DEBUG ((DEBUG_ERROR, "%a, property %s is missing\n", __FUNCTION__, PropertyAscii));
     }
 
     FreePool (PropertyAscii);
@@ -1043,7 +1018,6 @@ RedfishUpdateResourceCommon (
 {
   EFI_STATUS Status;
   CHAR8      *Json;
-  CHAR8      *ArrayKey;
   EFI_STRING ConfigureLang;
   CHAR8      *EtagStr;
 
@@ -1053,14 +1027,8 @@ RedfishUpdateResourceCommon (
 
   Json = NULL;
   ConfigureLang = NULL;
-  ArrayKey = NULL;
 
-  Status = GetArraykeyFromUri (Private->Uri, &ArrayKey);
-  if (EFI_ERROR (Status)) {
-    return Status;
-  }
-
-  ConfigureLang = GetConfigureLangByKey (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, NULL, ArrayKey);
+  ConfigureLang = GetConfigureLang (Private->Uri, NULL);
   if (ConfigureLang == NULL) {
     return EFI_NOT_FOUND;
   }
@@ -1109,9 +1077,42 @@ ON_RELEASE:
     FreePool (ConfigureLang);
   }
 
-  if (ArrayKey != NULL) {
-    FreePool (ArrayKey);
+  return Status;
+}
+
+/**
+  Identify resource from given URI.
+
+  @param[in]   This                Pointer to REDFISH_RESOURCE_COMMON_PRIVATE instance.
+  @param[in]   Json                The JSON to consume.
+
+  @retval EFI_SUCCESS              Value is returned successfully.
+  @retval Others                   Some error happened.
+
+**/
+EFI_STATUS
+RedfishIdentifyResourceCommon (
+  IN     REDFISH_RESOURCE_COMMON_PRIVATE  *Private,
+  IN     CHAR8                            *Json
+  )
+{
+  BOOLEAN     Supported;
+  EFI_STRING  ResourceLink;
+
+  ResourceLink = NULL;
+  Supported = RedfishIdentifyResource (Private->Uri, Private->Json);
+  if (Supported) {
+    //
+    // Keep URI and ConfigLang mapping
+    //
+    ResourceLink = GetOdataId (Private->Payload);
+    if (ResourceLink != NULL) {
+      RedfisSetRedfishUri (Private->Uri, ResourceLink);
+      FreePool (ResourceLink);
+    }
+
+    return EFI_SUCCESS;
   }
 
-  return Status;
+  return EFI_UNSUPPORTED;
 }
