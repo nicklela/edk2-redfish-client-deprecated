@@ -25,12 +25,12 @@
 **/
 BOOLEAN
 RedfishIdentifyResource (
-  IN     CHAR8      *Uri,
+  IN     EFI_STRING Uri,
   IN     CHAR8      *Json
   )
 {
   if (!IS_EMPTY_STRING (Uri)) {
-    DEBUG ((DEBUG_VERBOSE, "%a, accept resource: %a\n", __FUNCTION__, Uri));
+    DEBUG ((DEBUG_VERBOSE, "%a, accept resource: %s\n", __FUNCTION__, Uri));
   }
 
   return TRUE;
