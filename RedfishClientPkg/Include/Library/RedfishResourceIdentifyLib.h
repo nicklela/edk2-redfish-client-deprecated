@@ -22,7 +22,7 @@
 **/
 BOOLEAN
 RedfishIdentifyResource (
-  IN     CHAR8      *Uri,
+  IN     EFI_STRING Uri,
   IN     CHAR8      *Json
   );
 

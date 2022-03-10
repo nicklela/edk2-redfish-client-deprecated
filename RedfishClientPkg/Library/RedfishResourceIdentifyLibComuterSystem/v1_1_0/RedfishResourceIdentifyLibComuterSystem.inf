@@ -33,6 +33,7 @@
   BaseLib
   DebugLib
   UefiBootServicesTableLib
+  UefiLib
 
 [Protocols]
   gEfiRestJsonStructureProtocolGuid   ## CONSUMES

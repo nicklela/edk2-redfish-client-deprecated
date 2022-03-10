@@ -10,6 +10,7 @@
 #include <Uefi.h>
 #include <RedfishBase.h>
 
+#include <Library/UefiLib.h>
 #include <Library/BaseLib.h>
 #include <Library/DebugLib.h>
 #include <Library/NetLib.h>
@@ -34,7 +35,7 @@ EFI_REST_JSON_STRUCTURE_PROTOCOL  *mJsonStructProtocol = NULL;
 **/
 BOOLEAN
 RedfishIdentifyResource (
-  IN     CHAR8      *Uri,
+  IN     EFI_STRING Uri,
   IN     CHAR8      *Json
   )
 {
@@ -45,11 +46,11 @@ RedfishIdentifyResource (
   EFI_GUID                              ResourceUuid;
 
   if (IS_EMPTY_STRING (Uri) || IS_EMPTY_STRING (Json)) {
-    return EFI_INVALID_PARAMETER;
+    return FALSE;
   }
 
   if (mJsonStructProtocol == NULL) {
-    return EFI_NOT_READY;
+    return FALSE;
   }
 
   ComputerSystem = NULL;
@@ -63,32 +64,29 @@ RedfishIdentifyResource (
                                   );
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, ToStructure() failed: %r\n", __FUNCTION__, Status));
-    return Status;
+    return FALSE;
   }
 
   ComputerSystemCs = ComputerSystem->ComputerSystem;
 
   if (IS_EMPTY_STRING (ComputerSystemCs->UUID)) {
-    return EFI_UNSUPPORTED;
+    return FALSE;
   }
 
   Status = AsciiStrToGuid (ComputerSystemCs->UUID, &ResourceUuid);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, fail to get resource UUID: %r\n", __FUNCTION__, Status));
-    return Status;
+    return FALSE;
   }
 
   Status = NetLibGetSystemGuid (&SystemUuid);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, fail to get system UUID from SMBIOS: %r\n", __FUNCTION__, Status));
-    return Status;
+    return FALSE;
   }
 
   DEBUG ((REDFISH_DEBUG_TRACE, "%a, Identify: System: %g Resource: %g\n", __FUNCTION__, &SystemUuid, &ResourceUuid));
   if (CompareGuid (&ResourceUuid, &SystemUuid)) {
-    if (!IS_EMPTY_STRING (ComputerSystemCs->Id)) {
-      RedfisSetSystemRootPath (ComputerSystemCs->Id);
-    }
     Status = EFI_SUCCESS;
   } else {
     Status = EFI_UNSUPPORTED;
@@ -99,7 +97,7 @@ RedfishIdentifyResource (
                         (EFI_REST_JSON_STRUCTURE_HEADER *)ComputerSystem
                         );
 
-  return TRUE;
+  return (Status == EFI_SUCCESS ? TRUE : FALSE);
 }
 
 /**
@@ -110,7 +108,7 @@ RedfishIdentifyResource (
 **/
 VOID
 EFIAPI
-EfiRestJasonStructureProtocolIsReady
+RestJasonStructureProtocolIsReady
  (
   IN  EFI_EVENT                             Event,
   IN  VOID                                  *Context
@@ -157,7 +155,7 @@ RedfishResourceIdentifyComuterSystemConstructor (
   EfiCreateProtocolNotifyEvent (
     &gEfiRestJsonStructureProtocolGuid,
     TPL_CALLBACK,
-    EfiRestJasonStructureProtocolIsReady,
+    RestJasonStructureProtocolIsReady,
     NULL,
     &Registration
     );
