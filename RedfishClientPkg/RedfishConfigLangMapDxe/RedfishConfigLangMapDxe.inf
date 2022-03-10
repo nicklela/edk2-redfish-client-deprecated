@@ -8,12 +8,12 @@
 
 [Defines]
   INF_VERSION               = 0x0001000b
-  BASE_NAME                 = RedfishResourceMapDxe
+  BASE_NAME                 = RedfishConfigLangMapDxe
   FILE_GUID                 = F4121E32-454D-4E51-AB4B-DAA577833E95
   MODULE_TYPE               = DXE_DRIVER
   VERSION_STRING            = 1.0
-  ENTRY_POINT               = RedfishResourceMapDriverEntryPoint
-  UNLOAD_IMAGE              = RedfishResourceMapDriverUnload
+  ENTRY_POINT               = RedfishConfigLangMapDriverEntryPoint
+  UNLOAD_IMAGE              = RedfishConfigLangMapDriverUnload
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -22,8 +22,8 @@
   RedfishClientPkg/RedfishClientPkg.dec
 
 [Sources]
-  RedfishResourceMapDxe.h
-  RedfishResourceMapDxe.c
+  RedfishConfigLangMapDxe.h
+  RedfishConfigLangMapDxe.c
 
 [LibraryClasses]
   BaseLib
@@ -36,7 +36,7 @@
   UefiDriverEntryPoint
 
 [Protocols]
-  gEdkIIRedfishResourceMapProtocolGuid           ## PRODUCED ##
+  gEdkIIRedfishConfigLangMapProtocolGuid           ## PRODUCED ##
 
 [Guids]
   gEfiEventExitBootServicesGuid                  ## CONSUMED ##

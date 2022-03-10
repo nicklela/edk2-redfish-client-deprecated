@@ -15,7 +15,7 @@
 !if $(REDFISH_CLIENT) == TRUE
   RedfishClientPkg/RedfishFeatureCoreDxe/RedfishFeatureCoreDxe.inf
   RedfishClientPkg/RedfishETagDxe/RedfishETagDxe.inf
-  RedfishClientPkg/RedfishResourceMapDxe/RedfishResourceMapDxe.inf
+  RedfishClientPkg/RedfishConfigLangMapDxe/RedfishConfigLangMapDxe.inf
   RedfishClientPkg/Features/Memory/V1_7_1/Dxe/RedfishMemoryDxe.inf
   RedfishClientPkg/Features/RedfishMemoryCollectionDxe/RedfishMemoryCollectionDxe.inf
   RedfishClientPkg/Features/ComputerSystem/v1_1_0/Dxe/RedfishComputerSystemDxe.inf
