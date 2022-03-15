@@ -1073,6 +1073,8 @@ RedfishGetUri (
   EFI_STRING Found;
   EFI_STRING TempStr;
   EFI_STRING ResultStr;
+  EFI_STRING Head;
+  EFI_STRING CloseBracket;
   UINTN      TempStrSize;
   UINTN      RemainingLen;
   UINTN      ConfigLangLen;
@@ -1085,59 +1087,98 @@ RedfishGetUri (
 
   DEBUG ((REDFISH_DEBUG_TRACE, "%a, Get: %s\n", __FUNCTION__, ConfigLang));
 
-  Target = StrStr (ConfigLang, L"{");
-  if (Target == NULL) {
+  CloseBracket = StrStr (ConfigLang, L"{");
+  if (CloseBracket == NULL) {
     return AllocateCopyPool (StrSize (ConfigLang), ConfigLang);
   }
 
+  //
+  // remove leading "/v1" or "/redfish/v1"
+  //
+  Head = StrStr (ConfigLang, L"v1");
+  if (Head == NULL) {
+    Head = ConfigLang;
+  } else {
+    Head += 2;
+  }
+
+  ResultStr = AllocatePool (sizeof (CHAR16) * MAX_REDFISH_URL_LEN);
+  if (ResultStr == NULL) {
+    return NULL;
+  }
+  //
+  // Add leading "/v1" for libredfish
+  //
+  UnicodeSPrint (ResultStr, sizeof (CHAR16) * MAX_REDFISH_URL_LEN, L"/v1");
+
+  //
+  // Go though ConfigLang and replace each {} with URL
+  //
   do {
+    ConfigLangLen = StrLen (Head);
+    Target = CloseBracket;
+
+    //
+    // Look for next ConfigLang
+    //
+    do {
+      Target += 1;
+    } while (*Target != '\0' && *Target != '}');
+
+    //
+    // Invalid format. No '}' found
+    //
+    if (*Target == '\0') {
+      DEBUG ((DEBUG_ERROR, "%a, invalid format: %s\n", __FUNCTION__, ConfigLang));
+      return NULL;
+    }
+
+    //
+    // Copy current ConfigLang to temporary string and do a query
+    //
     Target += 1;
-  } while (*Target != '\0' && *Target != '}');
+    RemainingLen = StrLen (Target);
+    TempStrSize = (ConfigLangLen - RemainingLen + 1) * sizeof (CHAR16);
+    TempStr = AllocateCopyPool (TempStrSize, Head);
+    if (TempStr == NULL) {
+      return NULL;
+    }
+    TempStr[ConfigLangLen - RemainingLen] = '\0';
 
-  if (*Target == '\0') {
-    DEBUG ((DEBUG_ERROR, "%a, invalid format: %s\n", __FUNCTION__, ConfigLang));
-    return NULL;
+    Status = mConfigLangMapProtocol->Get (
+                                       mConfigLangMapProtocol,
+                                       RedfishGetTypeConfigLang,
+                                       TempStr,
+                                       &Found
+                                       );
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "%a, Can not find: %s\n", __FUNCTION__, TempStr));
+      return NULL;
+    }
+
+    DEBUG ((REDFISH_DEBUG_TRACE, "%a, Found: %s\n", __FUNCTION__, Found));
+
+    //
+    // Keep result in final string pool
+    //
+    StrCatS (ResultStr, MAX_REDFISH_URL_LEN, Found);
+    FreePool (TempStr);
+
+    //
+    // Prepare for next ConfigLang
+    //
+    Head = Target;
+    CloseBracket = StrStr (Head, L"{");
+  } while (CloseBracket != NULL);
+
+  //
+  // String which is no ConfigLang remains
+  //
+  if (Head != '\0') {
+    StrCatS (ResultStr, MAX_REDFISH_URL_LEN, Head);
   }
 
-  Target += 1;
-  ConfigLangLen = StrLen (ConfigLang);
-  RemainingLen = StrLen (Target);
-  TempStrSize = (ConfigLangLen - RemainingLen + 1) * sizeof (CHAR16);
-  TempStr = AllocateCopyPool (TempStrSize, ConfigLang);
-  if (TempStr == NULL) {
-    return NULL;
-  }
-  TempStr[ConfigLangLen - RemainingLen] = '\0';
-
-  Status = mConfigLangMapProtocol->Get (
-                                     mConfigLangMapProtocol,
-                                     RedfishGetTypeConfigLang,
-                                     TempStr,
-                                     &Found
-                                     );
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, Can not find: %s\n", __FUNCTION__, TempStr));
-    return NULL;
-  }
-
-  DEBUG ((REDFISH_DEBUG_TRACE, "%a, Found: %s\n", __FUNCTION__, Found));
-
-  if (RemainingLen == 0) {
-    return Found;
-  }
-
-  TempStrSize = (StrLen (Found) + RemainingLen + 1) * sizeof (CHAR16);
-  FreePool (TempStr);
-  TempStr = AllocateZeroPool (TempStrSize);
-  if (TempStr == NULL) {
-    return NULL;
-  }
-
-  StrCpyS (TempStr, TempStrSize, Found);
-  StrCatS (TempStr, TempStrSize, Target);
-
-  ResultStr = RedfishGetUri (TempStr);
-  FreePool (TempStr);
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a, return: %s\n", __FUNCTION__, ResultStr));
 
   return ResultStr;
 }
@@ -1219,6 +1260,7 @@ RedfisSetRedfishUri (
   )
 {
   EFI_STATUS Status;
+  EFI_STRING Prefix;
 
   if (IS_EMPTY_STRING (ConfigLang) || IS_EMPTY_STRING (Uri)) {
     return EFI_INVALID_PARAMETER;
@@ -1231,6 +1273,14 @@ RedfisSetRedfishUri (
   }
 
   DEBUG ((REDFISH_DEBUG_TRACE, "%a, Saved: %s -> %s\n", __FUNCTION__, ConfigLang, Uri));
+
+  //
+  // remove leading "/v1" or "/redfish/v1"
+  //
+  Prefix = StrStr (Uri, L"v1");
+  if (Prefix != NULL) {
+    Uri = Prefix + 2;
+  }
 
   return mConfigLangMapProtocol->Set (mConfigLangMapProtocol, ConfigLang, Uri);
 }

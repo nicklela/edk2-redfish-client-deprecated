@@ -989,7 +989,7 @@ RedfishCheckResourceCommon (
     Match = AsciiStrStr (Json, PropertyAscii);
     if (Match == NULL || AsciiStrnCmp (Match, PropertyAscii, AsciiStrLen (PropertyAscii)) != 0) {
       Status = EFI_NOT_FOUND;
-      DEBUG ((DEBUG_ERROR, "%a, property %s is missing\n", __FUNCTION__, PropertyAscii));
+      DEBUG ((DEBUG_ERROR, "%a, property %a is missing\n", __FUNCTION__, PropertyAscii));
     }
 
     FreePool (PropertyAscii);
@@ -1098,18 +1098,42 @@ RedfishIdentifyResourceCommon (
 {
   BOOLEAN     Supported;
   EFI_STRING  ResourceLink;
+  EFI_STATUS  Status;
+  EFI_STRING  *ConfigureLangList;
+  UINTN       Count;
+  EFI_STRING  EndOfChar;
 
   ResourceLink = NULL;
   Supported = RedfishIdentifyResource (Private->Uri, Private->Json);
   if (Supported) {
+    Status = RedfishPlatformConfigGetConfigureLang (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, REDPATH_ARRAY_PATTERN, &ConfigureLangList, &Count);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "%a, BiosConfigToRedfishGetConfigureLangRegex failed: %r\n", __FUNCTION__, Status));
+      return Status;
+    }
+
+    if (Count == 0) {
+      return EFI_SUCCESS;
+    }
+
+    EndOfChar = StrStr (ConfigureLangList[0], L"}");
+    if (EndOfChar == NULL) {
+      ASSERT (FALSE);
+      return EFI_DEVICE_ERROR;
+    }
+
+    *(++EndOfChar) = '\0';
+
     //
     // Keep URI and ConfigLang mapping
     //
     ResourceLink = GetOdataId (Private->Payload);
     if (ResourceLink != NULL) {
-      RedfisSetRedfishUri (Private->Uri, ResourceLink);
+      RedfisSetRedfishUri (ConfigureLangList[0], ResourceLink);
       FreePool (ResourceLink);
     }
+
+    FreePool (ConfigureLangList);
 
     return EFI_SUCCESS;
   }
