@@ -546,11 +546,17 @@ RedfishConfigLangMapGet (
 
   Target = FindConfigLangMapRecord (&Private->ConfigLangList.Listheader, QueryString, (QueryStringType == RedfishGetTypeUri));
   if (Target == NULL) {
+#if CONFIG_LANG_MAP_DEBUG_ENABLED
+    DumpConfigLangMapList (&Private->ConfigLangList, L"EFI_NOT_FOUND");
+#endif
     return EFI_NOT_FOUND;
   }
 
-  Result = (QueryStringType == RedfishGetTypeUri ? Target->Uri : Target->ConfigLang);
+  Result = (QueryStringType == RedfishGetTypeUri ? Target->ConfigLang : Target->Uri);
   *ResultString = AllocateCopyPool (StrSize (Result), Result);
+  if (*ResultString == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
 
   return EFI_SUCCESS;
 }
