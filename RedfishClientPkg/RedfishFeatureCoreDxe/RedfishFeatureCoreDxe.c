@@ -2,7 +2,7 @@
   RedfishFeatureCoreDxe produces EdkIIRedfishFeatureCoreProtocol
   for EDK2 Redfish Feature driver registration.
 
-  (C) Copyright 2021 Hewlett Packard Enterprise Development LP<BR>
+  (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -85,10 +85,21 @@ RedfishFeatureDriverStartup(
   if (ResourceUriNodeList == NULL) {
     return;
   }
+
+  //
+  // Signal event before doing provisioning
+  //
+  SignalReadyToProvisioningEvent ();
+
   //
   // Invoke the callback by the hierarchy level
   //
   StartUpFeatureDriver (ResourceUriNodeList, StartupContext);
+
+  //
+  // Signal event after provisioning finished
+  //
+  SignalAfterProvisioningEvent ();
 }
 
 /**

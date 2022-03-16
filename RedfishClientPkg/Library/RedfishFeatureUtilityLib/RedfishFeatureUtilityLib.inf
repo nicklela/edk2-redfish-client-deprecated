@@ -41,6 +41,7 @@
   UefiLib
   UefiBootServicesTableLib
   UefiRuntimeServicesTableLib
+  PcdLib
 
 [Protocols]
   gEdkIIRedfishETagProtocolGuid           ## CONSUMED ##
@@ -49,3 +50,7 @@
 [Pcd]
   gEfiRedfishClientPkgTokenSpaceGuid.PcdMaxRedfishSchemaStringSize
   gEfiRedfishClientPkgTokenSpaceGuid.PcdMaxRedfishSchemaVersionSize
+
+[Guids]
+  gEfiRedfishClientFeatureReadyToProvisioningGuid
+  gEfiRedfishClientFeatureAfterProvisioningGuid

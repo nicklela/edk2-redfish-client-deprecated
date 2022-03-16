@@ -696,14 +696,17 @@ RedfishConfigLangMapDriverUnload (
       FreePool (mRedfishConfigLangMapPrivate->VariableName);
     }
 
-    if (mRedfishConfigLangMapPrivate->Event != NULL) {
-      gBS->CloseEvent (mRedfishConfigLangMapPrivate->Event);
+    if (mRedfishConfigLangMapPrivate->ExitBootEvent != NULL) {
+      gBS->CloseEvent (mRedfishConfigLangMapPrivate->ExitBootEvent);
+    }
+
+    if (mRedfishConfigLangMapPrivate->ProvisionEvent != NULL) {
+      gBS->CloseEvent (mRedfishConfigLangMapPrivate->ProvisionEvent);
     }
 
     FreePool (mRedfishConfigLangMapPrivate);
     mRedfishConfigLangMapPrivate = NULL;
   }
-
 
   return EFI_SUCCESS;
 }
@@ -772,7 +775,7 @@ RedfishConfigLangMapDriverEntryPoint (
                   RedfishConfigLangMapOnExitBootService,
                   NULL,
                   &gEfiEventExitBootServicesGuid,
-                  &mRedfishConfigLangMapPrivate->Event
+                  &mRedfishConfigLangMapPrivate->ExitBootEvent
                   );
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a: Fail to register Exit Boot Service event.", __FUNCTION__));
@@ -786,6 +789,15 @@ RedfishConfigLangMapDriverEntryPoint (
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_INFO, "%a, Initial ConfigLangMap List: %r\n", __FUNCTION__, Status));
   }
+
+  //
+  // Register after provisioning event
+  //
+  Status = CreateAfterProvisioningEvent (
+             RedfishConfigLangMapOnExitBootService,
+             NULL,
+             &mRedfishConfigLangMapPrivate->ProvisionEvent
+             );
 
   return EFI_SUCCESS;
 

@@ -25,7 +25,8 @@
 #include <Library/UefiDriverEntryPoint.h>
 #include <Library/UefiLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
-
+#include <Library/PcdLib.h>
+#include <Library/RedfishFeatureUtilityLib.h>
 #include <Protocol/EdkIIRedfishConfigLangMapProtocol.h>
 
 #include <Guid/VariableFormat.h>
@@ -62,7 +63,8 @@ typedef struct {
   REDFISH_CONFIG_LANG_MAP_LIST           ConfigLangList;
   EDKII_REDFISH_CONFIG_LANG_MAP_PROTOCOL Protocol;
   EFI_STRING                             VariableName;
-  EFI_EVENT                              Event;
+  EFI_EVENT                              ExitBootEvent;
+  EFI_EVENT                              ProvisionEvent;
 } REDFISH_CONFIG_LANG_MAP_PRIVATE_DATA;
 
 #define REDFISH_CONFIG_LANG_MAP_PRIVATE_FROM_THIS(a)  BASE_CR (a, REDFISH_CONFIG_LANG_MAP_PRIVATE_DATA, Protocol)

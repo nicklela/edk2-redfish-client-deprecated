@@ -1,7 +1,7 @@
 /** @file
   Definitions of RedfishFeatureCoreDxe
 
-  (C) Copyright 2021 Hewlett Packard Enterprise Development LP<BR>
+  (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -18,6 +18,7 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Library/PrintLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+#include <Library/RedfishFeatureUtilityLib.h>
 
 #define MaxNodeNameLength 64
 #define NodeSeperator L'/'
