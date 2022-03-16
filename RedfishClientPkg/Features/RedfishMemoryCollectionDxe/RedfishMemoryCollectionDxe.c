@@ -17,9 +17,10 @@ HandleResource (
   IN  EFI_STRING                 Uri
   )
 {
-  EFI_STATUS                            Status;
+  EFI_STATUS                              Status;
   EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL  *RedfishResrouceProtocol;
-  REDFISH_SCHEMA_INFO                   SchemaInfo;
+  REDFISH_SCHEMA_INFO                     SchemaInfo;
+  EFI_STRING                              ConfigLang;
 
   if (Private == NULL || IS_EMPTY_STRING (Uri)) {
     return EFI_INVALID_PARAMETER;
@@ -47,19 +48,25 @@ HandleResource (
   // Check and see if this is target resource that we want to handle.
   // Some resource is handled by other provider so we have to make sure this first.
   //
-  DEBUG ((REDFISH_DEBUG_TRACE, "%a Identify for %s\n", __FUNCTION__, Uri));
-  Status = RedfishResrouceProtocol->Identify (
-                                      RedfishResrouceProtocol,
-                                      Uri
-                                      );
-  if (EFI_ERROR (Status)) {
-    if (Status == EFI_UNSUPPORTED) {
-      DEBUG ((DEBUG_INFO, "%a, \"%a\" is not handled by us\n", __FUNCTION__, Uri));
-      return EFI_SUCCESS;
-    }
+  DEBUG ((REDFISH_DEBUG_TRACE, "%s Identify for %s\n", __FUNCTION__, Uri));
+  ConfigLang = RedfishGetConfigLanguage (Uri);
+  if (ConfigLang == NULL) {
+    Status = RedfishResrouceProtocol->Identify (
+                                        RedfishResrouceProtocol,
+                                        Uri
+                                        );
+    if (EFI_ERROR (Status)) {
+      if (Status == EFI_UNSUPPORTED) {
+        DEBUG ((DEBUG_INFO, "%a, \"%s\" is not handled by us\n", __FUNCTION__, Uri));
+        return EFI_SUCCESS;
+      }
 
-    DEBUG ((DEBUG_ERROR, "%a, fail to identify resource: \"%a\": %r\n", __FUNCTION__, Uri, Status));
-    return Status;
+      DEBUG ((DEBUG_ERROR, "%a, fail to identify resource: \"%s\": %r\n", __FUNCTION__, Uri, Status));
+      return Status;
+    }
+  } else {
+    DEBUG ((REDFISH_DEBUG_TRACE, "%a, history record found: %s\n", __FUNCTION__, ConfigLang));
+    FreePool (ConfigLang);
   }
 
   //

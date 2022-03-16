@@ -434,14 +434,17 @@ GetOdataId (
 
   Return config language from given URI and prperty name. It's call responsibility to release returned buffer.
 
+  @param[in] Uri            The URI to match
+  @param[in] PropertyName   The property name of resource. This is optional.
+
   @retval  NULL     Can not find redfish uri.
   @retval  Other    redfish uri is returned.
 
 **/
 EFI_STRING
 GetConfigureLang (
-  IN  EFI_STRING  Uri,
-  IN  CHAR8       *PropertyName
+  IN  CHAR8 *Uri,
+  IN  CHAR8 *PropertyName   OPTIONAL
   );
 
 /**
@@ -457,6 +460,21 @@ GetConfigureLang (
 EFI_STRING
 RedfishGetUri (
   IN  EFI_STRING ConfigLang
+  );
+
+/**
+
+  Return config language by given URI. It's call responsibility to release returned buffer.
+
+  @param[in]  Uri   Uri to search.
+
+  @retval  NULL     Can not find redfish uri.
+  @retval  Other    redfish uri is returned.
+
+**/
+EFI_STRING
+RedfishGetConfigLanguage (
+  IN  EFI_STRING Uri
   );
 
 /**

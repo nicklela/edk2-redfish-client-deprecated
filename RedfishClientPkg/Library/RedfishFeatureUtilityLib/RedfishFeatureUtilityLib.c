@@ -1229,17 +1229,58 @@ RedfishGetConfigLanguage (
 
   Return config language from given URI and prperty name. It's call responsibility to release returned buffer.
 
+  @param[in] Uri            The URI to match
+  @param[in] PropertyName   The property name of resource. This is optional.
+
   @retval  NULL     Can not find redfish uri.
   @retval  Other    redfish uri is returned.
 
 **/
 EFI_STRING
 GetConfigureLang (
-  IN  EFI_STRING Uri,
-  IN  CHAR8     *PropertyName
+  IN  CHAR8 *Uri,
+  IN  CHAR8 *PropertyName   OPTIONAL
   )
 {
-  return RedfishGetConfigLanguage (Uri);
+  EFI_STRING  ConfigLang;
+  UINTN       StringSize;
+  EFI_STRING  ResultStr;
+  EFI_STRING  UnicodeUri;
+  EFI_STATUS  Status;
+
+  if (IS_EMPTY_STRING (Uri)) {
+    return NULL;
+  }
+
+  StringSize = AsciiStrSize (Uri);
+  UnicodeUri = AllocatePool (StringSize * sizeof (CHAR16));
+  if (UnicodeUri == NULL) {
+    return NULL;
+  }
+
+  Status = AsciiStrToUnicodeStrS (Uri, UnicodeUri, StringSize);
+  if (EFI_ERROR (Status)) {
+    return NULL;
+  }
+
+  ConfigLang = RedfishGetConfigLanguage (UnicodeUri);
+  if (ConfigLang == NULL) {
+    return NULL;
+  }
+
+  if (IS_EMPTY_STRING (PropertyName)) {
+    return ConfigLang;
+  }
+
+  StringSize = StrSize (ConfigLang) + (AsciiStrLen (PropertyName) * sizeof (CHAR16));
+  ResultStr = AllocatePool (StringSize);
+  if (ResultStr == NULL) {
+    return NULL;
+  }
+
+  UnicodeSPrint (ResultStr, StringSize, L"%s/%a", ConfigLang, PropertyName);
+
+  return ResultStr;
 }
 
 /**
