@@ -28,6 +28,7 @@
 #include <Library/UefiLib.h>
 
 #include <Guid/VariableFormat.h>
+#include <Guid/RedfishClientEventGroup.h>
 
 #include <Protocol/EdkIIRedfishETagProtocol.h>
 #include <Protocol/EdkIIRedfishConfigLangMapProtocol.h>

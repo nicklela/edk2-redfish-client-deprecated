@@ -1720,6 +1720,146 @@ PropertyChecker2Parm (
 }
 
 /**
+  Unloads the application and its installed protocol.
+
+  @param[in] ImageHandle       Handle that identifies the image to be unloaded.
+  @param[in] SystemTable      The system table.
+
+  @retval EFI_SUCCESS      The image has been unloaded.
+
+**/
+EFI_STATUS
+EFIAPI
+RedfishFeatureUtilityLibDestructor (
+  IN EFI_HANDLE                            ImageHandle,
+  IN EFI_SYSTEM_TABLE                      *SystemTable
+  )
+{
+  return EFI_SUCCESS;
+}
+
+/**
+  Create an EFI event before Redfish provisioning start.
+
+  @param  NotifyFunction            The notification function to call when the event is signaled.
+  @param  NotifyContext             The content to pass to NotifyFunction when the event is signaled.
+  @param  ReadyToProvisioningEvent  Returns the EFI event returned from gBS->CreateEvent(Ex).
+
+  @retval EFI_SUCCESS       Event was created.
+  @retval Other             Event was not created.
+
+**/
+EFI_STATUS
+EFIAPI
+CreateReadyToProvisioningEvent (
+  IN  EFI_EVENT_NOTIFY  NotifyFunction,  OPTIONAL
+  IN  VOID              *NotifyContext,  OPTIONAL
+  OUT EFI_EVENT         *ReadyToProvisioningEvent
+  )
+{
+  EFI_STATUS Status;
+
+  Status = gBS->CreateEventEx (
+                  EVT_NOTIFY_SIGNAL,
+                  TPL_CALLBACK,
+                  (NotifyFunction == NULL ? EfiEventEmptyFunction : NotifyFunction),
+                  NotifyContext,
+                  &gEfiRedfishClientFeatureReadyToProvisioningGuid,
+                  ReadyToProvisioningEvent
+                  );
+
+  return Status;
+}
+
+/**
+  Create an EFI event after Redfish provisioning finished.
+
+  @param  NotifyFunction            The notification function to call when the event is signaled.
+  @param  NotifyContext             The content to pass to NotifyFunction when the event is signaled.
+  @param  ReadyToProvisioningEvent  Returns the EFI event returned from gBS->CreateEvent(Ex).
+
+  @retval EFI_SUCCESS       Event was created.
+  @retval Other             Event was not created.
+
+**/
+EFI_STATUS
+EFIAPI
+CreateAfterProvisioningEvent (
+  IN  EFI_EVENT_NOTIFY  NotifyFunction,  OPTIONAL
+  IN  VOID              *NotifyContext,  OPTIONAL
+  OUT EFI_EVENT         *ReadyToProvisioningEvent
+  )
+{
+  EFI_STATUS Status;
+
+  Status = gBS->CreateEventEx (
+                  EVT_NOTIFY_SIGNAL,
+                  TPL_CALLBACK,
+                  (NotifyFunction == NULL ? EfiEventEmptyFunction : NotifyFunction),
+                  NotifyContext,
+                  &gEfiRedfishClientFeatureAfterProvisioningGuid,
+                  ReadyToProvisioningEvent
+                  );
+
+  return Status;
+}
+
+/**
+  Signal ready to provisioning event.
+
+  @retval EFI_SUCCESS       Event was created.
+  @retval Other             Event was not created.
+
+**/
+EFI_STATUS
+SignalReadyToProvisioningEvent (
+  IN VOID
+  )
+{
+  EFI_STATUS Status;
+  EFI_EVENT  Event;
+
+  Status = CreateReadyToProvisioningEvent (NULL, NULL, &Event);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, failed to create after provisioning event\n", __FUNCTION__));
+    return Status;
+  }
+
+  gBS->SignalEvent (Event);
+  gBS->CloseEvent (Event);
+
+  return EFI_SUCCESS;
+}
+
+/**
+  Signal after provisioning event.
+
+  @retval EFI_SUCCESS       Event was created.
+  @retval Other             Event was not created.
+
+**/
+EFI_STATUS
+SignalAfterProvisioningEvent (
+  IN VOID
+  )
+{
+  EFI_STATUS Status;
+  EFI_EVENT  Event;
+
+  Status = CreateAfterProvisioningEvent (NULL, NULL, &Event);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, failed to create after provisioning event\n", __FUNCTION__));
+    return Status;
+  }
+
+  gBS->SignalEvent (Event);
+  gBS->CloseEvent (Event);
+
+  return EFI_SUCCESS;
+}
+
+
+/**
 
   Install Boot Maintenance Manager Menu driver.
 
@@ -1738,24 +1878,5 @@ RedfishFeatureUtilityLibConstructor (
   )
 {
 
-  return EFI_SUCCESS;
-}
-
-/**
-  Unloads the application and its installed protocol.
-
-  @param[in] ImageHandle       Handle that identifies the image to be unloaded.
-  @param[in] SystemTable      The system table.
-
-  @retval EFI_SUCCESS      The image has been unloaded.
-
-**/
-EFI_STATUS
-EFIAPI
-RedfishFeatureUtilityLibDestructor (
-  IN EFI_HANDLE                            ImageHandle,
-  IN EFI_SYSTEM_TABLE                      *SystemTable
-  )
-{
   return EFI_SUCCESS;
 }
