@@ -80,7 +80,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "AllocationAlignmentMiB");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "AllocationAlignmentMiB");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->AllocationAlignmentMiB);
       if (EFI_ERROR (Status)) {
@@ -100,7 +100,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "AllocationIncrementMiB");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "AllocationIncrementMiB");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->AllocationIncrementMiB);
       if (EFI_ERROR (Status)) {
@@ -120,7 +120,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "BaseModuleType");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "BaseModuleType");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, MemoryCs->BaseModuleType);
       if (EFI_ERROR (Status)) {
@@ -140,7 +140,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "BusWidthBits");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "BusWidthBits");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->BusWidthBits);
       if (EFI_ERROR (Status)) {
@@ -160,7 +160,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "CacheSizeMiB");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "CacheSizeMiB");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->CacheSizeMiB);
       if (EFI_ERROR (Status)) {
@@ -180,7 +180,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "CapacityMiB");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "CapacityMiB");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->CapacityMiB);
       if (EFI_ERROR (Status)) {
@@ -200,7 +200,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "ConfigurationLocked");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "ConfigurationLocked");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsBooleanType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (BOOLEAN)*MemoryCs->ConfigurationLocked);
       if (EFI_ERROR (Status)) {
@@ -220,7 +220,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "DataWidthBits");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "DataWidthBits");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->DataWidthBits);
       if (EFI_ERROR (Status)) {
@@ -240,7 +240,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "DeviceID");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "DeviceID");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, MemoryCs->DeviceID);
       if (EFI_ERROR (Status)) {
@@ -260,7 +260,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "DeviceLocator");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "DeviceLocator");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, MemoryCs->DeviceLocator);
       if (EFI_ERROR (Status)) {
@@ -280,7 +280,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "ErrorCorrection");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "ErrorCorrection");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, MemoryCs->ErrorCorrection);
       if (EFI_ERROR (Status)) {
@@ -300,7 +300,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "FirmwareApiVersion");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "FirmwareApiVersion");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, MemoryCs->FirmwareApiVersion);
       if (EFI_ERROR (Status)) {
@@ -320,7 +320,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "FirmwareRevision");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "FirmwareRevision");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, MemoryCs->FirmwareRevision);
       if (EFI_ERROR (Status)) {
@@ -340,7 +340,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "IsRankSpareEnabled");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "IsRankSpareEnabled");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsBooleanType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (BOOLEAN)*MemoryCs->IsRankSpareEnabled);
       if (EFI_ERROR (Status)) {
@@ -360,7 +360,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "IsSpareDeviceEnabled");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "IsSpareDeviceEnabled");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsBooleanType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (BOOLEAN)*MemoryCs->IsSpareDeviceEnabled);
       if (EFI_ERROR (Status)) {
@@ -380,7 +380,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "LogicalSizeMiB");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "LogicalSizeMiB");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->LogicalSizeMiB);
       if (EFI_ERROR (Status)) {
@@ -400,7 +400,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "Manufacturer");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "Manufacturer");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, MemoryCs->Manufacturer);
       if (EFI_ERROR (Status)) {
@@ -420,7 +420,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "MemoryDeviceType");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "MemoryDeviceType");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, MemoryCs->MemoryDeviceType);
       if (EFI_ERROR (Status)) {
@@ -448,7 +448,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "MemoryLocation/Channel");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "MemoryLocation/Channel");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->MemoryLocation->Channel);
       if (EFI_ERROR (Status)) {
@@ -468,7 +468,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "MemoryLocation/MemoryController");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "MemoryLocation/MemoryController");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->MemoryLocation->MemoryController);
       if (EFI_ERROR (Status)) {
@@ -488,7 +488,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "MemoryLocation/Slot");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "MemoryLocation/Slot");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->MemoryLocation->Slot);
       if (EFI_ERROR (Status)) {
@@ -508,7 +508,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "MemoryLocation/Socket");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "MemoryLocation/Socket");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->MemoryLocation->Socket);
       if (EFI_ERROR (Status)) {
@@ -528,7 +528,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "MemorySubsystemControllerManufacturerID");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "MemorySubsystemControllerManufacturerID");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, MemoryCs->MemorySubsystemControllerManufacturerID);
       if (EFI_ERROR (Status)) {
@@ -548,7 +548,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "MemorySubsystemControllerProductID");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "MemorySubsystemControllerProductID");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, MemoryCs->MemorySubsystemControllerProductID);
       if (EFI_ERROR (Status)) {
@@ -568,7 +568,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "MemoryType");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "MemoryType");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, MemoryCs->MemoryType);
       if (EFI_ERROR (Status)) {
@@ -588,7 +588,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "ModuleManufacturerID");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "ModuleManufacturerID");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, MemoryCs->ModuleManufacturerID);
       if (EFI_ERROR (Status)) {
@@ -608,7 +608,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "ModuleProductID");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "ModuleProductID");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, MemoryCs->ModuleProductID);
       if (EFI_ERROR (Status)) {
@@ -628,7 +628,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "NonVolatileSizeMiB");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "NonVolatileSizeMiB");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->NonVolatileSizeMiB);
       if (EFI_ERROR (Status)) {
@@ -648,7 +648,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "OperatingSpeedMhz");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "OperatingSpeedMhz");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->OperatingSpeedMhz);
       if (EFI_ERROR (Status)) {
@@ -668,7 +668,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "PartNumber");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "PartNumber");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, MemoryCs->PartNumber);
       if (EFI_ERROR (Status)) {
@@ -688,7 +688,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "PersistentRegionNumberLimit");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "PersistentRegionNumberLimit");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->PersistentRegionNumberLimit);
       if (EFI_ERROR (Status)) {
@@ -708,7 +708,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "PersistentRegionSizeLimitMiB");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "PersistentRegionSizeLimitMiB");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->PersistentRegionSizeLimitMiB);
       if (EFI_ERROR (Status)) {
@@ -728,7 +728,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "PersistentRegionSizeMaxMiB");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "PersistentRegionSizeMaxMiB");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->PersistentRegionSizeMaxMiB);
       if (EFI_ERROR (Status)) {
@@ -756,7 +756,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "PowerManagementPolicy/AveragePowerBudgetMilliWatts");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "PowerManagementPolicy/AveragePowerBudgetMilliWatts");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->PowerManagementPolicy->AveragePowerBudgetMilliWatts);
       if (EFI_ERROR (Status)) {
@@ -776,7 +776,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "PowerManagementPolicy/MaxTDPMilliWatts");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "PowerManagementPolicy/MaxTDPMilliWatts");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->PowerManagementPolicy->MaxTDPMilliWatts);
       if (EFI_ERROR (Status)) {
@@ -796,7 +796,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "PowerManagementPolicy/PeakPowerBudgetMilliWatts");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "PowerManagementPolicy/PeakPowerBudgetMilliWatts");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->PowerManagementPolicy->PeakPowerBudgetMilliWatts);
       if (EFI_ERROR (Status)) {
@@ -816,7 +816,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "PowerManagementPolicy/PolicyEnabled");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "PowerManagementPolicy/PolicyEnabled");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsBooleanType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (BOOLEAN)*MemoryCs->PowerManagementPolicy->PolicyEnabled);
       if (EFI_ERROR (Status)) {
@@ -836,7 +836,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "RankCount");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "RankCount");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->RankCount);
       if (EFI_ERROR (Status)) {
@@ -864,7 +864,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "SecurityCapabilities/ConfigurationLockCapable");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "SecurityCapabilities/ConfigurationLockCapable");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsBooleanType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (BOOLEAN)*MemoryCs->SecurityCapabilities->ConfigurationLockCapable);
       if (EFI_ERROR (Status)) {
@@ -884,7 +884,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "SecurityCapabilities/DataLockCapable");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "SecurityCapabilities/DataLockCapable");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsBooleanType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (BOOLEAN)*MemoryCs->SecurityCapabilities->DataLockCapable);
       if (EFI_ERROR (Status)) {
@@ -904,7 +904,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "SecurityCapabilities/MaxPassphraseCount");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "SecurityCapabilities/MaxPassphraseCount");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->SecurityCapabilities->MaxPassphraseCount);
       if (EFI_ERROR (Status)) {
@@ -924,7 +924,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "SecurityCapabilities/PassphraseCapable");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "SecurityCapabilities/PassphraseCapable");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsBooleanType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (BOOLEAN)*MemoryCs->SecurityCapabilities->PassphraseCapable);
       if (EFI_ERROR (Status)) {
@@ -944,7 +944,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "SecurityCapabilities/PassphraseLockLimit");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "SecurityCapabilities/PassphraseLockLimit");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->SecurityCapabilities->PassphraseLockLimit);
       if (EFI_ERROR (Status)) {
@@ -964,7 +964,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "SecurityState");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "SecurityState");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, MemoryCs->SecurityState);
       if (EFI_ERROR (Status)) {
@@ -984,7 +984,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "SerialNumber");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "SerialNumber");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, MemoryCs->SerialNumber);
       if (EFI_ERROR (Status)) {
@@ -1004,7 +1004,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "SpareDeviceCount");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "SpareDeviceCount");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->SpareDeviceCount);
       if (EFI_ERROR (Status)) {
@@ -1024,7 +1024,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "SubsystemDeviceID");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "SubsystemDeviceID");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, MemoryCs->SubsystemDeviceID);
       if (EFI_ERROR (Status)) {
@@ -1044,7 +1044,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "SubsystemVendorID");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "SubsystemVendorID");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, MemoryCs->SubsystemVendorID);
       if (EFI_ERROR (Status)) {
@@ -1064,7 +1064,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "VendorID");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "VendorID");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, MemoryCs->VendorID);
       if (EFI_ERROR (Status)) {
@@ -1084,7 +1084,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "VolatileRegionNumberLimit");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "VolatileRegionNumberLimit");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->VolatileRegionNumberLimit);
       if (EFI_ERROR (Status)) {
@@ -1104,7 +1104,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "VolatileRegionSizeLimitMiB");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "VolatileRegionSizeLimitMiB");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->VolatileRegionSizeLimitMiB);
       if (EFI_ERROR (Status)) {
@@ -1124,7 +1124,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "VolatileRegionSizeMaxMiB");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "VolatileRegionSizeMaxMiB");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->VolatileRegionSizeMaxMiB);
       if (EFI_ERROR (Status)) {
@@ -1144,7 +1144,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "VolatileSizeMiB");
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "VolatileSizeMiB");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*MemoryCs->VolatileSizeMiB);
       if (EFI_ERROR (Status)) {
@@ -2265,7 +2265,7 @@ RedfishUpdateResourceCommon (
   Json = NULL;
   ConfigureLang = NULL;
 
-  ConfigureLang = GetConfigureLang (Private->Uri, NULL);
+  ConfigureLang = RedfishGetConfigLanguage (Private->Uri);
   if (ConfigureLang == NULL) {
     return EFI_NOT_FOUND;
   }
@@ -2334,19 +2334,36 @@ RedfishIdentifyResourceCommon (
   )
 {
   BOOLEAN     Supported;
-  EFI_STRING  ResourceLink;
+  EFI_STATUS  Status;
+  EFI_STRING  *ConfigureLangList;
+  UINTN       Count;
+  EFI_STRING  EndOfChar;
 
-  ResourceLink = NULL;
   Supported = RedfishIdentifyResource (Private->Uri, Private->Json);
   if (Supported) {
+    Status = RedfishPlatformConfigGetConfigureLang (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, REDPATH_ARRAY_PATTERN, &ConfigureLangList, &Count);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "%a, BiosConfigToRedfishGetConfigureLangRegex failed: %r\n", __FUNCTION__, Status));
+      return Status;
+    }
+
+    if (Count == 0) {
+      return EFI_SUCCESS;
+    }
+
+    EndOfChar = StrStr (ConfigureLangList[0], L"}");
+    if (EndOfChar == NULL) {
+      ASSERT (FALSE);
+      return EFI_DEVICE_ERROR;
+    }
+
+    *(++EndOfChar) = '\0';
+
     //
     // Keep URI and ConfigLang mapping
     //
-    ResourceLink = GetOdataId (Private->Payload);
-    if (ResourceLink != NULL) {
-      RedfisSetRedfishUri (Private->Uri, ResourceLink);
-      FreePool (ResourceLink);
-    }
+    RedfisSetRedfishUri (ConfigureLangList[0], Private->Uri);
+    FreePool (ConfigureLangList);
 
     return EFI_SUCCESS;
   }

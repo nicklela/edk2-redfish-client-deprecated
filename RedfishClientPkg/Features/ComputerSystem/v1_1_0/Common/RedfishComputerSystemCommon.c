@@ -80,7 +80,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "SystemType");
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "SystemType");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->SystemType);
       if (EFI_ERROR (Status)) {
@@ -100,7 +100,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "AssetTag");
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "AssetTag");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->AssetTag);
       if (EFI_ERROR (Status)) {
@@ -120,7 +120,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "Manufacturer");
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Manufacturer");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Manufacturer);
       if (EFI_ERROR (Status)) {
@@ -140,7 +140,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "Model");
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Model");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Model);
       if (EFI_ERROR (Status)) {
@@ -160,7 +160,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "SKU");
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "SKU");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->SKU);
       if (EFI_ERROR (Status)) {
@@ -180,7 +180,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "SerialNumber");
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "SerialNumber");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->SerialNumber);
       if (EFI_ERROR (Status)) {
@@ -200,7 +200,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "PartNumber");
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "PartNumber");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->PartNumber);
       if (EFI_ERROR (Status)) {
@@ -220,7 +220,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "HostName");
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "HostName");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->HostName);
       if (EFI_ERROR (Status)) {
@@ -240,7 +240,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "IndicatorLED");
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "IndicatorLED");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->IndicatorLED);
       if (EFI_ERROR (Status)) {
@@ -260,7 +260,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "PowerState");
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "PowerState");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->PowerState);
       if (EFI_ERROR (Status)) {
@@ -280,7 +280,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "Boot/BootSourceOverrideTarget");
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Boot/BootSourceOverrideTarget");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->BootSourceOverrideTarget);
       if (EFI_ERROR (Status)) {
@@ -300,7 +300,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "Boot/BootSourceOverrideEnabled");
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Boot/BootSourceOverrideEnabled");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->BootSourceOverrideEnabled);
       if (EFI_ERROR (Status)) {
@@ -320,7 +320,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "Boot/UefiTargetBootSourceOverride");
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Boot/UefiTargetBootSourceOverride");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->UefiTargetBootSourceOverride);
       if (EFI_ERROR (Status)) {
@@ -340,7 +340,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "Boot/BootSourceOverrideMode");
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Boot/BootSourceOverrideMode");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->BootSourceOverrideMode);
       if (EFI_ERROR (Status)) {
@@ -360,7 +360,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "BiosVersion");
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "BiosVersion");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->BiosVersion);
       if (EFI_ERROR (Status)) {
@@ -380,7 +380,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "ProcessorSummary/Count");
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "ProcessorSummary/Count");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*ComputerSystemCs->ProcessorSummary->Count);
       if (EFI_ERROR (Status)) {
@@ -400,7 +400,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "ProcessorSummary/Model");
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "ProcessorSummary/Model");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->ProcessorSummary->Model);
       if (EFI_ERROR (Status)) {
@@ -420,7 +420,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "MemorySummary/TotalSystemMemoryGiB");
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "MemorySummary/TotalSystemMemoryGiB");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB);
       if (EFI_ERROR (Status)) {
@@ -440,7 +440,7 @@ RedfishConsumeResourceCommon (
     //
     // Find corresponding redpath for collection resource.
     //
-    ConfigureLang = GetConfigureLang (Private->Uri, "MemorySummary/MemoryMirroring");
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "MemorySummary/MemoryMirroring");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->MemorySummary->MemoryMirroring);
       if (EFI_ERROR (Status)) {
@@ -1028,7 +1028,7 @@ RedfishUpdateResourceCommon (
   Json = NULL;
   ConfigureLang = NULL;
 
-  ConfigureLang = GetConfigureLang (Private->Uri, NULL);
+  ConfigureLang = RedfishGetConfigLanguage (Private->Uri);
   if (ConfigureLang == NULL) {
     return EFI_NOT_FOUND;
   }
@@ -1097,13 +1097,11 @@ RedfishIdentifyResourceCommon (
   )
 {
   BOOLEAN     Supported;
-  EFI_STRING  ResourceLink;
   EFI_STATUS  Status;
   EFI_STRING  *ConfigureLangList;
   UINTN       Count;
   EFI_STRING  EndOfChar;
 
-  ResourceLink = NULL;
   Supported = RedfishIdentifyResource (Private->Uri, Private->Json);
   if (Supported) {
     Status = RedfishPlatformConfigGetConfigureLang (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, REDPATH_ARRAY_PATTERN, &ConfigureLangList, &Count);
@@ -1127,12 +1125,7 @@ RedfishIdentifyResourceCommon (
     //
     // Keep URI and ConfigLang mapping
     //
-    ResourceLink = GetOdataId (Private->Payload);
-    if (ResourceLink != NULL) {
-      RedfisSetRedfishUri (ConfigureLangList[0], ResourceLink);
-      FreePool (ResourceLink);
-    }
-
+    RedfisSetRedfishUri (ConfigureLangList[0], Private->Uri);
     FreePool (ConfigureLangList);
 
     return EFI_SUCCESS;
