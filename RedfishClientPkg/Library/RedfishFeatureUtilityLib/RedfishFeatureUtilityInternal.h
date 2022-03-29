@@ -18,17 +18,15 @@
 #include <Library/DebugLib.h>
 #include <Library/JsonLib.h>
 #include <Library/MemoryAllocationLib.h>
-#include <Library/PrintLib.h>
-#include <Library/PcdLib.h>
 #include <Library/RedfishLib.h>
 #include <Library/RedfishFeatureUtilityLib.h>
 #include <Library/RedfishPlatformConfigLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <Library/UefiLib.h>
+#include <Library/PrintLib.h>
 
 #include <Guid/VariableFormat.h>
-#include <Guid/RedfishClientEventGroup.h>
 
 #include <Protocol/EdkIIRedfishETagProtocol.h>
 #include <Protocol/EdkIIRedfishConfigLangMapProtocol.h>
@@ -36,7 +34,6 @@
 #define INDEX_VARIABLE_SIZE       64
 #define INDEX_STRING_SIZE         16
 #define INDEX_STRING              L"{%d}"
-#define SCHEMA_NAME_PREFIX_OFFSET 15 // x-uefi-redfish-
 #define REDFISH_ROOT_PATH         "/v1"
 #define MAX_CONF_LANG_LEN         128
 #define MAX_REDFISH_URL_LEN       255

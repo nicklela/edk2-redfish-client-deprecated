@@ -35,22 +35,17 @@
   BaseMemoryLib
   DebugLib
   MemoryAllocationLib
-  PrintLib
   RedfishLib
   RedfishPlatformConfigLib
   UefiLib
   UefiBootServicesTableLib
   UefiRuntimeServicesTableLib
-  PcdLib
+  PrintLib
 
 [Protocols]
   gEdkIIRedfishETagProtocolGuid           ## CONSUMED ##
   gEdkIIRedfishConfigLangMapProtocolGuid  ## CONSUMED ##
 
 [Pcd]
-  gEfiRedfishClientPkgTokenSpaceGuid.PcdMaxRedfishSchemaStringSize
-  gEfiRedfishClientPkgTokenSpaceGuid.PcdMaxRedfishSchemaVersionSize
 
 [Guids]
-  gEfiRedfishClientFeatureReadyToProvisioningGuid
-  gEfiRedfishClientFeatureAfterProvisioningGuid
