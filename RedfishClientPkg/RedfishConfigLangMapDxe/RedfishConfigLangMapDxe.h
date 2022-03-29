@@ -25,8 +25,7 @@
 #include <Library/UefiDriverEntryPoint.h>
 #include <Library/UefiLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
-#include <Library/PcdLib.h>
-#include <Library/RedfishFeatureUtilityLib.h>
+#include <Library/RedfishEventLib.h>
 #include <Protocol/EdkIIRedfishConfigLangMapProtocol.h>
 
 #include <Guid/VariableFormat.h>

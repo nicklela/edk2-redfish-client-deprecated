@@ -34,8 +34,7 @@
   UefiBootServicesTableLib
   UefiRuntimeServicesTableLib
   UefiDriverEntryPoint
-#  RedfishFeatureUtilityLib
-  PcdLib
+  RedfishEventLib
 
 [Protocols]
   gEdkIIRedfishConfigLangMapProtocolGuid           ## PRODUCED ##
