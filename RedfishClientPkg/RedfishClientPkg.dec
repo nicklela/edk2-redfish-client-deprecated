@@ -23,6 +23,7 @@
   RedfishFeatureUtilityLib|Include/Library/RedfishFeatureUtilityLib.h
   RedfishResourceIdentifyLib|Include/Library/RedfishResourceIdentifyLib.h
   EdkIIRedfishResourceConfigLib|Include/Library/EdkIIRedfishResourceConfigLib.h
+  RedfishEventLib|Include/Library/RedfishEventLib.h
 
 [LibraryClasses.Common.Private]
   ##  @libraryclass Redfish Helper Library
