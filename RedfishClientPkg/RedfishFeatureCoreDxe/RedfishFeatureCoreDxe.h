@@ -16,9 +16,8 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
 #include <Library/MemoryAllocationLib.h>
-#include <Library/PrintLib.h>
 #include <Library/UefiBootServicesTableLib.h>
-#include <Library/RedfishFeatureUtilityLib.h>
+#include <Library/RedfishEventLib.h>
 
 #define MaxNodeNameLength 64
 #define NodeSeperator L'/'

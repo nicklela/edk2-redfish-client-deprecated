@@ -38,7 +38,7 @@
   UefiBootServicesTableLib
   UefiDriverEntryPoint
   UefiLib
-  RedfishFeatureUtilityLib
+  RedfishEventLib
 
 [Protocols]
   gEdkIIRedfishFeatureProtocolGuid    ## BY_START
