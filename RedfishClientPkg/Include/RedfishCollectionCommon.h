@@ -24,12 +24,12 @@
 #include <Library/RedfishFeatureUtilityLib.h>
 #include <Library/UefiLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+#include <Library/EdkIIRedfishResourceConfigLib.h>
 
 //
 // Protocols
 //
 #include <Protocol/EdkIIRedfishConfigHandler.h>
-#include <Protocol/EdkIIRedfishResourceConfigProtocol.h>
 #include <Protocol/EdkIIRedfishFeature.h>
 #include <Protocol/RestJsonStructure.h>
 #include <Protocol/RestEx.h>
