@@ -18,7 +18,6 @@ HandleResource (
   )
 {
   EFI_STATUS                              Status;
-  EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL  *RedfishResrouceProtocol;
   REDFISH_SCHEMA_INFO                     SchemaInfo;
   EFI_STRING                              ConfigLang;
 
@@ -26,22 +25,16 @@ HandleResource (
     return EFI_INVALID_PARAMETER;
   }
 
+  //
+  // Resource match
+  //
+
   DEBUG ((REDFISH_DEBUG_TRACE, "%a, process resource for: %s\n", __FUNCTION__, Uri));
 
   Status = GetRedfishSchemaInfo (Private->RedfishService, Private->JsonStructProtocol, Uri, &SchemaInfo);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, failed to get schema information from: %s: %r\n", __FUNCTION__, Uri, Status));
+    DEBUG ((DEBUG_ERROR, "%a, failed to get schema information from: %a %r\n", __FUNCTION__, Uri, Status));
     return Status;
-  }
-
-  RedfishResrouceProtocol = GetRedfishResourceConfigProtocol (
-                              SchemaInfo.Schema,
-                              SchemaInfo.Major,
-                              SchemaInfo.Minor,
-                              SchemaInfo.Errata
-                              );
-  if (RedfishResrouceProtocol == NULL) {
-    return EFI_DEVICE_ERROR;
   }
 
   //
@@ -51,10 +44,7 @@ HandleResource (
   DEBUG ((REDFISH_DEBUG_TRACE, "%s Identify for %s\n", __FUNCTION__, Uri));
   ConfigLang = RedfishGetConfigLanguage (Uri);
   if (ConfigLang == NULL) {
-    Status = RedfishResrouceProtocol->Identify (
-                                        RedfishResrouceProtocol,
-                                        Uri
-                                        );
+    Status = EdkIIRedfishResourceConfigIdentify (&SchemaInfo, Uri);
     if (EFI_ERROR (Status)) {
       if (Status == EFI_UNSUPPORTED) {
         DEBUG ((DEBUG_INFO, "%a, \"%s\" is not handled by us\n", __FUNCTION__, Uri));
@@ -69,25 +59,19 @@ HandleResource (
     FreePool (ConfigLang);
   }
 
+
   //
   // Check and see if target property exist or not even when collection memeber exists.
   // If not, we sill do provision.
   //
   DEBUG ((REDFISH_DEBUG_TRACE, "%a Check for %s\n", __FUNCTION__, Uri));
-  Status = RedfishResrouceProtocol->Check (
-                                      RedfishResrouceProtocol,
-                                      Uri
-                                      );
+  Status = EdkIIRedfishResourceConfigCheck (&SchemaInfo, Uri);
   if (EFI_ERROR (Status)) {
     //
     // The target property does not exist, do the provision to create property.
     //
     DEBUG ((REDFISH_DEBUG_TRACE, "%a provision for %s\n", __FUNCTION__, Uri));
-    Status = RedfishResrouceProtocol->Provisioning (
-                                        RedfishResrouceProtocol,
-                                        Uri,
-                                        FALSE
-                                        );
+    Status = EdkIIRedfishResourceConfigProvisionging (&SchemaInfo, Uri, FALSE);
     if (EFI_ERROR (Status)) {
       DEBUG ((DEBUG_ERROR, "%a, failed to provision with GET mode: %r\n", __FUNCTION__, Status));
     }
@@ -99,10 +83,7 @@ HandleResource (
   // Consume first.
   //
   DEBUG ((REDFISH_DEBUG_TRACE, "%a consume for %s\n", __FUNCTION__, Uri));
-  Status = RedfishResrouceProtocol->Consume (
-                                      RedfishResrouceProtocol,
-                                      Uri
-                                      );
+  Status = EdkIIRedfishResourceConfigConsume (&SchemaInfo, Uri);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, failed to consume resoruce for: %s: %r\n", __FUNCTION__, Uri, Status));
   }
@@ -111,10 +92,10 @@ HandleResource (
   // Patch.
   //
   DEBUG ((REDFISH_DEBUG_TRACE, "%a update for %s\n", __FUNCTION__, Uri));
-  Status = RedfishResrouceProtocol->Update (
-                                      RedfishResrouceProtocol,
-                                      Uri
-                                      );
+  Status = EdkIIRedfishResourceConfigUpdate (&SchemaInfo, Uri);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, failed to update resoruce for: %s: %r\n", __FUNCTION__, Uri, Status));
+  }
 
   return Status;
 }
@@ -209,7 +190,6 @@ CreateCollectionResource (
   )
 {
   EFI_STATUS                            Status;
-  EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL  *RedfishResrouceProtocol;
   REDFISH_SCHEMA_INFO                   SchemaInfo;
 
   if (Private == NULL) {
@@ -226,16 +206,7 @@ CreateCollectionResource (
 
   DEBUG ((REDFISH_DEBUG_TRACE, "%a, supported schema: %a %a.%a.%a\n", __FUNCTION__, SchemaInfo.Schema, SchemaInfo.Major, SchemaInfo.Minor, SchemaInfo.Errata));
 
-  RedfishResrouceProtocol = GetRedfishResourceConfigProtocol (SchemaInfo.Schema, SchemaInfo.Major, SchemaInfo.Minor, SchemaInfo.Errata);
-  if (RedfishResrouceProtocol == NULL) {
-    return EFI_DEVICE_ERROR;
-  }
-
-  Status = RedfishResrouceProtocol->Provisioning (
-                                      RedfishResrouceProtocol,
-                                      Private->CollectionPath,
-                                      TRUE
-                                      );
+  Status = EdkIIRedfishResourceConfigProvisionging (&SchemaInfo, Private->CollectionPath, TRUE);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, failed to create resoruce for: %s: %r\n", __FUNCTION__, Private->CollectionPath, Status));
   }

@@ -35,11 +35,11 @@
   UefiLib
   UefiDriverEntryPoint
   UefiBootServicesTableLib
+  EdkIIRedfishResourceConfigLib
 
 [Protocols]
   gEdkIIRedfishConfigHandlerProtocolGuid    ## CONSUMED
   gEfiRestJsonStructureProtocolGuid         ## CONSUMED
-  gEdkIIRedfishResourceConfigProtocolGuid   ## CONSUMED
   gEdkIIRedfishFeatureProtocolGuid          ## CONSUMED
 
 [Guids]
