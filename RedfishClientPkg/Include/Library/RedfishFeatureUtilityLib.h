@@ -10,9 +10,6 @@
 #ifndef REDFISH_FEATURE_UTILITY_LIB_H_
 #define REDFISH_FEATURE_UTILITY_LIB_H_
 
-#include <Protocol/EdkIIRedfishResourceConfigProtocol.h>
-#include <Protocol/RestJsonStructure.h>
-
 //
 // Definition of REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG
 //
@@ -196,44 +193,6 @@ CreatePayloadToPatchResource (
 
 /**
 
-  Find Redfish Resource Config Protocol that supports given schema and version.
-
-  @param[in]  Schema      Schema name.
-  @param[in]  Major       Schema version major number.
-  @param[in]  Minor       Schema version minor number.
-  @param[in]  Errata      Schema version errata number.
-
-  @retval     EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL *    Pointer to protocol
-  @retval     NULL                                        No protocol found.
-
-**/
-EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL  *
-GetRedfishResourceConfigProtocol (
-  IN  CHAR8               *Schema,
-  IN  CHAR8               *Major,
-  IN  CHAR8               *Minor,
-  IN  CHAR8               *Errata
-  );
-
-/**
-
-  Get supported schema list by given specify schema name.
-
-  @param[in]  Schema      Schema type name.
-  @param[out] SchemaInfo  Returned schema information.
-
-  @retval     EFI_SUCCESS         Schema information is returned successfully.
-  @retval     Others              Errors occur.
-
-**/
-EFI_STATUS
-GetSupportedSchemaVersion (
-  IN   CHAR8                *Schema,
-  OUT  REDFISH_SCHEMA_INFO  *SchemaInfo
-  );
-
-/**
-
   Save Redfish URI in database for further use.
 
   @param[in]    ConfigLang        ConfigLang to save
@@ -247,27 +206,6 @@ EFI_STATUS
 RedfisSetRedfishUri (
   IN    EFI_STRING  ConfigLang,
   IN    EFI_STRING  Uri
-  );
-
-/**
-
-  Get schema information by given protocol and service instance.
-
-  @param[in]  RedfishService      Pointer to Redfish service instance.
-  @param[in]  JsonStructProtocol  Json Structure protocol instance.
-  @param[in]  Uri                 Target URI.
-  @param[out] SchemaInfo          Returned schema information.
-
-  @retval     EFI_SUCCESS         Schema information is returned successfully.
-  @retval     Others              Errors occur.
-
-**/
-EFI_STATUS
-GetRedfishSchemaInfo (
-  IN  REDFISH_SERVICE                   *RedfishService,
-  IN  EFI_REST_JSON_STRUCTURE_PROTOCOL  *JsonStructProtocol,
-  IN  EFI_STRING                        Uri,
-  OUT REDFISH_SCHEMA_INFO               *SchemaInfo
   );
 
 /**
@@ -490,68 +428,6 @@ RedfishGetConfigLanguage (
 CHAR8 *
 StrUnicodeToAscii (
   IN EFI_STRING   UnicodeStr
-  );
-
-/**
-  Create an EFI event before Redfish provisioning start.
-
-  @param  NotifyFunction            The notification function to call when the event is signaled.
-  @param  NotifyContext             The content to pass to NotifyFunction when the event is signaled.
-  @param  ReadyToProvisioningEvent  Returns the EFI event returned from gBS->CreateEvent(Ex).
-
-  @retval EFI_SUCCESS       Event was created.
-  @retval Other             Event was not created.
-
-**/
-EFI_STATUS
-EFIAPI
-CreateReadyToProvisioningEvent (
-  IN  EFI_EVENT_NOTIFY  NotifyFunction,  OPTIONAL
-  IN  VOID              *NotifyContext,  OPTIONAL
-  OUT EFI_EVENT         *ReadyToProvisioningEvent
-  );
-
-/**
-  Create an EFI event after Redfish provisioning finished.
-
-  @param  NotifyFunction            The notification function to call when the event is signaled.
-  @param  NotifyContext             The content to pass to NotifyFunction when the event is signaled.
-  @param  ReadyToProvisioningEvent  Returns the EFI event returned from gBS->CreateEvent(Ex).
-
-  @retval EFI_SUCCESS       Event was created.
-  @retval Other             Event was not created.
-
-**/
-EFI_STATUS
-EFIAPI
-CreateAfterProvisioningEvent (
-  IN  EFI_EVENT_NOTIFY  NotifyFunction,  OPTIONAL
-  IN  VOID              *NotifyContext,  OPTIONAL
-  OUT EFI_EVENT         *ReadyToProvisioningEvent
-  );
-
-/**
-  Signal ready to provisioning event.
-
-  @retval EFI_SUCCESS       Event was created.
-  @retval Other             Event was not created.
-
-**/
-EFI_STATUS
-SignalReadyToProvisioningEvent (
-  IN VOID
-  );
-
-/**
-  Signal after provisioning event.
-
-  @retval EFI_SUCCESS       Event was created.
-  @retval Other             Event was not created.
-
-**/
-EFI_STATUS
-SignalAfterProvisioningEvent (
-  IN VOID
   );
 
 #endif
