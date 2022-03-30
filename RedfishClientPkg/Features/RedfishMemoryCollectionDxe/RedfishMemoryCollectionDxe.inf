@@ -36,6 +36,7 @@
   UefiDriverEntryPoint
   UefiBootServicesTableLib
   EdkIIRedfishResourceConfigLib
+  RedfishBmcVersionLib
 
 [Protocols]
   gEdkIIRedfishConfigHandlerProtocolGuid    ## CONSUMED
