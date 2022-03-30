@@ -271,16 +271,17 @@ DumpRawBuffer (
   )
 {
   UINTN  Index;
+  CHAR16 *Seeker;
 
   if (Buffer == NULL) {
     return EFI_INVALID_PARAMETER;
   }
 
   Index = 0;
-
+  Seeker = (CHAR16 *)Buffer;
   DEBUG ((DEBUG_ERROR, "Buffer size: %d\n", BufferSize));
-  while (Buffer[Index] != '\0') {
-    DEBUG ((DEBUG_ERROR, "(%d) %c ", (Index + 1), Buffer[Index]));
+  while (Seeker[Index] != '\0') {
+    DEBUG ((DEBUG_ERROR, "(%d) %c ", (Index + 1), Seeker[Index]));
 
     ++Index;
   }
@@ -367,7 +368,7 @@ SaveConfigLangMapList (
   //
   // Caculate the total size we need to keep ConfigLangMap list.
   //
-  VarSize = ConfigLangMapList->TotalSize + 1; // terminator character
+  VarSize = ConfigLangMapList->TotalSize + sizeof (CHAR16); // terminator character
   VarData = AllocateZeroPool (VarSize);
   if (VarData == NULL) {
     return EFI_OUT_OF_RESOURCES;
@@ -382,14 +383,14 @@ SaveConfigLangMapList (
     StringSize = StrSize (Record->Uri);
     CopyMem (Seeker, Record->Uri, StringSize);
 
-    Seeker += (StringSize - 1);
+    Seeker += (StringSize / sizeof (CHAR16) - 1);
     *Seeker = '|';
     ++Seeker;
 
     StringSize = StrSize (Record->ConfigLang);
     CopyMem (Seeker, Record->ConfigLang, StringSize);
 
-    Seeker += (StringSize - 1);
+    Seeker += (StringSize / sizeof (CHAR16) - 1);
     *Seeker = '\n';
 
     ++Seeker;
@@ -403,7 +404,7 @@ SaveConfigLangMapList (
   DumpRawBuffer (VarData, VarSize);
 #endif
 
-  ASSERT (((UINTN)Seeker - (UINTN)VarData + 1) == VarSize);
+  ASSERT (((UINTN)Seeker - (UINTN)VarData + sizeof (CHAR16)) == VarSize);
 
   //
   // Check if variable exists already. If yes, remove it first.
