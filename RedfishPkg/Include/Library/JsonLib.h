@@ -2,7 +2,7 @@
   APIs for JSON operations.
 
   Copyright (c) 2019, Intel Corporation. All rights reserved.<BR>
- (C) Copyright 2021 Hewlett Packard Enterprise Development LP<BR>
+ (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP<BR>
 
     SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -56,7 +56,7 @@ typedef    INT64   EDKII_JSON_INT_T; // #JSON_INTEGER_IS_LONG_LONG is set to 1
 #define EDKII_JSON_OBJECT_FOREACH_SAFE(Object, N, Key, Value)           \
     for (Key = JsonObjectIteratorKey(JsonObjectIterator(Object)),                \
         N = JsonObjectIteratorNext(Object, JsonObjectKeyToIterator(Key));        \
-        Key && (Value = JsonObjectIteratorValue(JsonObjectKeyToIterator(Key)));  \
+        Key != NULL && (Value = JsonObjectIteratorValue(JsonObjectKeyToIterator(Key))) != NULL;  \
         Key = JsonObjectIteratorKey(N),                                      \
         N = JsonObjectIteratorNext(Object, JsonObjectKeyToIterator(Key)))
 
