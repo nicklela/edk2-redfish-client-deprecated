@@ -29,3 +29,4 @@
   RedfishResourceIdentifyLib|RedfishClientPkg/Library/RedfishResourceIdentifyLibNull/RedfishResourceIdentifyLibNull.inf
   EdkIIRedfishResourceConfigLib|RedfishClientPkg/Library/EdkIIRedfishResourceConfigLib/EdkIIRedfishResourceConfigLib.inf
   RedfishEventLib|RedfishClientPkg/Library/RedfishEventLib/RedfishEventLib.inf
+  RedfishBmcVersionLib|RedfishClientPkg/Library/RedfishBmcVersionLib/RedfishBmcVersionLib.inf
