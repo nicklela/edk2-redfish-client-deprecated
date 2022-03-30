@@ -245,6 +245,11 @@ ReleaseCollectionResource (
     Private->CollectionJson = NULL;
   }
 
+  if (Private->RedfishVersion != NULL) {
+    FreePool (Private->RedfishVersion);
+    Private->RedfishVersion = NULL;
+  }
+
   return EFI_SUCCESS;
 }
 
@@ -329,6 +334,11 @@ RedfishCollectionFeatureCallback (
   if (RedfishService == NULL) {
     return EFI_NOT_READY;
   }
+
+  //
+  // Find Redfish version on BMC
+  //
+  Private->RedfishVersion = RedfishGetBmcVersion (RedfishService);
 
   //
   // Initialize collection path

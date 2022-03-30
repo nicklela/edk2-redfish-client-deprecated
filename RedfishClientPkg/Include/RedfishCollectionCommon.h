@@ -25,6 +25,7 @@
 #include <Library/UefiLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/EdkIIRedfishResourceConfigLib.h>
+#include <Library/RedfishBmcVersionLib.h>
 
 //
 // Protocols
@@ -45,6 +46,7 @@ typedef struct _REDFISH_COLLECTION_PRIVATE {
   CHAR8                                 *CollectionJson;
   REDFISH_PAYLOAD                       CollectionPayload;
   REDFISH_RESPONSE                      RedResponse;
+  EFI_STRING                            RedfishVersion;
 } REDFISH_COLLECTION_PRIVATE;
 
 #define REDFISH_COLLECTION_PRIVATE_DATA_FROM_PROTOCOL(This) \
