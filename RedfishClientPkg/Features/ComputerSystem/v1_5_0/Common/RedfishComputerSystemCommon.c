@@ -9,7 +9,7 @@
 
 #include "RedfishComputerSystemCommon.h"
 
-CHAR8 MemoryEmptyJson[] = "{\"@odata.id\": \"\", \"@odata.type\": \"#ComputerSystem.V1_4_1.ComputerSystem\", \"Id\": \"\", \"Name\": \"\"}";
+CHAR8 MemoryEmptyJson[] = "{\"@odata.id\": \"\", \"@odata.type\": \"#ComputerSystem.V1_5_0.ComputerSystem\", \"Id\": \"\", \"Name\": \"\"}";
 
 REDFISH_RESOURCE_COMMON_PRIVATE *mRedfishResourcePrivate = NULL;
 
@@ -32,8 +32,8 @@ RedfishConsumeResourceCommon (
   )
 {
   EFI_STATUS                    Status;
-  EFI_REDFISH_COMPUTERSYSTEM_V1_4_1     *ComputerSystem;
-  EFI_REDFISH_COMPUTERSYSTEM_V1_4_1_CS  *ComputerSystemCs;
+  EFI_REDFISH_COMPUTERSYSTEM_V1_5_0     *ComputerSystem;
+  EFI_REDFISH_COMPUTERSYSTEM_V1_5_0_CS  *ComputerSystemCs;
   EFI_STRING                    ConfigureLang;
 
   if (Private == NULL || IS_EMPTY_STRING (Json)) {
@@ -474,8 +474,8 @@ ProvisioningProperties (
   OUT CHAR8                             **ResultJson
   )
 {
-  EFI_REDFISH_COMPUTERSYSTEM_V1_4_1     *ComputerSystem;
-  EFI_REDFISH_COMPUTERSYSTEM_V1_4_1_CS  *ComputerSystemCs;
+  EFI_REDFISH_COMPUTERSYSTEM_V1_5_0     *ComputerSystem;
+  EFI_REDFISH_COMPUTERSYSTEM_V1_5_0_CS  *ComputerSystemCs;
   EFI_STATUS                            Status;
   INT64                                 *NumericValue;
   CHAR8                                 *AsciiStringValue;
@@ -648,7 +648,7 @@ ProvisioningProperties (
   // Handle BOOT
   //
   if(ComputerSystemCs->Boot == NULL) {
-    ComputerSystemCs->Boot = AllocateZeroPool (sizeof (RedfishComputerSystem_V1_4_1_Boot_CS));
+    ComputerSystemCs->Boot = AllocateZeroPool (sizeof (RedfishComputerSystem_V1_5_0_Boot_CS));
     ASSERT (ComputerSystemCs->Boot != NULL);
     UnusedProperty = TRUE;
   } else {
@@ -733,7 +733,7 @@ ProvisioningProperties (
   // Handle PROCESSORSUMMARY
   //
   if(ComputerSystemCs->ProcessorSummary == NULL) {
-    ComputerSystemCs->ProcessorSummary = AllocateZeroPool (sizeof (RedfishComputerSystem_V1_4_1_ProcessorSummary_CS));
+    ComputerSystemCs->ProcessorSummary = AllocateZeroPool (sizeof (RedfishComputerSystem_V1_5_0_ProcessorSummary_CS));
     ASSERT (ComputerSystemCs->ProcessorSummary != NULL);
     UnusedProperty = TRUE;
   } else {
@@ -775,7 +775,7 @@ ProvisioningProperties (
   // Handle MEMORYSUMMARY
   //
   if(ComputerSystemCs->MemorySummary == NULL) {
-    ComputerSystemCs->MemorySummary = AllocateZeroPool (sizeof (RedfishComputerSystem_V1_4_1_MemorySummary_CS));
+    ComputerSystemCs->MemorySummary = AllocateZeroPool (sizeof (RedfishComputerSystem_V1_5_0_MemorySummary_CS));
     ASSERT (ComputerSystemCs->MemorySummary != NULL);
     UnusedProperty = TRUE;
   } else {
