@@ -82,14 +82,14 @@ RedfishGetBmcVersion (
   )
 {
   EFI_STATUS        Status;
-  EFI_STRING        VerstionString;
+  EFI_STRING        VersionString;
   REDFISH_RESPONSE  Response;
   EDKII_JSON_VALUE  JsonValue;
   EDKII_JSON_VALUE  N;
-  EDKII_JSON_VALUE  Key;
+  CHAR8             *Key;
   EDKII_JSON_VALUE  Value;
 
-  VerstionString = NULL;
+  VersionString = NULL;
 
   if (Service == NULL) {
     goto ON_ERROR;
@@ -132,25 +132,25 @@ RedfishGetBmcVersion (
   }
 
   EDKII_JSON_OBJECT_FOREACH_SAFE (JsonValue, N, Key, Value) {
-    if (JsonValueIsString (Value)) {
-      VerstionString = JsonValueGetUnicodeString (Value);
+    if (Key[0] == 'v' && JsonValueIsString (Value)) {
+      VersionString = JsonValueGetUnicodeString (Value);
       break;
     }
   }
 
-  if (VerstionString != NULL) {
-    CacheVersion (Service, VerstionString);
-    return VerstionString;
+  if (VersionString != NULL) {
+    CacheVersion (Service, VersionString);
+    return VersionString;
   }
 
 ON_ERROR:
 
-  VerstionString = (CHAR16 *)PcdGetPtr (PcdDefaultRedfishVersion);
-  if (VerstionString == NULL) {
-    VerstionString = REDFISH_VERSION_DEFAULT_STRING;
+  VersionString = (CHAR16 *)PcdGetPtr (PcdDefaultRedfishVersion);
+  if (VersionString == NULL) {
+    VersionString = REDFISH_VERSION_DEFAULT_STRING;
   }
 
-  return AllocateCopyPool (StrSize (VerstionString), VerstionString);
+  return AllocateCopyPool (StrSize (VersionString), VersionString);
 }
 
 /**
