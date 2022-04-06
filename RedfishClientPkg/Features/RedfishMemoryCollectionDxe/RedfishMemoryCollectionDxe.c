@@ -112,8 +112,6 @@ HandleCollectionResource (
   RedfishCS_Header                        *Header;
   RedfishCS_Type_Uri_Data                 *UriData;
   EFI_STRING                              MemberUri;
-  UINTN                                   Size;
-  UINTN                                   Count;
 
   if (Private == NULL) {
     return EFI_INVALID_PARAMETER;
@@ -123,7 +121,7 @@ HandleCollectionResource (
     return EFI_NOT_READY;
   }
 
-  DEBUG ((REDFISH_DEBUG_TRACE, "%a, process collection for: %s\n", __FUNCTION__, Private->CollectionPath));
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a, process collection for: %s\n", __FUNCTION__, Private->CollectionUri));
 
   //
   // Convert JSON text to C structure.
@@ -149,23 +147,22 @@ HandleCollectionResource (
     return EFI_NOT_FOUND;
   }
 
-  Count = 0;
   List = GetFirstLink (&CollectionCs->Members);
   while (TRUE) {
 
     Header = (RedfishCS_Header *)List;
     if (Header->ResourceType == RedfishCS_Type_Uri) {
       UriData = (RedfishCS_Type_Uri_Data *)Header;
-
-      ++Count;
-      Size = (StrLen (Private->CollectionPath) + REDFISH_MAX_COLLECTION_INDEX_LEN) * sizeof (CHAR16);
-      MemberUri = AllocatePool (Size);
+      MemberUri = NULL;
+      MemberUri = StrAsciiToUnicode (UriData->Uri);
       ASSERT (MemberUri != NULL);
-      UnicodeSPrint (MemberUri, Size, L"%s[%d]", Private->CollectionPath, Count);
+      if (MemberUri != NULL) {
+        Status = HandleResource (Private, MemberUri);
+        if (EFI_ERROR (Status)) {
+          DEBUG ((DEBUG_ERROR, "%a, process memory resource: %a failed: %r\n", __FUNCTION__, UriData->Uri, Status));
+        }
 
-      Status = HandleResource (Private, MemberUri);
-      if (EFI_ERROR (Status)) {
-        DEBUG ((DEBUG_ERROR, "%a, process ComputerSystem resource: %a failed: %r\n", __FUNCTION__, UriData->Uri, Status));
+        FreePool (MemberUri);
       }
     }
 
@@ -196,7 +193,7 @@ CreateCollectionResource (
     return EFI_INVALID_PARAMETER;
   }
 
-  DEBUG ((REDFISH_DEBUG_TRACE, "%a, create resource for collection for: %s\n", __FUNCTION__, Private->CollectionPath));
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a, create resource for collection for: %s\n", __FUNCTION__, Private->CollectionUri));
 
   Status = GetSupportedSchemaVersion (REDFISH_SCHEMA_NAME, &SchemaInfo);
   if (EFI_ERROR (Status)) {
@@ -206,9 +203,9 @@ CreateCollectionResource (
 
   DEBUG ((REDFISH_DEBUG_TRACE, "%a, supported schema: %a %a.%a.%a\n", __FUNCTION__, SchemaInfo.Schema, SchemaInfo.Major, SchemaInfo.Minor, SchemaInfo.Errata));
 
-  Status = EdkIIRedfishResourceConfigProvisionging (&SchemaInfo, Private->CollectionPath, TRUE);
+  Status = EdkIIRedfishResourceConfigProvisionging (&SchemaInfo, Private->CollectionUri, TRUE);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, failed to create resoruce for: %s: %r\n", __FUNCTION__, Private->CollectionPath, Status));
+    DEBUG ((DEBUG_ERROR, "%a, failed to create resoruce for: %s: %r\n", __FUNCTION__, Private->CollectionUri, Status));
   }
 
   return Status;
@@ -264,14 +261,14 @@ CollectionHandler (
     return EFI_INVALID_PARAMETER;
   }
 
-  DEBUG ((REDFISH_DEBUG_TRACE, "%a, collection handler for %s\n", __FUNCTION__, Private->CollectionPath));
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a, collection handler for %s\n", __FUNCTION__, Private->CollectionUri));
 
   //
   // Query collection from Redfish service.
   //
-  Status = GetResourceByPath (Private->RedfishService, Private->CollectionPath, &Private->RedResponse);
+  Status = GetResourceByUri (Private->RedfishService, Private->CollectionUri, &Private->RedResponse);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, unable to get resource from: %s :%r\n", __FUNCTION__, Private->CollectionPath, Status));
+    DEBUG ((DEBUG_ERROR, "%a, unable to get resource from: %s :%r\n", __FUNCTION__, Private->CollectionUri, Status));
     goto ON_RELEASE;
   }
 
@@ -343,8 +340,8 @@ RedfishCollectionFeatureCallback (
   //
   // Initialize collection path
   //
-  Private->CollectionPath = RedfishGetUri (REDFISH_MANAGED_URI);
-  if (Private->CollectionPath == NULL) {
+  Private->CollectionUri = RedfishGetUri (REDFISH_MANAGED_URI);
+  if (Private->CollectionUri == NULL) {
     ASSERT (FALSE);
     return EFI_OUT_OF_RESOURCES;
   }

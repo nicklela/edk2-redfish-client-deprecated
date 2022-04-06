@@ -35,7 +35,6 @@ RedfishConsumeResourceCommon (
   EFI_REDFISH_MEMORY_V1_7_1     *Memory;
   EFI_REDFISH_MEMORY_V1_7_1_CS  *MemoryCs;
   EFI_STRING                    ConfigureLang;
-  CHAR8                         *EtagInDb;
 
   if (Private == NULL || IS_EMPTY_STRING (Json)) {
     return EFI_INVALID_PARAMETER;
@@ -44,7 +43,6 @@ RedfishConsumeResourceCommon (
   Memory= NULL;
   MemoryCs = NULL;
   ConfigureLang = NULL;
-  EtagInDb = NULL;
 
   Status = Private->JsonStructProtocol->ToStructure (
                                           Private->JsonStructProtocol,
@@ -62,15 +60,12 @@ RedfishConsumeResourceCommon (
   //
   // Check ETAG to see if we need to consume it
   //
-  EtagInDb = GetEtagWithUri (Private->Uri);
-  if (EtagInDb != NULL && HeaderEtag != NULL) {
-    if (AsciiStrCmp (EtagInDb, HeaderEtag) == 0) {
-      //
-      // No change
-      //
-      DEBUG ((DEBUG_INFO, "%a, ETAG: [%a] no change, ignore consume action\n", __FUNCTION__, EtagInDb));
-      goto ON_RELEASE;
-    }
+  if (CheckEtag (Private->Uri, HeaderEtag, MemoryCs->odata_etag)) {
+    //
+    // No change
+    //
+    DEBUG ((DEBUG_INFO, "%a, ETAG: %s has no change, ignore consume action\n", __FUNCTION__, Private->Uri));
+    goto ON_RELEASE;
   }
 
   //
@@ -1165,10 +1160,6 @@ ON_RELEASE:
   //
   // Release resource.
   //
-  if (EtagInDb != NULL) {
-    FreePool (EtagInDb);
-  }
-
   Private->JsonStructProtocol->DestoryStructure (
                                  Private->JsonStructProtocol,
                                  (EFI_REST_JSON_STRUCTURE_HEADER *)Memory

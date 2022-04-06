@@ -52,7 +52,7 @@ GetRedfishSchemaInfo (
     return EFI_INVALID_PARAMETER;
   }
 
-  Status = GetResourceByPath (RedfishService, Uri, &Response);
+  Status = GetResourceByUri (RedfishService, Uri, &Response);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, failed to get resource from %s: %r", __FUNCTION__, Uri, Status));
     return Status;

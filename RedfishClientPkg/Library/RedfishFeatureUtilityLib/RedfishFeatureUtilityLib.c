@@ -186,11 +186,11 @@ GetEtagWithUri (
 
 /**
 
-  Convert Unicode string to Ascii string. It's call responsibility to release returned buffer.
+  Convert Unicode string to ASCII string. It's call responsibility to release returned buffer.
 
   @param[in]  UnicodeStr      Unicode string to convert.
 
-  @retval     CHAR8 *         Ascii string returned.
+  @retval     CHAR8 *         ASCII string returned.
   @retval     NULL            Errors occur.
 
 **/
@@ -214,8 +214,52 @@ StrUnicodeToAscii (
   }
 
   Status = UnicodeStrToAsciiStrS (UnicodeStr, AsciiStr, AsciiStrSize);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "UnicodeStrToAsciiStrS failed: %r\n", Status));
+    FreePool (AsciiStr);
+    return NULL;
+  }
 
   return AsciiStr;
+}
+
+/**
+
+  Convert ASCII string to Unicode string. It's call responsibility to release returned buffer.
+
+  @param[in]  AsciiStr        ASCII string to convert.
+
+  @retval     EFI_STRING      Unicode string returned.
+  @retval     NULL            Errors occur.
+
+**/
+EFI_STRING
+StrAsciiToUnicode (
+  IN CHAR8  *AsciiStr
+  )
+{
+  EFI_STRING  UnicodeStr;
+  UINTN       UnicodeStrSize;
+  EFI_STATUS  Status;
+
+  if (IS_EMPTY_STRING (AsciiStr)) {
+    return NULL;
+  }
+
+  UnicodeStrSize = (AsciiStrLen (AsciiStr) + 1) * sizeof (CHAR16);
+  UnicodeStr = AllocatePool (UnicodeStrSize);
+  if (UnicodeStr == NULL) {
+    return NULL;
+  }
+
+  Status = AsciiStrToUnicodeStrS (AsciiStr, UnicodeStr, UnicodeStrSize);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "t failed: %r\n", Status));
+    FreePool (UnicodeStr);
+    return NULL;
+  }
+
+  return UnicodeStr;
 }
 
 /**
@@ -404,10 +448,10 @@ ApplyFeatureSettingsBooleanType (
 
 /**
 
-  Read redfish resource by given resource path.
+  Read redfish resource by given resource URI.
 
   @param[in]  Service       Redfish srvice instacne to make query.
-  @param[in]  ResourcePath  Target resource path.
+  @param[in]  ResourceUri   Target resource URI.
   @param[out] Response      HTTP response from redfish service.
 
   @retval     EFI_SUCCESS     Resrouce is returned successfully.
@@ -415,34 +459,34 @@ ApplyFeatureSettingsBooleanType (
 
 **/
 EFI_STATUS
-GetResourceByPath (
+GetResourceByUri (
   IN  REDFISH_SERVICE           *Service,
-  IN  EFI_STRING                ResourcePath,
+  IN  EFI_STRING                ResourceUri,
   OUT REDFISH_RESPONSE          *Response
   )
 {
   EFI_STATUS  Status;
-  CHAR8       *AsciiResourcePath;
+  CHAR8       *AsciiResourceUri;
 
-  if (Service == NULL || Response == NULL || IS_EMPTY_STRING (ResourcePath)) {
+  if (Service == NULL || Response == NULL || IS_EMPTY_STRING (ResourceUri)) {
     return EFI_INVALID_PARAMETER;
   }
 
-  AsciiResourcePath = StrUnicodeToAscii (ResourcePath);
-  if (AsciiResourcePath == NULL) {
+  AsciiResourceUri = StrUnicodeToAscii (ResourceUri);
+  if (AsciiResourceUri == NULL) {
     return EFI_OUT_OF_RESOURCES;
   }
 
   //
   // Get resource from redfish service.
   //
-  Status = RedfishGetByService (
+  Status = RedfishGetByUri (
              Service,
-             AsciiResourcePath,
+             AsciiResourceUri,
              Response
              );
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, RedfishGetByService to %a failed: %r\n", __FUNCTION__, AsciiResourcePath, Status));
+    DEBUG ((DEBUG_ERROR, "%a, RedfishGetByUri to %a failed: %r\n", __FUNCTION__, AsciiResourceUri, Status));
     if (Response->Payload != NULL) {
       RedfishDumpPayload (Response->Payload);
       RedfishFreeResponse (
@@ -455,8 +499,8 @@ GetResourceByPath (
     }
   }
 
-  if (AsciiResourcePath != NULL) {
-    FreePool (AsciiResourcePath);
+  if (AsciiResourceUri != NULL) {
+    FreePool (AsciiResourceUri);
   }
 
   return Status;
@@ -901,23 +945,20 @@ RedfishGetUri (
   }
 
   //
-  // remove leading "/v1" or "/redfish/v1"
+  // Remove leading "/v1" or "/redfish/v1" because we don't code
+  // configure language in this way.
   //
-  Head = StrStr (ConfigLang, L"v1");
+  Head = StrStr (ConfigLang, REDFISH_ROOT_PATH_UNICODE);
   if (Head == NULL) {
     Head = ConfigLang;
   } else {
-    Head += 2;
+    Head += 3;
   }
 
-  ResultStr = AllocatePool (sizeof (CHAR16) * MAX_REDFISH_URL_LEN);
+  ResultStr = AllocateZeroPool (sizeof (CHAR16) * MAX_REDFISH_URL_LEN);
   if (ResultStr == NULL) {
     return NULL;
   }
-  //
-  // Add leading "/v1" for libredfish
-  //
-  UnicodeSPrint (ResultStr, sizeof (CHAR16) * MAX_REDFISH_URL_LEN, L"/v1");
 
   //
   // Go though ConfigLang and replace each {} with URL
@@ -980,7 +1021,7 @@ RedfishGetUri (
   } while (CloseBracket != NULL);
 
   //
-  // String which is no ConfigLang remains
+  // String which has no ConfigLang remaining
   //
   if (Head != '\0') {
     StrCatS (ResultStr, MAX_REDFISH_URL_LEN, Head);
@@ -1109,7 +1150,6 @@ RedfisSetRedfishUri (
   )
 {
   EFI_STATUS Status;
-  EFI_STRING Prefix;
 
   if (IS_EMPTY_STRING (ConfigLang) || IS_EMPTY_STRING (Uri)) {
     return EFI_INVALID_PARAMETER;
@@ -1122,14 +1162,6 @@ RedfisSetRedfishUri (
   }
 
   DEBUG ((REDFISH_DEBUG_TRACE, "%a, Saved: %s -> %s\n", __FUNCTION__, ConfigLang, Uri));
-
-  //
-  // remove leading "/v1" or "/redfish/v1"
-  //
-  Prefix = StrStr (Uri, L"v1");
-  if (Prefix != NULL) {
-    Uri = Prefix + 2;
-  }
 
   return mConfigLangMapProtocol->Set (mConfigLangMapProtocol, ConfigLang, Uri);
 }
@@ -1451,6 +1483,64 @@ PropertyChecker2Parm (
   if (!ProvisionMode && PropertyBuffer1 != NULL && PropertyBuffer2 != NULL) {
     return TRUE;
   }
+
+  return FALSE;
+}
+
+/**
+
+  Check and see if ETAG is identical to what we keep in system.
+
+  @param[in]  Uri           URI requested
+  @param[in]  EtagInHeader  ETAG string returned from HTTP request.
+  @param[in]  EtagInJson    ETAG string in JSON body.
+
+  @retval     TRUE          ETAG is identical.
+  @retval     FALSE         ETAG is changed.
+
+**/
+BOOLEAN
+CheckEtag (
+  IN EFI_STRING Uri,
+  IN CHAR8      *EtagInHeader,
+  IN CHAR8      *EtagInJson
+  )
+{
+  CHAR8 *EtagInDb;
+
+  if (IS_EMPTY_STRING (Uri)) {
+    return FALSE;
+  }
+
+  if (IS_EMPTY_STRING (EtagInHeader) && IS_EMPTY_STRING (EtagInJson)) {
+    return FALSE;
+  }
+
+  //
+  // Check ETAG to see if we need to consume it
+  //
+  EtagInDb = NULL;
+  EtagInDb = GetEtagWithUri (Uri);
+  if (EtagInDb == NULL) {
+    DEBUG ((REDFISH_DEBUG_TRACE, "%a, no ETAG record cound be found for: %s\n", __FUNCTION__, Uri));
+    return FALSE;
+  }
+
+  if (EtagInHeader != NULL) {
+    if (AsciiStrCmp (EtagInDb, EtagInHeader) == 0) {
+      FreePool (EtagInDb);
+      return TRUE;
+    }
+  }
+
+  if (EtagInJson != NULL) {
+    if (AsciiStrCmp (EtagInDb, EtagInJson) == 0) {
+      FreePool (EtagInDb);
+      return TRUE;
+    }
+  }
+
+  FreePool (EtagInDb);
 
   return FALSE;
 }
