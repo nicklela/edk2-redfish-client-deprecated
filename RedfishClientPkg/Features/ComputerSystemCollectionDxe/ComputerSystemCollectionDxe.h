@@ -14,6 +14,5 @@
 #include <RedfishCollectionCommon.h>
 
 #define REDFISH_SCHEMA_NAME             "Systems"
-#define REDFISH_MANAGED_URI             L"/v1/Systems"
+#define REDFISH_MANAGED_URI             L"/redfish/v1/Systems"
 #endif
-
