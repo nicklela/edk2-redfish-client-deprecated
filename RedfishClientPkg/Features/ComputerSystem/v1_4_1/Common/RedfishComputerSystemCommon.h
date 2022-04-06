@@ -9,7 +9,7 @@
 #ifndef EFI_REDFISH_COMPUTERSYSTEM_COMMON_H_
 #define EFI_REDFISH_COMPUTERSYSTEM_COMMON_H_
 
-#include <RedfishJsonStructure/ComputerSystem/V1_4_1/EfiComputerSystemV1_1_0.h>
+#include <RedfishJsonStructure/ComputerSystem/V1_4_1/EfiComputerSystemV1_4_1.h>
 #include <RedfishResourceCommon.h>
 
 //
