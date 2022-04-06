@@ -38,9 +38,7 @@ RedfishResourceProvisioningResource (
     return EFI_INVALID_PARAMETER;
   }
 
-  if (!PostMode) {
-    return EFI_UNSUPPORTED;
-  }
+  DEBUG ((DEBUG_INFO, "%a, provisioning in %s mode\n", __FUNCTION__, (PostMode ? L"POST" : L"PATCH")));
 
   Private = REDFISH_RESOURCE_COMMON_PRIVATE_DATA_FROM_RESOURCE_PROTOCOL (This);
 
@@ -58,7 +56,7 @@ RedfishResourceProvisioningResource (
   Private->Payload = Response.Payload;
   ASSERT (Private->Payload != NULL);
 
-  Status = RedfishProvisioningResourceCommon (Private, FALSE);
+  Status = RedfishProvisioningResourceCommon (Private, !PostMode);
 
   //
   // Release resource
