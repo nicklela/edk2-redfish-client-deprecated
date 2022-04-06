@@ -14,5 +14,5 @@
 #include <RedfishCollectionCommon.h>
 
 #define REDFISH_SCHEMA_NAME             "Memory"
-#define REDFISH_MANAGED_URI             L"/v1/Systems/{1}/Memory"
+#define REDFISH_MANAGED_URI             L"/redfish/v1/Systems/{1}/Memory"
 #endif
