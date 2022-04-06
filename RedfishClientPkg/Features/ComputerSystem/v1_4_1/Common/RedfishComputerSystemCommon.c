@@ -9,7 +9,7 @@
 
 #include "RedfishComputerSystemCommon.h"
 
-CHAR8 MemoryEmptyJson[] = "{\"@odata.id\": \"\", \"@odata.type\": \"#ComputerSystem.v1_1_0.ComputerSystem\", \"Id\": \"\", \"Name\": \"\"}";
+CHAR8 MemoryEmptyJson[] = "{\"@odata.id\": \"\", \"@odata.type\": \"#ComputerSystem.V1_4_1.ComputerSystem\", \"Id\": \"\", \"Name\": \"\"}";
 
 REDFISH_RESOURCE_COMMON_PRIVATE *mRedfishResourcePrivate = NULL;
 
@@ -32,8 +32,8 @@ RedfishConsumeResourceCommon (
   )
 {
   EFI_STATUS                    Status;
-  EFI_REDFISH_COMPUTERSYSTEM_V1_1_0     *ComputerSystem;
-  EFI_REDFISH_COMPUTERSYSTEM_V1_1_0_CS  *ComputerSystemCs;
+  EFI_REDFISH_COMPUTERSYSTEM_V1_4_1     *ComputerSystem;
+  EFI_REDFISH_COMPUTERSYSTEM_V1_4_1_CS  *ComputerSystemCs;
   EFI_STRING                    ConfigureLang;
 
   if (Private == NULL || IS_EMPTY_STRING (Json)) {
@@ -474,12 +474,13 @@ ProvisioningProperties (
   OUT CHAR8                             **ResultJson
   )
 {
-  EFI_REDFISH_COMPUTERSYSTEM_V1_1_0     *ComputerSystem;
-  EFI_REDFISH_COMPUTERSYSTEM_V1_1_0_CS  *ComputerSystemCs;
+  EFI_REDFISH_COMPUTERSYSTEM_V1_4_1     *ComputerSystem;
+  EFI_REDFISH_COMPUTERSYSTEM_V1_4_1_CS  *ComputerSystemCs;
   EFI_STATUS                            Status;
   INT64                                 *NumericValue;
   CHAR8                                 *AsciiStringValue;
   BOOLEAN                               PropertyChanged;
+  BOOLEAN                               UnusedProperty;
 
   if (JsonStructProtocol == NULL || ResultJson == NULL || IS_EMPTY_STRING (IputJson) || IS_EMPTY_STRING (ConfigureLang)) {
     return EFI_INVALID_PARAMETER;
@@ -489,6 +490,8 @@ ProvisioningProperties (
 
   *ResultJson = NULL;
   PropertyChanged = FALSE;
+  UnusedProperty = TRUE;
+
 
   ComputerSystem = NULL;
   Status = JsonStructProtocol->ToStructure (
@@ -642,6 +645,17 @@ ProvisioningProperties (
   }
 
   //
+  // Handle BOOT
+  //
+  if(ComputerSystemCs->Boot == NULL) {
+    ComputerSystemCs->Boot = AllocateZeroPool (sizeof (RedfishComputerSystem_V1_4_1_Boot_CS));
+    ASSERT (ComputerSystemCs->Boot != NULL);
+    UnusedProperty = TRUE;
+  } else {
+    UnusedProperty = FALSE;
+  }
+
+  //
   // Handle BOOT->BOOTSOURCEOVERRIDETARGET
   //
   if (PropertyChecker (ComputerSystemCs->Boot->BootSourceOverrideTarget, ProvisionMode)) {
@@ -650,6 +664,7 @@ ProvisioningProperties (
       if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->BootSourceOverrideTarget, AsciiStringValue) != 0) {
         ComputerSystemCs->Boot->BootSourceOverrideTarget = AsciiStringValue;
         PropertyChanged = TRUE;
+        UnusedProperty = FALSE;
       }
     }
   }
@@ -663,6 +678,7 @@ ProvisioningProperties (
       if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->BootSourceOverrideEnabled, AsciiStringValue) != 0) {
         ComputerSystemCs->Boot->BootSourceOverrideEnabled = AsciiStringValue;
         PropertyChanged = TRUE;
+        UnusedProperty = FALSE;
       }
     }
   }
@@ -676,6 +692,7 @@ ProvisioningProperties (
       if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->UefiTargetBootSourceOverride, AsciiStringValue) != 0) {
         ComputerSystemCs->Boot->UefiTargetBootSourceOverride = AsciiStringValue;
         PropertyChanged = TRUE;
+        UnusedProperty = FALSE;
       }
     }
   }
@@ -689,8 +706,14 @@ ProvisioningProperties (
       if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->BootSourceOverrideMode, AsciiStringValue) != 0) {
         ComputerSystemCs->Boot->BootSourceOverrideMode = AsciiStringValue;
         PropertyChanged = TRUE;
+        UnusedProperty = FALSE;
       }
     }
+  }
+
+  if (UnusedProperty)  {
+    FreePool (ComputerSystemCs->Boot);
+    ComputerSystemCs->Boot = NULL;
   }
 
   //
@@ -704,6 +727,17 @@ ProvisioningProperties (
         PropertyChanged = TRUE;
       }
     }
+  }
+
+  //
+  // Handle PROCESSORSUMMARY
+  //
+  if(ComputerSystemCs->ProcessorSummary == NULL) {
+    ComputerSystemCs->ProcessorSummary = AllocateZeroPool (sizeof (RedfishComputerSystem_V1_4_1_ProcessorSummary_CS));
+    ASSERT (ComputerSystemCs->ProcessorSummary != NULL);
+    UnusedProperty = TRUE;
+  } else {
+    UnusedProperty = FALSE;
   }
 
   //
@@ -732,6 +766,22 @@ ProvisioningProperties (
     }
   }
 
+  if (UnusedProperty)  {
+    FreePool (ComputerSystemCs->Boot);
+    ComputerSystemCs->Boot = NULL;
+  }
+
+  //
+  // Handle MEMORYSUMMARY
+  //
+  if(ComputerSystemCs->MemorySummary == NULL) {
+    ComputerSystemCs->MemorySummary = AllocateZeroPool (sizeof (RedfishComputerSystem_V1_4_1_MemorySummary_CS));
+    ASSERT (ComputerSystemCs->MemorySummary != NULL);
+    UnusedProperty = TRUE;
+  } else {
+    UnusedProperty = FALSE;
+  }
+
   //
   // Handle MEMORYSUMMARY->TOTALSYSTEMMEMORYGIB
   //
@@ -758,7 +808,10 @@ ProvisioningProperties (
     }
   }
 
-
+  if (UnusedProperty)  {
+    FreePool (ComputerSystemCs->Boot);
+    ComputerSystemCs->Boot = NULL;
+  }
 
   //
   // Convert C structure back to JSON text.
