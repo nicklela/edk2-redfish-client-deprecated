@@ -48,7 +48,7 @@ RedfishResourceProvisioningResource (
     return EFI_NOT_READY;
   }
 
-  Status = GetResourceByPath (Private->RedfishService, Uri, &Response);
+  Status = GetResourceByUri (Private->RedfishService, Uri, &Response);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, get resource from: %a failed\n", __FUNCTION__, Uri));
     return Status;
@@ -108,7 +108,7 @@ RedfishResourceConsumeResource (
     return EFI_NOT_READY;
   }
 
-  Status = GetResourceByPath (Private->RedfishService, Uri, &Response);
+  Status = GetResourceByUri (Private->RedfishService, Uri, &Response);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, get resource from: %s failed\n", __FUNCTION__, Uri));
     return Status;
@@ -226,7 +226,7 @@ RedfishResourceUpdate (
     return EFI_NOT_READY;
   }
 
-  Status = GetResourceByPath (Private->RedfishService, Uri, &Response);
+  Status = GetResourceByUri (Private->RedfishService, Uri, &Response);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, get resource from: %s failed\n", __FUNCTION__, Uri));
     return Status;
@@ -295,7 +295,7 @@ RedfishResourceCheck (
     return EFI_NOT_READY;
   }
 
-  Status = GetResourceByPath (Private->RedfishService, Uri, &Response);
+  Status = GetResourceByUri (Private->RedfishService, Uri, &Response);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, get resource from: %s failed\n", __FUNCTION__, Uri));
     return Status;
@@ -366,7 +366,7 @@ RedfishResourceIdentify (
     return EFI_NOT_READY;
   }
 
-  Status = GetResourceByPath (Private->RedfishService, Uri, &Response);
+  Status = GetResourceByUri (Private->RedfishService, Uri, &Response);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, get resource from: %s failed\n", __FUNCTION__, Uri));
     return Status;

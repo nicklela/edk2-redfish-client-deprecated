@@ -28,10 +28,10 @@ typedef struct {
 
 /**
 
-  Read redfish resource by given resource path.
+  Read redfish resource by given resource URI.
 
   @param[in]  Service       Redfish srvice instacne to make query.
-  @param[in]  ResourcePath  Target resource path.
+  @param[in]  ResourceUri   Target resource URI.
   @param[out] Response      HTTP response from redfish service.
 
   @retval     EFI_SUCCESS     Resrouce is returned successfully.
@@ -39,9 +39,9 @@ typedef struct {
 
 **/
 EFI_STATUS
-GetResourceByPath (
+GetResourceByUri (
   IN  REDFISH_SERVICE           *Service,
-  IN  EFI_STRING                ResourcePath,
+  IN  EFI_STRING                ResourceUri,
   OUT REDFISH_RESPONSE          *Response
   );
 
@@ -417,17 +417,51 @@ RedfishGetConfigLanguage (
 
 /**
 
-  Convert Unicode string to Ascii string. It's call responsibility to release returned buffer.
+  Convert Unicode string to ASCII string. It's call responsibility to release returned buffer.
 
   @param[in]  UnicodeStr      Unicode string to convert.
 
-  @retval     CHAR8 *         Ascii string returned.
+  @retval     CHAR8 *         ASCII string returned.
   @retval     NULL            Errors occur.
 
 **/
 CHAR8 *
 StrUnicodeToAscii (
   IN EFI_STRING   UnicodeStr
+  );
+
+/**
+
+  Convert ASCII string to Unicode string. It's call responsibility to release returned buffer.
+
+  @param[in]  AsciiStr        ASCII string to convert.
+
+  @retval     EFI_STRING      Unicode string returned.
+  @retval     NULL            Errors occur.
+
+**/
+EFI_STRING
+StrAsciiToUnicode (
+  IN CHAR8  *AsciiStr
+  );
+
+/**
+
+  Check and see if ETAG is identical to what we keep in system.
+
+  @param[in]  Uri           URI requested
+  @param[in]  EtagInHeader  ETAG string returned from HTTP request.
+  @param[in]  EtagInJson    ETAG string in JSON body.
+
+  @retval     TRUE          ETAG is identical.
+  @retval     FALSE         ETAG is changed.
+
+**/
+BOOLEAN
+CheckEtag (
+  IN EFI_STRING Uri,
+  IN CHAR8      *EtagInHeader,
+  IN CHAR8      *EtagInJson
   );
 
 #endif

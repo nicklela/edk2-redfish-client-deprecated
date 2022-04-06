@@ -35,6 +35,7 @@
 #define INDEX_STRING_SIZE         16
 #define INDEX_STRING              L"{%d}"
 #define REDFISH_ROOT_PATH         "/v1"
+#define REDFISH_ROOT_PATH_UNICODE L"/v1"
 #define MAX_CONF_LANG_LEN         128
 #define MAX_REDFISH_URL_LEN       255
 
