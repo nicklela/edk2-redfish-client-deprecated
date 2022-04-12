@@ -1192,7 +1192,7 @@ ProvisioningMemoryProperties (
     return EFI_INVALID_PARAMETER;
   }
 
-  DEBUG ((REDFISH_DEBUG_TRACE, "%a provision for %s with: %s\n", __FUNCTION__, ConfigureLang, (ProvisionMode ? L"Provision all resource" : L"Provision existing resource")));
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a provision for %s with: %s\n", __FUNCTION__, ConfigureLang, (ProvisionMode ? L"Provision resource" : L"Update resource")));
 
   *ResultJson = NULL;
   PropertyChanged = FALSE;
@@ -2037,6 +2037,7 @@ ProvisioningMemoryResource (
     return EFI_INVALID_PARAMETER;
   }
 
+  EtagStr = NULL;
   AsciiSPrint (ResourceId, sizeof (ResourceId), "%d", Index);
 
   Status = ProvisioningMemoryProperties (
@@ -2122,14 +2123,72 @@ ProvisioningMemoryExistResource (
   IN  REDFISH_RESOURCE_COMMON_PRIVATE  *Private
   )
 {
+  EFI_STATUS Status;
+  EFI_STRING ConfigureLang;
+  CHAR8      *EtagStr;
+  CHAR8      *Json;
+
   if (Private == NULL) {
     return EFI_INVALID_PARAMETER;
   }
 
+  EtagStr = NULL;
+  Json = NULL;
+  ConfigureLang = NULL;
+
   Private->Json = JsonDumpString (RedfishJsonInPayload (Private->Payload), EDKII_JSON_COMPACT);
   ASSERT (Private->Json != NULL);
 
-  return RedfishUpdateResourceCommon (Private, Private->Json);
+  ConfigureLang = RedfishGetConfigLanguage (Private->Uri);
+  if (ConfigureLang == NULL) {
+    return EFI_NOT_FOUND;
+  }
+
+  Status = ProvisioningMemoryProperties (
+             Private->JsonStructProtocol,
+             Private->Json,
+             NULL,
+             ConfigureLang,
+             TRUE,
+             &Json
+             );
+  if (EFI_ERROR (Status)) {
+    if (Status == EFI_NOT_FOUND) {
+      DEBUG ((REDFISH_DEBUG_TRACE, "%a, provisioning existing resource for %s ignored. Nothing changed\n", __FUNCTION__, ConfigureLang));
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, provisioning existing resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+    }
+    goto ON_RELEASE;
+  }
+
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a, provisioning existing resource for %s\n", __FUNCTION__, ConfigureLang));
+  //
+  // PUT back to instance
+  //
+  Status = CreatePayloadToPatchResource (Private->RedfishService, Private->Payload, Json, &EtagStr);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, patch resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+  }
+
+  //
+  // Handle Etag
+  //
+  if (EtagStr != NULL) {
+    SetEtagWithUri (EtagStr, Private->Uri);
+    FreePool (EtagStr);
+  }
+
+ON_RELEASE:
+
+  if (Json != NULL) {
+    FreePool (Json);
+  }
+
+  if (ConfigureLang != NULL) {
+    FreePool (ConfigureLang);
+  }
+
+  return Status;
 }
 
 /**
@@ -2253,6 +2312,7 @@ RedfishUpdateResourceCommon (
     return EFI_INVALID_PARAMETER;
   }
 
+  EtagStr = NULL;
   Json = NULL;
   ConfigureLang = NULL;
 
@@ -2284,7 +2344,7 @@ RedfishUpdateResourceCommon (
   //
   Status = CreatePayloadToPatchResource (Private->RedfishService, Private->Payload, Json, &EtagStr);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, post memory resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+    DEBUG ((DEBUG_ERROR, "%a, patch resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
   }
 
   //

@@ -1431,6 +1431,178 @@ GetPropertyBooleanValue (
 
 /**
 
+  Return the last string of configure language. Any modification to returned
+  string will change ConfigureLanguage.
+
+  @param[in]  ConfigureLanguage Configure language string
+
+  @retval     EFI_STRING        Attribute name is returned
+  @retval     NULL              Error occurs
+
+**/
+EFI_STRING
+GetAttributeNameFromConfigLanguage (
+  IN  EFI_STRING  ConfigureLanguage
+  )
+{
+  UINTN StringLen;
+  UINTN Index;
+
+  if (IS_EMPTY_STRING (ConfigureLanguage)) {
+    return NULL;
+  }
+
+  StringLen = StrLen (ConfigureLanguage);
+  for (Index = StringLen - 1; Index >= 0; Index--) {
+    if (ConfigureLanguage[Index] == '/') {
+      return &ConfigureLanguage[Index + 1];
+    }
+  }
+
+  return NULL;
+}
+
+/**
+
+  Get the property value in array type.
+
+  @param[in]  Schema        Schema of this property.
+  @param[in]  Version       Schema version.
+  @param[in]  PropertyName  Property name.
+  @param[in]  ConfigureLang Configure Language of this property.
+  @param[out] ArraySize     The size of returned array.
+  @param[out] ArrayValue    Returned array.
+
+  @retval     EFI_SUCCESS   property array is retunred successfully.
+  @retval     Others        Error occurs.
+
+**/
+EFI_STATUS
+GetPropertyArrayValue (
+  IN  CHAR8               *Schema,
+  IN  CHAR8               *Version,
+  IN  EFI_STRING          PropertyName,
+  IN  EFI_STRING          ConfigureLang,
+  OUT UINTN               *ArraySize,
+  OUT EDKII_REDFISH_VALUE **ArrayValue
+  )
+{
+  EFI_STATUS          Status;
+  EDKII_REDFISH_VALUE RedfishValue;
+  EFI_STRING          ConfigureLangBuffer;
+  UINTN               BufferSize;
+  EFI_STRING          *ConfigureLangList;
+  UINTN               Count;
+  EDKII_REDFISH_VALUE *ReturnArray;
+  UINTN               Index;
+  EFI_STRING          BufferString;
+
+  if (IS_EMPTY_STRING (Schema) || IS_EMPTY_STRING (Version) || IS_EMPTY_STRING (ConfigureLang) || IS_EMPTY_STRING (PropertyName)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  if (ArraySize == NULL || ArrayValue == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  *ArraySize = 0;
+  ConfigureLangList = NULL;
+  ConfigureLangBuffer = NULL;
+  Count = 0;
+
+  //
+  // Configure Language buffer.
+  //
+  BufferSize = sizeof (CHAR16) * MAX_CONF_LANG_LEN;
+  ConfigureLangBuffer = AllocatePool (BufferSize);
+  if (ConfigureLangBuffer == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  //
+  // Carving the regular expression pattern. Add '\' to '{' and '}'
+  //
+  Index = 0;
+  while (ConfigureLang[Index] != '\0') {
+
+    if (ConfigureLang[Index] == '{' || ConfigureLang[Index] == '}') {
+      ConfigureLangBuffer[Count++] = '\\';
+    }
+    ConfigureLangBuffer[Count] = ConfigureLang[Index];
+    Index++;
+    Count++;
+  }
+
+  //
+  // Find how many items in this array
+  //
+  UnicodeSPrint (&ConfigureLangBuffer[Count], BufferSize, L"/%s%s", PropertyName, REGULAR_EXPRESSION_ARRAY);
+  Count = 0;
+  Status = RedfishPlatformConfigGetConfigureLang (Schema, Version, ConfigureLangBuffer, &ConfigureLangList, &Count);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, BiosConfigToRedfishGetConfigureLangRegex failed: %r\n", __FUNCTION__, Status));
+    return Status;
+  }
+
+  if (Count == 0) {
+    return EFI_NOT_FOUND;
+  }
+
+  *ArraySize = Count;
+  ReturnArray = AllocatePool (sizeof (EDKII_REDFISH_VALUE));
+  if (ReturnArray == NULL) {
+    Status = EFI_OUT_OF_RESOURCES;
+    goto ON_RELEASE;
+  }
+
+  for (Index = 0; Index < Count; Index++) {
+    Status = RedfishPlatformConfigGetValue (Schema, Version, ConfigureLangList[Index], &RedfishValue);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "%a, %a.%a query current setting for %s failed: %r\n", __FUNCTION__, Schema, Version, ConfigureLangList[Index], Status));
+      break;
+    }
+
+    DEBUG ((REDFISH_DEBUG_TRACE, "%a, %d) %s type: 0x%x value: 0x%x\n", __FUNCTION__, Index, ConfigureLangList[Index], RedfishValue.Type, RedfishValue.Value));
+
+    ReturnArray[Index].Type = RedfishValue.Type;
+    switch (RedfishValue.Type) {
+      case REDFISH_VALUE_TYPE_STRING:
+        ReturnArray[Index].Value.Buffer = RedfishValue.Value.Buffer;
+        break;
+      case REDFISH_VALUE_TYPE_BOOLEAN:
+        ReturnArray[Index].Value.Boolean = RedfishValue.Value.Boolean;
+        break;
+      case REDFISH_VALUE_TYPE_INTEGER:
+        ReturnArray[Index].Value.Integer = RedfishValue.Value.Integer;
+        break;
+      default:
+        //
+        // Unknown type. Use configure language string
+        //
+        BufferString = GetAttributeNameFromConfigLanguage (ConfigureLangList[Index]);
+        ReturnArray[Index].Type = REDFISH_VALUE_TYPE_STRING;
+        ReturnArray[Index].Value.Buffer = StrUnicodeToAscii (BufferString);
+        break;
+    }
+  }
+
+  *ArrayValue = ReturnArray;
+
+ON_RELEASE:
+
+  if (ConfigureLangList != NULL) {
+    FreePool (ConfigureLangList);
+  }
+
+  if (ConfigureLangBuffer != NULL) {
+    FreePool (ConfigureLangBuffer);
+  }
+
+  return EFI_SUCCESS;
+}
+
+/**
+
   Check and see if we need to do provisioning for this property.
 
   @param[in]  PropertyBuffer   Pointer to property instance.
@@ -1451,36 +1623,6 @@ PropertyChecker (
   }
 
   if (!ProvisionMode && PropertyBuffer != NULL) {
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
-/**
-
-  Check and see if we need to do provisioning for this two properties.
-
-  @param[in]  PropertyBuffer1   Pointer to property instance 1.
-  @param[in]  PropertyBuffer2   Pointer to property instance 2.
-  @param[in]  ProvisionMode     TRUE if we are in provision mode. FALSE otherwise.
-
-  @retval     TRUE             Provision is required.
-  @retval     FALSE            Provision is not required.
-
-**/
-BOOLEAN
-PropertyChecker2Parm (
-  IN VOID         *PropertyBuffer1,
-  IN VOID         *PropertyBuffer2,
-  IN BOOLEAN      ProvisionMode
-  )
-{
-  if (ProvisionMode && (PropertyBuffer1 == NULL || PropertyBuffer2 == NULL)) {
-    return TRUE;
-  }
-
-  if (!ProvisionMode && PropertyBuffer1 != NULL && PropertyBuffer2 != NULL) {
     return TRUE;
   }
 
