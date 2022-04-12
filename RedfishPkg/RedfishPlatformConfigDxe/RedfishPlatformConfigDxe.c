@@ -2,7 +2,7 @@
 
   The implementation of EDKII Redfidh Platform Config Protocol.
 
-  (C) Copyright 2021 Hewlett Packard Enterprise Development LP<BR>
+  (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -472,6 +472,18 @@ RedfishPlatformConfigProtocolGetValue (
         DEBUG ((DEBUG_ERROR, "%a, failed to convert HII value to Redfish value: %r\n", __FUNCTION__, Status));
         goto RELEASE_RESOURCE;
       }
+      break;
+    case EFI_IFR_ACTION_OP:
+      if (TargetStatement->HiiStatement->Value.Type != EFI_IFR_TYPE_ACTION) {
+        ASSERT (FALSE);
+        Status = EFI_DEVICE_ERROR;
+        goto RELEASE_RESOURCE;
+      }
+
+      //
+      // Action has no value. Just return unknown type.
+      //
+      Value->Type = REDFISH_VALUE_TYPE_UNKNOWN;
       break;
     default:
       DEBUG ((DEBUG_ERROR, "%a, catch unsupported type: 0x%x! Please contact with author if we need to support this type.\n", __FUNCTION__, TargetStatement->HiiStatement->Operand));
