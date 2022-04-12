@@ -17,11 +17,11 @@
 //
 #define RESOURCE_SCHEMA         "ComputerSystem"
 #define RESOURCE_SCHEMA_MAJOR   "1"
-#define RESOURCE_SCHEMA_MINOR   "1"
+#define RESOURCE_SCHEMA_MINOR   "5"
 #define RESOURCE_SCHEMA_ERRATA  "0"
-#define RESOURCE_SCHEMA_VERSION "V1_5_0"
+#define RESOURCE_SCHEMA_VERSION "v1_5_0"
 #define REDPATH_ARRAY_PATTERN   L"/Systems/{.*}/"
 #define REDPATH_ARRAY_PREFIX    L"/Systems/"
-#define RESOURCE_SCHEMA_FULL    "x-uefi-redfish-ComputerSystem.V1_5_0"
+#define RESOURCE_SCHEMA_FULL    "x-uefi-redfish-ComputerSystem.v1_5_0"
 
 #endif

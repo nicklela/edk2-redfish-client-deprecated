@@ -2,6 +2,7 @@
   The boot manager reference implementation
 
 Copyright (c) 2004 - 2018, Intel Corporation. All rights reserved.<BR>
+(C) Copyright 2022 Hewlett Packard Enterprise Development LP<BR>
 SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
@@ -478,7 +479,7 @@ UpdateConfigLanguage (
     HiiHandle,
     StringId,
     ConfigLanguage,
-    "x-uefi-redfish-ComputerSystem.v1_1_0"
+    "x-uefi-redfish-ComputerSystem.v1_5_0"
     );
 
   return EFI_SUCCESS;
