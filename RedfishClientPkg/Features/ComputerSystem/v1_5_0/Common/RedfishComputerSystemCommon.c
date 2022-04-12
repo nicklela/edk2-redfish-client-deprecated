@@ -481,17 +481,24 @@ ProvisioningProperties (
   CHAR8                                 *AsciiStringValue;
   BOOLEAN                               PropertyChanged;
   BOOLEAN                               UnusedProperty;
+  UINTN                                 ArraySize;
+  EDKII_REDFISH_VALUE                   *ArrayValue;
+  UINTN                                 Index;
+  RedfishCS_char_Array                  *CharArrayBuffer;
+  RedfishCS_char_Array                  *PreArrayBuffer;
 
   if (JsonStructProtocol == NULL || ResultJson == NULL || IS_EMPTY_STRING (IputJson) || IS_EMPTY_STRING (ConfigureLang)) {
     return EFI_INVALID_PARAMETER;
   }
 
-  DEBUG ((REDFISH_DEBUG_TRACE, "%a provision for %s with: %s\n", __FUNCTION__, ConfigureLang, (ProvisionMode ? L"Provision all resource" : L"Provision existing resource")));
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a provision for %s with: %s\n", __FUNCTION__, ConfigureLang, (ProvisionMode ? L"Provision resource" : L"Update resource")));
 
   *ResultJson = NULL;
   PropertyChanged = FALSE;
   UnusedProperty = TRUE;
-
+  ArraySize = 0;
+  ArrayValue = NULL;
+  PreArrayBuffer = NULL;
 
   ComputerSystem = NULL;
   Status = JsonStructProtocol->ToStructure (
@@ -711,6 +718,38 @@ ProvisioningProperties (
     }
   }
 
+  //
+  // Handle BOOT->BOOTORDER
+  //
+  if (PropertyChecker (ComputerSystemCs->Boot->BootOrder, ProvisionMode)) {
+    Status = GetPropertyArrayValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootOrder", ConfigureLang, &ArraySize, &ArrayValue);
+    if (!EFI_ERROR (Status)) {
+      if (ArraySize > 0) {
+
+        CharArrayBuffer = AllocatePool (sizeof (RedfishCS_char_Array));
+        ASSERT (CharArrayBuffer != NULL);
+        ASSERT (ArrayValue[0].Type == REDFISH_VALUE_TYPE_STRING);
+
+        CharArrayBuffer->ArrayValue = ArrayValue[0].Value.Buffer;
+        CharArrayBuffer->Next = NULL;
+        PreArrayBuffer = CharArrayBuffer;
+        ComputerSystemCs->Boot->BootOrder = CharArrayBuffer;
+        for (Index = 1; Index < ArraySize; Index++) {
+
+          CharArrayBuffer = AllocatePool (sizeof (RedfishCS_char_Array));
+          ASSERT (CharArrayBuffer != NULL);
+          ASSERT (ArrayValue[Index].Type == REDFISH_VALUE_TYPE_STRING);
+          CharArrayBuffer->ArrayValue = ArrayValue[Index].Value.Buffer;
+          CharArrayBuffer->Next = NULL;
+          PreArrayBuffer->Next = CharArrayBuffer;
+          PreArrayBuffer = CharArrayBuffer;
+        }
+        PropertyChanged = TRUE;
+        UnusedProperty = FALSE;
+      }
+    }
+  }
+
   if (UnusedProperty)  {
     FreePool (ComputerSystemCs->Boot);
     ComputerSystemCs->Boot = NULL;
@@ -767,8 +806,8 @@ ProvisioningProperties (
   }
 
   if (UnusedProperty)  {
-    FreePool (ComputerSystemCs->Boot);
-    ComputerSystemCs->Boot = NULL;
+    FreePool (ComputerSystemCs->ProcessorSummary);
+    ComputerSystemCs->ProcessorSummary = NULL;
   }
 
   //
@@ -809,8 +848,8 @@ ProvisioningProperties (
   }
 
   if (UnusedProperty)  {
-    FreePool (ComputerSystemCs->Boot);
-    ComputerSystemCs->Boot = NULL;
+    FreePool (ComputerSystemCs->MemorySummary);
+    ComputerSystemCs->MemorySummary = NULL;
   }
 
   //
@@ -854,6 +893,7 @@ ProvisioningResource (
     return EFI_INVALID_PARAMETER;
   }
 
+  EtagStr = NULL;
   AsciiSPrint (ResourceId, sizeof (ResourceId), "%d", Index);
 
   Status = ProvisioningProperties (
@@ -939,14 +979,72 @@ ProvisioningExistResource (
   IN  REDFISH_RESOURCE_COMMON_PRIVATE  *Private
   )
 {
+  EFI_STATUS Status;
+  EFI_STRING ConfigureLang;
+  CHAR8      *EtagStr;
+  CHAR8      *Json;
+
   if (Private == NULL) {
     return EFI_INVALID_PARAMETER;
   }
 
+  EtagStr = NULL;
+  Json = NULL;
+  ConfigureLang = NULL;
+
   Private->Json = JsonDumpString (RedfishJsonInPayload (Private->Payload), EDKII_JSON_COMPACT);
   ASSERT (Private->Json != NULL);
 
-  return RedfishUpdateResourceCommon (Private, Private->Json);
+  ConfigureLang = RedfishGetConfigLanguage (Private->Uri);
+  if (ConfigureLang == NULL) {
+    return EFI_NOT_FOUND;
+  }
+
+  Status = ProvisioningProperties (
+             Private->JsonStructProtocol,
+             Private->Json,
+             NULL,
+             ConfigureLang,
+             TRUE,
+             &Json
+             );
+  if (EFI_ERROR (Status)) {
+    if (Status == EFI_NOT_FOUND) {
+      DEBUG ((REDFISH_DEBUG_TRACE, "%a, provisioning existing resource for %s ignored. Nothing changed\n", __FUNCTION__, ConfigureLang));
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, provisioning existing resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+    }
+    goto ON_RELEASE;
+  }
+
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a, provisioning existing resource for %s\n", __FUNCTION__, ConfigureLang));
+  //
+  // PUT back to instance
+  //
+  Status = CreatePayloadToPatchResource (Private->RedfishService, Private->Payload, Json, &EtagStr);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, patch resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+  }
+
+  //
+  // Handle Etag
+  //
+  if (EtagStr != NULL) {
+    SetEtagWithUri (EtagStr, Private->Uri);
+    FreePool (EtagStr);
+  }
+
+ON_RELEASE:
+
+  if (Json != NULL) {
+    FreePool (Json);
+  }
+
+  if (ConfigureLang != NULL) {
+    FreePool (ConfigureLang);
+  }
+
+  return Status;
 }
 
 /**
@@ -1069,6 +1167,7 @@ RedfishUpdateResourceCommon (
     return EFI_INVALID_PARAMETER;
   }
 
+  EtagStr = NULL;
   Json = NULL;
   ConfigureLang = NULL;
 
@@ -1100,7 +1199,7 @@ RedfishUpdateResourceCommon (
   //
   Status = CreatePayloadToPatchResource (Private->RedfishService, Private->Payload, Json, &EtagStr);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, post memory resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+    DEBUG ((DEBUG_ERROR, "%a, patch resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
   }
 
   //

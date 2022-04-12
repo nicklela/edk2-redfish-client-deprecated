@@ -10,6 +10,8 @@
 #ifndef REDFISH_FEATURE_UTILITY_LIB_H_
 #define REDFISH_FEATURE_UTILITY_LIB_H_
 
+#include <Protocol/EdkIIRedfishPlatformConfig.h>
+
 //
 // Definition of REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG
 //
@@ -304,25 +306,6 @@ PropertyChecker (
 
 /**
 
-  Check and see if we need to do provisioning for this two properties.
-
-  @param[in]  PropertyBuffer1   Pointer to property instance 1.
-  @param[in]  PropertyBuffer2   Pointer to property instance 2.
-  @param[in]  ProvisionMode     TRUE if we are in provision mode. FALSE otherwise.
-
-  @retval     TRUE             Provision is required.
-  @retval     FALSE            Provision is not required.
-
-**/
-BOOLEAN
-PropertyChecker2Parm (
-  IN VOID         *PropertyBuffer1,
-  IN VOID         *PropertyBuffer2,
-  IN BOOLEAN      ProvisionMode
-  );
-
-/**
-
   Keep ETAG string and URI string in database.
 
   @param[in]  EtagStr   ETAG string.
@@ -462,6 +445,31 @@ CheckEtag (
   IN EFI_STRING Uri,
   IN CHAR8      *EtagInHeader,
   IN CHAR8      *EtagInJson
+  );
+
+/**
+
+  Get the property value in array type.
+
+  @param[in]  Schema        Schema of this property.
+  @param[in]  Version       Schema version.
+  @param[in]  PropertyName  Property name.
+  @param[in]  ConfigureLang Configure Language of this property.
+  @param[out] ArraySize     The size of returned array.
+  @param[out] ArrayValue    Returned array.
+
+  @retval     EFI_SUCCESS   property array is retunred successfully.
+  @retval     Others        Error occurs.
+
+**/
+EFI_STATUS
+GetPropertyArrayValue (
+  IN  CHAR8               *Schema,
+  IN  CHAR8               *Version,
+  IN  EFI_STRING          PropertyName,
+  IN  EFI_STRING          ConfigureLang,
+  OUT UINTN               *ArraySize,
+  OUT EDKII_REDFISH_VALUE **ArrayValue
   );
 
 #endif

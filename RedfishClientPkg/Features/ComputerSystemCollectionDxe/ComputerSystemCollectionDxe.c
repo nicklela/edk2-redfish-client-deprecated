@@ -33,7 +33,7 @@ HandleResource (
 
   Status = GetRedfishSchemaInfo (Private->RedfishService, Private->JsonStructProtocol, Uri, &SchemaInfo);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, failed to get schema information from: %a %r\n", __FUNCTION__, Uri, Status));
+    DEBUG ((DEBUG_ERROR, "%a, failed to get schema information from: %s %r\n", __FUNCTION__, Uri, Status));
     return Status;
   }
 
