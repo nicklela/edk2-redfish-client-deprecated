@@ -19,7 +19,7 @@
 
 #include <Protocol/RestJsonStructure.h>
 
-#include <RedfishJsonStructure/ComputerSystem/v1_1_0/EfiComputerSystemV1_1_0.h>
+#include <RedfishJsonStructure/ComputerSystem/v1_5_0/EfiComputerSystemV1_5_0.h>
 
 EFI_REST_JSON_STRUCTURE_PROTOCOL  *mJsonStructProtocol = NULL;
 
@@ -40,8 +40,8 @@ RedfishIdentifyResource (
   )
 {
   EFI_STATUS                            Status;
-  EFI_REDFISH_COMPUTERSYSTEM_V1_1_0     *ComputerSystem;
-  EFI_REDFISH_COMPUTERSYSTEM_V1_1_0_CS  *ComputerSystemCs;
+  EFI_REDFISH_COMPUTERSYSTEM_V1_5_0     *ComputerSystem;
+  EFI_REDFISH_COMPUTERSYSTEM_V1_5_0_CS  *ComputerSystemCs;
   EFI_GUID                              SystemUuid;
   EFI_GUID                              ResourceUuid;
 

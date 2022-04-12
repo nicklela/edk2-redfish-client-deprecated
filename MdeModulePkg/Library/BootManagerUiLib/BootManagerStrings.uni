@@ -19,7 +19,7 @@
 /=#
 #langdef   en-US "English"
 #langdef   fr-FR "Français"
-#langdef   x-uefi-redfish-ComputerSystem.v1_1_0 "ComputerSystem.v1_1_0"
+#langdef   x-uefi-redfish-ComputerSystem.v1_5_0 "ComputerSystem.v1_5_0"
 
 #string STR_BM_BANNER                  #language en-US  "Boot Manager"
                                        #language fr-FR  "Boot Manager"
