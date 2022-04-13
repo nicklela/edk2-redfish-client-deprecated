@@ -1186,7 +1186,6 @@ ProvisioningMemoryProperties (
   BOOLEAN                       *BooleanValue;
   CHAR8                         *AsciiStringValue;
   BOOLEAN                       PropertyChanged;
-  BOOLEAN                       UnusedProperty;
 
   if (JsonStructProtocol == NULL || ResultJson == NULL || IS_EMPTY_STRING (IputJson) || IS_EMPTY_STRING (ConfigureLang)) {
     return EFI_INVALID_PARAMETER;
@@ -1196,7 +1195,6 @@ ProvisioningMemoryProperties (
 
   *ResultJson = NULL;
   PropertyChanged = FALSE;
-  UnusedProperty = TRUE;
 
   Memory = NULL;
   Status = JsonStructProtocol->ToStructure (
@@ -1465,73 +1463,58 @@ ProvisioningMemoryProperties (
   //
   // Handle MEMORYLOCATION
   //
-  if(MemoryCs->MemoryLocation == NULL) {
-    MemoryCs->MemoryLocation = AllocateZeroPool (sizeof (RedfishMemory_V1_7_1_MemoryLocation_CS));
-    ASSERT (MemoryCs->MemoryLocation != NULL);
-    UnusedProperty = TRUE;
-  } else {
-    UnusedProperty = FALSE;
-  }
-
-  //
-  // Handle MEMORYLOCATION->CHANNEL
-  //
-  if (PropertyChecker (MemoryCs->MemoryLocation->Channel, ProvisionMode)) {
-    NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"MemoryLocation/Channel", ConfigureLang);
-    if (NumericValue != NULL) {
-      if (ProvisionMode || *MemoryCs->MemoryLocation->Channel != *NumericValue) {
-        MemoryCs->MemoryLocation->Channel = NumericValue;
-        PropertyChanged = TRUE;
-        UnusedProperty = FALSE;
+  if(MemoryCs->MemoryLocation != NULL) {
+    //
+    // Handle MEMORYLOCATION->CHANNEL
+    //
+    if (PropertyChecker (MemoryCs->MemoryLocation->Channel, ProvisionMode)) {
+      NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"MemoryLocation/Channel", ConfigureLang);
+      if (NumericValue != NULL) {
+        if (ProvisionMode || *MemoryCs->MemoryLocation->Channel != *NumericValue) {
+          MemoryCs->MemoryLocation->Channel = NumericValue;
+          PropertyChanged = TRUE;
+        }
       }
     }
-  }
 
-  //
-  // Handle MEMORYLOCATION->MEMORYCONTROLLER
-  //
-  if (PropertyChecker (MemoryCs->MemoryLocation->MemoryController, ProvisionMode)) {
-    NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"MemoryLocation/MemoryController", ConfigureLang);
-    if (NumericValue != NULL) {
-      if (ProvisionMode || *MemoryCs->MemoryLocation->MemoryController != *NumericValue) {
-        MemoryCs->MemoryLocation->MemoryController = NumericValue;
-        PropertyChanged = TRUE;
-        UnusedProperty = FALSE;
+    //
+    // Handle MEMORYLOCATION->MEMORYCONTROLLER
+    //
+    if (PropertyChecker (MemoryCs->MemoryLocation->MemoryController, ProvisionMode)) {
+      NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"MemoryLocation/MemoryController", ConfigureLang);
+      if (NumericValue != NULL) {
+        if (ProvisionMode || *MemoryCs->MemoryLocation->MemoryController != *NumericValue) {
+          MemoryCs->MemoryLocation->MemoryController = NumericValue;
+          PropertyChanged = TRUE;
+        }
       }
     }
-  }
 
-  //
-  // Handle MEMORYLOCATION->SLOT
-  //
-  if (PropertyChecker (MemoryCs->MemoryLocation->Slot, ProvisionMode)) {
-    NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"MemoryLocation/Slot", ConfigureLang);
-    if (NumericValue != NULL) {
-      if (ProvisionMode || *MemoryCs->MemoryLocation->Slot != *NumericValue) {
-        MemoryCs->MemoryLocation->Slot = NumericValue;
-        PropertyChanged = TRUE;
-        UnusedProperty = FALSE;
+    //
+    // Handle MEMORYLOCATION->SLOT
+    //
+    if (PropertyChecker (MemoryCs->MemoryLocation->Slot, ProvisionMode)) {
+      NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"MemoryLocation/Slot", ConfigureLang);
+      if (NumericValue != NULL) {
+        if (ProvisionMode || *MemoryCs->MemoryLocation->Slot != *NumericValue) {
+          MemoryCs->MemoryLocation->Slot = NumericValue;
+          PropertyChanged = TRUE;
+        }
       }
     }
-  }
 
-  //
-  // Handle MEMORYLOCATION->SOCKET
-  //
-  if (PropertyChecker (MemoryCs->MemoryLocation->Socket, ProvisionMode)) {
-    NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"MemoryLocation/Socket", ConfigureLang);
-    if (NumericValue != NULL) {
-      if (ProvisionMode || *MemoryCs->MemoryLocation->Socket != *NumericValue) {
-        MemoryCs->MemoryLocation->Socket = NumericValue;
-        PropertyChanged = TRUE;
-        UnusedProperty = FALSE;
+    //
+    // Handle MEMORYLOCATION->SOCKET
+    //
+    if (PropertyChecker (MemoryCs->MemoryLocation->Socket, ProvisionMode)) {
+      NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"MemoryLocation/Socket", ConfigureLang);
+      if (NumericValue != NULL) {
+        if (ProvisionMode || *MemoryCs->MemoryLocation->Socket != *NumericValue) {
+          MemoryCs->MemoryLocation->Socket = NumericValue;
+          PropertyChanged = TRUE;
+        }
       }
     }
-  }
-
-  if (UnusedProperty)  {
-    FreePool (MemoryCs->MemoryLocation);
-    MemoryCs->MemoryLocation = NULL;
   }
 
   //
@@ -1680,77 +1663,62 @@ ProvisioningMemoryProperties (
   //
   // Handle POWERMANAGEMENTPOLICY
   //
-  if(MemoryCs->PowerManagementPolicy == NULL) {
-    MemoryCs->PowerManagementPolicy = AllocateZeroPool (sizeof (RedfishMemory_V1_7_1_PowerManagementPolicy_CS));
-    ASSERT (MemoryCs->PowerManagementPolicy != NULL);
-    UnusedProperty = TRUE;
-  } else {
-    UnusedProperty = FALSE;
-  }
-
-  //
-  // Handle POWERMANAGEMENTPOLICY->AVERAGEPOWERBUDGETMILLIWATTS
-  //
-  if (PropertyChecker (MemoryCs->PowerManagementPolicy->AveragePowerBudgetMilliWatts, ProvisionMode)) {
-    NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"PowerManagementPolicy/AveragePowerBudgetMilliWatts", ConfigureLang);
-    if (NumericValue != NULL) {
-      if (ProvisionMode || *MemoryCs->PowerManagementPolicy->AveragePowerBudgetMilliWatts != *NumericValue) {
-        MemoryCs->PowerManagementPolicy->AveragePowerBudgetMilliWatts = NumericValue;
-        PropertyChanged = TRUE;
-        UnusedProperty = FALSE;
-      }
-    }
-  }
-
-  //
-  // Handle POWERMANAGEMENTPOLICY->MAXTDPMILLIWATTS
-  //
-  if (PropertyChecker (MemoryCs->PowerManagementPolicy->MaxTDPMilliWatts, ProvisionMode)) {
-    NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"PowerManagementPolicy/MaxTDPMilliWatts", ConfigureLang);
-    if (NumericValue != NULL) {
-      if (ProvisionMode || *MemoryCs->PowerManagementPolicy->MaxTDPMilliWatts != *NumericValue) {
-        MemoryCs->PowerManagementPolicy->MaxTDPMilliWatts = NumericValue;
-        PropertyChanged = TRUE;
-        UnusedProperty = FALSE;
-      }
-    }
-  }
-
-  //
-  // Handle POWERMANAGEMENTPOLICY->PEAKPOWERBUDGETMILLIWATTS
-  //
-  if (PropertyChecker (MemoryCs->PowerManagementPolicy->PeakPowerBudgetMilliWatts, ProvisionMode)) {
-    NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"PowerManagementPolicy/PeakPowerBudgetMilliWatts", ConfigureLang);
-    if (NumericValue != NULL) {
-      if (ProvisionMode || *MemoryCs->PowerManagementPolicy->PeakPowerBudgetMilliWatts != *NumericValue) {
-        MemoryCs->PowerManagementPolicy->PeakPowerBudgetMilliWatts = NumericValue;
-        PropertyChanged = TRUE;
-        UnusedProperty = FALSE;
-      }
-    }
-  }
-
-  //
-  // Handle POWERMANAGEMENTPOLICY->POLICYENABLED
-  //
-  if (PropertyChecker (MemoryCs->PowerManagementPolicy->PolicyEnabled, ProvisionMode)) {
-    BooleanValue = GetPropertyBooleanValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"PowerManagementPolicy/PolicyEnabled", ConfigureLang);
-    if (BooleanValue != NULL) {
-      if (ProvisionMode || *MemoryCs->PowerManagementPolicy->PolicyEnabled != *BooleanValue) {
-        IntegerValue = AllocatePool (sizeof (*IntegerValue));
-        if (IntegerValue != NULL) {
-          *IntegerValue = (BooleanValue ? 0x01 : 0x00);
-          MemoryCs->PowerManagementPolicy->PolicyEnabled = IntegerValue;
+  if(MemoryCs->PowerManagementPolicy != NULL) {
+    //
+    // Handle POWERMANAGEMENTPOLICY->AVERAGEPOWERBUDGETMILLIWATTS
+    //
+    if (PropertyChecker (MemoryCs->PowerManagementPolicy->AveragePowerBudgetMilliWatts, ProvisionMode)) {
+      NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"PowerManagementPolicy/AveragePowerBudgetMilliWatts", ConfigureLang);
+      if (NumericValue != NULL) {
+        if (ProvisionMode || *MemoryCs->PowerManagementPolicy->AveragePowerBudgetMilliWatts != *NumericValue) {
+          MemoryCs->PowerManagementPolicy->AveragePowerBudgetMilliWatts = NumericValue;
           PropertyChanged = TRUE;
-          UnusedProperty = FALSE;
         }
       }
     }
-  }
 
-  if (UnusedProperty)  {
-    FreePool (MemoryCs->PowerManagementPolicy);
-    MemoryCs->PowerManagementPolicy = NULL;
+    //
+    // Handle POWERMANAGEMENTPOLICY->MAXTDPMILLIWATTS
+    //
+    if (PropertyChecker (MemoryCs->PowerManagementPolicy->MaxTDPMilliWatts, ProvisionMode)) {
+      NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"PowerManagementPolicy/MaxTDPMilliWatts", ConfigureLang);
+      if (NumericValue != NULL) {
+        if (ProvisionMode || *MemoryCs->PowerManagementPolicy->MaxTDPMilliWatts != *NumericValue) {
+          MemoryCs->PowerManagementPolicy->MaxTDPMilliWatts = NumericValue;
+          PropertyChanged = TRUE;
+        }
+      }
+    }
+
+    //
+    // Handle POWERMANAGEMENTPOLICY->PEAKPOWERBUDGETMILLIWATTS
+    //
+    if (PropertyChecker (MemoryCs->PowerManagementPolicy->PeakPowerBudgetMilliWatts, ProvisionMode)) {
+      NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"PowerManagementPolicy/PeakPowerBudgetMilliWatts", ConfigureLang);
+      if (NumericValue != NULL) {
+        if (ProvisionMode || *MemoryCs->PowerManagementPolicy->PeakPowerBudgetMilliWatts != *NumericValue) {
+          MemoryCs->PowerManagementPolicy->PeakPowerBudgetMilliWatts = NumericValue;
+          PropertyChanged = TRUE;
+        }
+      }
+    }
+
+    //
+    // Handle POWERMANAGEMENTPOLICY->POLICYENABLED
+    //
+    if (PropertyChecker (MemoryCs->PowerManagementPolicy->PolicyEnabled, ProvisionMode)) {
+      BooleanValue = GetPropertyBooleanValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"PowerManagementPolicy/PolicyEnabled", ConfigureLang);
+      if (BooleanValue != NULL) {
+        if (ProvisionMode || *MemoryCs->PowerManagementPolicy->PolicyEnabled != *BooleanValue) {
+          IntegerValue = AllocatePool (sizeof (*IntegerValue));
+          if (IntegerValue != NULL) {
+            *IntegerValue = (BooleanValue ? 0x01 : 0x00);
+            MemoryCs->PowerManagementPolicy->PolicyEnabled = IntegerValue;
+            PropertyChanged = TRUE;
+          }
+        }
+      }
+    }
   }
 
   //
@@ -1769,99 +1737,83 @@ ProvisioningMemoryProperties (
   //
   // Handle SECURITYCAPABILITIES
   //
-  if(MemoryCs->SecurityCapabilities == NULL) {
-    MemoryCs->SecurityCapabilities = AllocateZeroPool (sizeof (RedfishMemory_V1_7_1_SecurityCapabilities_CS));
-    ASSERT (MemoryCs->SecurityCapabilities != NULL);
-    UnusedProperty = TRUE;
-  } else {
-    UnusedProperty = FALSE;
-  }
-
-  //
-  // Handle SECURITYCAPABILITIES->CONFIGURATIONLOCKCAPABLE
-  //
-  if (PropertyChecker (MemoryCs->SecurityCapabilities->ConfigurationLockCapable, ProvisionMode)) {
-    BooleanValue = GetPropertyBooleanValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"SecurityCapabilities/ConfigurationLockCapable", ConfigureLang);
-    if (BooleanValue != NULL) {
-      if (ProvisionMode || *MemoryCs->SecurityCapabilities->ConfigurationLockCapable != *BooleanValue) {
-        IntegerValue = AllocatePool (sizeof (*IntegerValue));
-        if (IntegerValue != NULL) {
-          *IntegerValue = (BooleanValue ? 0x01 : 0x00);
-          MemoryCs->SecurityCapabilities->ConfigurationLockCapable = IntegerValue;
-          PropertyChanged = TRUE;
-          UnusedProperty = FALSE;
+  if(MemoryCs->SecurityCapabilities != NULL) {
+    //
+    // Handle SECURITYCAPABILITIES->CONFIGURATIONLOCKCAPABLE
+    //
+    if (PropertyChecker (MemoryCs->SecurityCapabilities->ConfigurationLockCapable, ProvisionMode)) {
+      BooleanValue = GetPropertyBooleanValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"SecurityCapabilities/ConfigurationLockCapable", ConfigureLang);
+      if (BooleanValue != NULL) {
+        if (ProvisionMode || *MemoryCs->SecurityCapabilities->ConfigurationLockCapable != *BooleanValue) {
+          IntegerValue = AllocatePool (sizeof (*IntegerValue));
+          if (IntegerValue != NULL) {
+            *IntegerValue = (BooleanValue ? 0x01 : 0x00);
+            MemoryCs->SecurityCapabilities->ConfigurationLockCapable = IntegerValue;
+            PropertyChanged = TRUE;
+          }
         }
       }
     }
-  }
 
-  //
-  // Handle SECURITYCAPABILITIES->DATALOCKCAPABLE
-  //
-  if (PropertyChecker (MemoryCs->SecurityCapabilities->DataLockCapable, ProvisionMode)) {
-    BooleanValue = GetPropertyBooleanValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"SecurityCapabilities/DataLockCapable", ConfigureLang);
-    if (BooleanValue != NULL) {
-      if (ProvisionMode || *MemoryCs->SecurityCapabilities->DataLockCapable != *BooleanValue) {
-        IntegerValue = AllocatePool (sizeof (*IntegerValue));
-        if (IntegerValue != NULL) {
-          *IntegerValue = (BooleanValue ? 0x01 : 0x00);
-          MemoryCs->SecurityCapabilities->DataLockCapable = IntegerValue;
-          PropertyChanged = TRUE;
-          UnusedProperty = FALSE;
+    //
+    // Handle SECURITYCAPABILITIES->DATALOCKCAPABLE
+    //
+    if (PropertyChecker (MemoryCs->SecurityCapabilities->DataLockCapable, ProvisionMode)) {
+      BooleanValue = GetPropertyBooleanValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"SecurityCapabilities/DataLockCapable", ConfigureLang);
+      if (BooleanValue != NULL) {
+        if (ProvisionMode || *MemoryCs->SecurityCapabilities->DataLockCapable != *BooleanValue) {
+          IntegerValue = AllocatePool (sizeof (*IntegerValue));
+          if (IntegerValue != NULL) {
+            *IntegerValue = (BooleanValue ? 0x01 : 0x00);
+            MemoryCs->SecurityCapabilities->DataLockCapable = IntegerValue;
+            PropertyChanged = TRUE;
+          }
         }
       }
     }
-  }
 
-  //
-  // Handle SECURITYCAPABILITIES->MAXPASSPHRASECOUNT
-  //
-  if (PropertyChecker (MemoryCs->SecurityCapabilities->MaxPassphraseCount, ProvisionMode)) {
-    NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"SecurityCapabilities/MaxPassphraseCount", ConfigureLang);
-    if (NumericValue != NULL) {
-      if (ProvisionMode || *MemoryCs->SecurityCapabilities->MaxPassphraseCount != *NumericValue) {
-        MemoryCs->SecurityCapabilities->MaxPassphraseCount = NumericValue;
-        PropertyChanged = TRUE;
-        UnusedProperty = FALSE;
-      }
-    }
-  }
-
-  //
-  // Handle SECURITYCAPABILITIES->PASSPHRASECAPABLE
-  //
-  if (PropertyChecker (MemoryCs->SecurityCapabilities->PassphraseCapable, ProvisionMode)) {
-    BooleanValue = GetPropertyBooleanValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"SecurityCapabilities/PassphraseCapable", ConfigureLang);
-    if (BooleanValue != NULL) {
-      if (ProvisionMode || *MemoryCs->SecurityCapabilities->PassphraseCapable != *BooleanValue) {
-        IntegerValue = AllocatePool (sizeof (*IntegerValue));
-        if (IntegerValue != NULL) {
-          *IntegerValue = (BooleanValue ? 0x01 : 0x00);
-          MemoryCs->SecurityCapabilities->PassphraseCapable = IntegerValue;
+    //
+    // Handle SECURITYCAPABILITIES->MAXPASSPHRASECOUNT
+    //
+    if (PropertyChecker (MemoryCs->SecurityCapabilities->MaxPassphraseCount, ProvisionMode)) {
+      NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"SecurityCapabilities/MaxPassphraseCount", ConfigureLang);
+      if (NumericValue != NULL) {
+        if (ProvisionMode || *MemoryCs->SecurityCapabilities->MaxPassphraseCount != *NumericValue) {
+          MemoryCs->SecurityCapabilities->MaxPassphraseCount = NumericValue;
           PropertyChanged = TRUE;
-          UnusedProperty = FALSE;
         }
       }
     }
-  }
 
-  //
-  // Handle SECURITYCAPABILITIES->PASSPHRASELOCKLIMIT
-  //
-  if (PropertyChecker (MemoryCs->SecurityCapabilities->PassphraseLockLimit, ProvisionMode)) {
-    NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"SecurityCapabilities/PassphraseLockLimit", ConfigureLang);
-    if (NumericValue != NULL) {
-      if (ProvisionMode || *MemoryCs->SecurityCapabilities->PassphraseLockLimit != *NumericValue) {
-        MemoryCs->SecurityCapabilities->PassphraseLockLimit = NumericValue;
-        PropertyChanged = TRUE;
-        UnusedProperty = FALSE;
+    //
+    // Handle SECURITYCAPABILITIES->PASSPHRASECAPABLE
+    //
+    if (PropertyChecker (MemoryCs->SecurityCapabilities->PassphraseCapable, ProvisionMode)) {
+      BooleanValue = GetPropertyBooleanValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"SecurityCapabilities/PassphraseCapable", ConfigureLang);
+      if (BooleanValue != NULL) {
+        if (ProvisionMode || *MemoryCs->SecurityCapabilities->PassphraseCapable != *BooleanValue) {
+          IntegerValue = AllocatePool (sizeof (*IntegerValue));
+          if (IntegerValue != NULL) {
+            *IntegerValue = (BooleanValue ? 0x01 : 0x00);
+            MemoryCs->SecurityCapabilities->PassphraseCapable = IntegerValue;
+            PropertyChanged = TRUE;
+          }
+        }
       }
     }
-  }
 
-  if (UnusedProperty)  {
-    FreePool (MemoryCs->SecurityCapabilities);
-    MemoryCs->SecurityCapabilities = NULL;
+    //
+    // Handle SECURITYCAPABILITIES->PASSPHRASELOCKLIMIT
+    //
+    if (PropertyChecker (MemoryCs->SecurityCapabilities->PassphraseLockLimit, ProvisionMode)) {
+      NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"SecurityCapabilities/PassphraseLockLimit", ConfigureLang);
+      if (NumericValue != NULL) {
+        if (ProvisionMode || *MemoryCs->SecurityCapabilities->PassphraseLockLimit != *NumericValue) {
+          MemoryCs->SecurityCapabilities->PassphraseLockLimit = NumericValue;
+          PropertyChanged = TRUE;
+        }
+      }
+    }
   }
 
   //
