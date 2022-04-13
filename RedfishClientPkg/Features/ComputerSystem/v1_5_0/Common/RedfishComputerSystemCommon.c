@@ -9,7 +9,7 @@
 
 #include "RedfishComputerSystemCommon.h"
 
-CHAR8 MemoryEmptyJson[] = "{\"@odata.id\": \"\", \"@odata.type\": \"#ComputerSystem.V1_5_0.ComputerSystem\", \"Id\": \"\", \"Name\": \"\"}";
+CHAR8 EmptyJson[] = "{\"@odata.id\": \"\", \"@odata.type\": \"#ComputerSystem.v1_5_0.ComputerSystem\", \"Id\": \"\", \"Name\": \"\", \"Boot\": {}}";
 
 REDFISH_RESOURCE_COMMON_PRIVATE *mRedfishResourcePrivate = NULL;
 
@@ -271,7 +271,7 @@ RedfishConsumeResourceCommon (
   //
   // Handle BOOT->BOOTSOURCEOVERRIDETARGET
   //
-  if (ComputerSystemCs->Boot->BootSourceOverrideTarget != NULL) {
+  if (ComputerSystemCs->Boot != NULL && ComputerSystemCs->Boot->BootSourceOverrideTarget != NULL) {
     //
     // Find corresponding redpath for collection resource.
     //
@@ -291,7 +291,7 @@ RedfishConsumeResourceCommon (
   //
   // Handle BOOT->BOOTSOURCEOVERRIDEENABLED
   //
-  if (ComputerSystemCs->Boot->BootSourceOverrideEnabled != NULL) {
+  if (ComputerSystemCs->Boot != NULL && ComputerSystemCs->Boot->BootSourceOverrideEnabled != NULL) {
     //
     // Find corresponding redpath for collection resource.
     //
@@ -311,7 +311,7 @@ RedfishConsumeResourceCommon (
   //
   // Handle BOOT->UEFITARGETBOOTSOURCEOVERRIDE
   //
-  if (ComputerSystemCs->Boot->UefiTargetBootSourceOverride != NULL) {
+  if (ComputerSystemCs->Boot != NULL && ComputerSystemCs->Boot->UefiTargetBootSourceOverride != NULL) {
     //
     // Find corresponding redpath for collection resource.
     //
@@ -331,7 +331,7 @@ RedfishConsumeResourceCommon (
   //
   // Handle BOOT->BOOTSOURCEOVERRIDEMODE
   //
-  if (ComputerSystemCs->Boot->BootSourceOverrideMode != NULL) {
+  if (ComputerSystemCs->Boot != NULL && ComputerSystemCs->Boot->BootSourceOverrideMode != NULL) {
     //
     // Find corresponding redpath for collection resource.
     //
@@ -371,7 +371,7 @@ RedfishConsumeResourceCommon (
   //
   // Handle PROCESSORSUMMARY->COUNT
   //
-  if (ComputerSystemCs->ProcessorSummary->Count != NULL) {
+  if (ComputerSystemCs->ProcessorSummary != NULL && ComputerSystemCs->ProcessorSummary->Count != NULL) {
     //
     // Find corresponding redpath for collection resource.
     //
@@ -391,7 +391,7 @@ RedfishConsumeResourceCommon (
   //
   // Handle PROCESSORSUMMARY->MODEL
   //
-  if (ComputerSystemCs->ProcessorSummary->Model != NULL) {
+  if (ComputerSystemCs->ProcessorSummary != NULL && ComputerSystemCs->ProcessorSummary->Model != NULL) {
     //
     // Find corresponding redpath for collection resource.
     //
@@ -411,7 +411,7 @@ RedfishConsumeResourceCommon (
   //
   // Handle MEMORYSUMMARY->TOTALSYSTEMMEMORYGIB
   //
-  if (ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB != NULL) {
+  if (ComputerSystemCs->ProcessorSummary != NULL && ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB != NULL) {
     //
     // Find corresponding redpath for collection resource.
     //
@@ -431,7 +431,7 @@ RedfishConsumeResourceCommon (
   //
   // Handle MEMORYSUMMARY->MEMORYMIRRORING
   //
-  if (ComputerSystemCs->MemorySummary->MemoryMirroring != NULL) {
+  if (ComputerSystemCs->ProcessorSummary != NULL && ComputerSystemCs->MemorySummary->MemoryMirroring != NULL) {
     //
     // Find corresponding redpath for collection resource.
     //
@@ -480,7 +480,6 @@ ProvisioningProperties (
   INT64                                 *NumericValue;
   CHAR8                                 *AsciiStringValue;
   BOOLEAN                               PropertyChanged;
-  BOOLEAN                               UnusedProperty;
   UINTN                                 ArraySize;
   EDKII_REDFISH_VALUE                   *ArrayValue;
   UINTN                                 Index;
@@ -495,7 +494,6 @@ ProvisioningProperties (
 
   *ResultJson = NULL;
   PropertyChanged = FALSE;
-  UnusedProperty = TRUE;
   ArraySize = 0;
   ArrayValue = NULL;
   PreArrayBuffer = NULL;
@@ -651,108 +649,89 @@ ProvisioningProperties (
     }
   }
 
-  //
-  // Handle BOOT
-  //
-  if(ComputerSystemCs->Boot == NULL) {
-    ComputerSystemCs->Boot = AllocateZeroPool (sizeof (RedfishComputerSystem_V1_5_0_Boot_CS));
-    ASSERT (ComputerSystemCs->Boot != NULL);
-    UnusedProperty = TRUE;
-  } else {
-    UnusedProperty = FALSE;
-  }
-
-  //
-  // Handle BOOT->BOOTSOURCEOVERRIDETARGET
-  //
-  if (PropertyChecker (ComputerSystemCs->Boot->BootSourceOverrideTarget, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootSourceOverrideTarget", ConfigureLang);
-    if (AsciiStringValue != NULL) {
-      if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->BootSourceOverrideTarget, AsciiStringValue) != 0) {
-        ComputerSystemCs->Boot->BootSourceOverrideTarget = AsciiStringValue;
-        PropertyChanged = TRUE;
-        UnusedProperty = FALSE;
+  if (ComputerSystemCs->Boot != NULL) {
+    //
+    // Handle BOOT->BOOTSOURCEOVERRIDETARGET
+    //
+    if (PropertyChecker (ComputerSystemCs->Boot->BootSourceOverrideTarget, ProvisionMode)) {
+      AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootSourceOverrideTarget", ConfigureLang);
+      if (AsciiStringValue != NULL) {
+        if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->BootSourceOverrideTarget, AsciiStringValue) != 0) {
+          ComputerSystemCs->Boot->BootSourceOverrideTarget = AsciiStringValue;
+          PropertyChanged = TRUE;
+        }
       }
     }
-  }
 
-  //
-  // Handle BOOT->BOOTSOURCEOVERRIDEENABLED
-  //
-  if (PropertyChecker (ComputerSystemCs->Boot->BootSourceOverrideEnabled, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootSourceOverrideEnabled", ConfigureLang);
-    if (AsciiStringValue != NULL) {
-      if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->BootSourceOverrideEnabled, AsciiStringValue) != 0) {
-        ComputerSystemCs->Boot->BootSourceOverrideEnabled = AsciiStringValue;
-        PropertyChanged = TRUE;
-        UnusedProperty = FALSE;
+    //
+    // Handle BOOT->BOOTSOURCEOVERRIDEENABLED
+    //
+    if (PropertyChecker (ComputerSystemCs->Boot->BootSourceOverrideEnabled, ProvisionMode)) {
+      AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootSourceOverrideEnabled", ConfigureLang);
+      if (AsciiStringValue != NULL) {
+        if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->BootSourceOverrideEnabled, AsciiStringValue) != 0) {
+          ComputerSystemCs->Boot->BootSourceOverrideEnabled = AsciiStringValue;
+          PropertyChanged = TRUE;
+        }
       }
     }
-  }
 
-  //
-  // Handle BOOT->UEFITARGETBOOTSOURCEOVERRIDE
-  //
-  if (PropertyChecker (ComputerSystemCs->Boot->UefiTargetBootSourceOverride, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/UefiTargetBootSourceOverride", ConfigureLang);
-    if (AsciiStringValue != NULL) {
-      if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->UefiTargetBootSourceOverride, AsciiStringValue) != 0) {
-        ComputerSystemCs->Boot->UefiTargetBootSourceOverride = AsciiStringValue;
-        PropertyChanged = TRUE;
-        UnusedProperty = FALSE;
+    //
+    // Handle BOOT->UEFITARGETBOOTSOURCEOVERRIDE
+    //
+    if (PropertyChecker (ComputerSystemCs->Boot->UefiTargetBootSourceOverride, ProvisionMode)) {
+      AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/UefiTargetBootSourceOverride", ConfigureLang);
+      if (AsciiStringValue != NULL) {
+        if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->UefiTargetBootSourceOverride, AsciiStringValue) != 0) {
+          ComputerSystemCs->Boot->UefiTargetBootSourceOverride = AsciiStringValue;
+          PropertyChanged = TRUE;
+        }
       }
     }
-  }
 
-  //
-  // Handle BOOT->BOOTSOURCEOVERRIDEMODE
-  //
-  if (PropertyChecker (ComputerSystemCs->Boot->BootSourceOverrideMode, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootSourceOverrideMode", ConfigureLang);
-    if (AsciiStringValue != NULL) {
-      if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->BootSourceOverrideMode, AsciiStringValue) != 0) {
-        ComputerSystemCs->Boot->BootSourceOverrideMode = AsciiStringValue;
-        PropertyChanged = TRUE;
-        UnusedProperty = FALSE;
+    //
+    // Handle BOOT->BOOTSOURCEOVERRIDEMODE
+    //
+    if (PropertyChecker (ComputerSystemCs->Boot->BootSourceOverrideMode, ProvisionMode)) {
+      AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootSourceOverrideMode", ConfigureLang);
+      if (AsciiStringValue != NULL) {
+        if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->BootSourceOverrideMode, AsciiStringValue) != 0) {
+          ComputerSystemCs->Boot->BootSourceOverrideMode = AsciiStringValue;
+          PropertyChanged = TRUE;
+        }
       }
     }
-  }
 
-  //
-  // Handle BOOT->BOOTORDER
-  //
-  if (PropertyChecker (ComputerSystemCs->Boot->BootOrder, ProvisionMode)) {
-    Status = GetPropertyArrayValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootOrder", ConfigureLang, &ArraySize, &ArrayValue);
-    if (!EFI_ERROR (Status)) {
-      if (ArraySize > 0) {
-
-        CharArrayBuffer = AllocatePool (sizeof (RedfishCS_char_Array));
-        ASSERT (CharArrayBuffer != NULL);
-        ASSERT (ArrayValue[0].Type == REDFISH_VALUE_TYPE_STRING);
-
-        CharArrayBuffer->ArrayValue = ArrayValue[0].Value.Buffer;
-        CharArrayBuffer->Next = NULL;
-        PreArrayBuffer = CharArrayBuffer;
-        ComputerSystemCs->Boot->BootOrder = CharArrayBuffer;
-        for (Index = 1; Index < ArraySize; Index++) {
+    //
+    // Handle BOOT->BOOTORDER
+    //
+    if (PropertyChecker (ComputerSystemCs->Boot->BootOrder, ProvisionMode)) {
+      Status = GetPropertyArrayValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootOrder", ConfigureLang, &ArraySize, &ArrayValue);
+      if (!EFI_ERROR (Status)) {
+        if (ArraySize > 0) {
 
           CharArrayBuffer = AllocatePool (sizeof (RedfishCS_char_Array));
           ASSERT (CharArrayBuffer != NULL);
-          ASSERT (ArrayValue[Index].Type == REDFISH_VALUE_TYPE_STRING);
-          CharArrayBuffer->ArrayValue = ArrayValue[Index].Value.Buffer;
+          ASSERT (ArrayValue[0].Type == REDFISH_VALUE_TYPE_STRING);
+
+          CharArrayBuffer->ArrayValue = ArrayValue[0].Value.Buffer;
           CharArrayBuffer->Next = NULL;
-          PreArrayBuffer->Next = CharArrayBuffer;
           PreArrayBuffer = CharArrayBuffer;
+          ComputerSystemCs->Boot->BootOrder = CharArrayBuffer;
+          for (Index = 1; Index < ArraySize; Index++) {
+
+            CharArrayBuffer = AllocatePool (sizeof (RedfishCS_char_Array));
+            ASSERT (CharArrayBuffer != NULL);
+            ASSERT (ArrayValue[Index].Type == REDFISH_VALUE_TYPE_STRING);
+            CharArrayBuffer->ArrayValue = ArrayValue[Index].Value.Buffer;
+            CharArrayBuffer->Next = NULL;
+            PreArrayBuffer->Next = CharArrayBuffer;
+            PreArrayBuffer = CharArrayBuffer;
+          }
+          PropertyChanged = TRUE;
         }
-        PropertyChanged = TRUE;
-        UnusedProperty = FALSE;
       }
     }
-  }
-
-  if (UnusedProperty)  {
-    FreePool (ComputerSystemCs->Boot);
-    ComputerSystemCs->Boot = NULL;
   }
 
   //
@@ -771,85 +750,63 @@ ProvisioningProperties (
   //
   // Handle PROCESSORSUMMARY
   //
-  if(ComputerSystemCs->ProcessorSummary == NULL) {
-    ComputerSystemCs->ProcessorSummary = AllocateZeroPool (sizeof (RedfishComputerSystem_V1_5_0_ProcessorSummary_CS));
-    ASSERT (ComputerSystemCs->ProcessorSummary != NULL);
-    UnusedProperty = TRUE;
-  } else {
-    UnusedProperty = FALSE;
-  }
-
-  //
-  // Handle PROCESSORSUMMARY->COUNT
-  //
-  if (PropertyChecker (ComputerSystemCs->ProcessorSummary->Count, ProvisionMode)) {
-    NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"ProcessorSummary/Count", ConfigureLang);
-    if (NumericValue != NULL) {
-      if (ProvisionMode || *ComputerSystemCs->ProcessorSummary->Count != *NumericValue) {
-        ComputerSystemCs->ProcessorSummary->Count = NumericValue;
-        PropertyChanged = TRUE;
+  if(ComputerSystemCs->ProcessorSummary != NULL) {
+    //
+    // Handle PROCESSORSUMMARY->COUNT
+    //
+    if (PropertyChecker (ComputerSystemCs->ProcessorSummary->Count, ProvisionMode)) {
+      NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"ProcessorSummary/Count", ConfigureLang);
+      if (NumericValue != NULL) {
+        if (ProvisionMode || *ComputerSystemCs->ProcessorSummary->Count != *NumericValue) {
+          ComputerSystemCs->ProcessorSummary->Count = NumericValue;
+          PropertyChanged = TRUE;
+        }
       }
     }
-  }
 
-  //
-  // Handle PROCESSORSUMMARY->MODEL
-  //
-  if (PropertyChecker (ComputerSystemCs->ProcessorSummary->Model, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"ProcessorSummary/Model", ConfigureLang);
-    if (AsciiStringValue != NULL) {
-      if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->ProcessorSummary->Model, AsciiStringValue) != 0) {
-        ComputerSystemCs->ProcessorSummary->Model = AsciiStringValue;
-        PropertyChanged = TRUE;
+    //
+    // Handle PROCESSORSUMMARY->MODEL
+    //
+    if (PropertyChecker (ComputerSystemCs->ProcessorSummary->Model, ProvisionMode)) {
+      AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"ProcessorSummary/Model", ConfigureLang);
+      if (AsciiStringValue != NULL) {
+        if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->ProcessorSummary->Model, AsciiStringValue) != 0) {
+          ComputerSystemCs->ProcessorSummary->Model = AsciiStringValue;
+          PropertyChanged = TRUE;
+        }
       }
     }
-  }
-
-  if (UnusedProperty)  {
-    FreePool (ComputerSystemCs->ProcessorSummary);
-    ComputerSystemCs->ProcessorSummary = NULL;
   }
 
   //
   // Handle MEMORYSUMMARY
   //
-  if(ComputerSystemCs->MemorySummary == NULL) {
-    ComputerSystemCs->MemorySummary = AllocateZeroPool (sizeof (RedfishComputerSystem_V1_5_0_MemorySummary_CS));
-    ASSERT (ComputerSystemCs->MemorySummary != NULL);
-    UnusedProperty = TRUE;
-  } else {
-    UnusedProperty = FALSE;
-  }
-
-  //
-  // Handle MEMORYSUMMARY->TOTALSYSTEMMEMORYGIB
-  //
-  if (PropertyChecker (ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB, ProvisionMode)) {
-    NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"MemorySummary/TotalSystemMemoryGiB", ConfigureLang);
-    if (NumericValue != NULL) {
-      if (ProvisionMode || *ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB != *NumericValue) {
-        ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB = NumericValue;
-        PropertyChanged = TRUE;
+  if(ComputerSystemCs->MemorySummary != NULL) {
+    //
+    // Handle MEMORYSUMMARY->TOTALSYSTEMMEMORYGIB
+    //
+    if (PropertyChecker (ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB, ProvisionMode)) {
+      NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"MemorySummary/TotalSystemMemoryGiB", ConfigureLang);
+      if (NumericValue != NULL) {
+        if (ProvisionMode || *ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB != *NumericValue) {
+          ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB = NumericValue;
+          PropertyChanged = TRUE;
+        }
       }
     }
-  }
 
-  //
-  // Handle MEMORYSUMMARY->MEMORYMIRRORING
-  //
-  if (PropertyChecker (ComputerSystemCs->MemorySummary->MemoryMirroring, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"MemorySummary/MemoryMirroring", ConfigureLang);
-    if (AsciiStringValue != NULL) {
-      if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->MemorySummary->MemoryMirroring, AsciiStringValue) != 0) {
-        ComputerSystemCs->MemorySummary->MemoryMirroring = AsciiStringValue;
-        PropertyChanged = TRUE;
+    //
+    // Handle MEMORYSUMMARY->MEMORYMIRRORING
+    //
+    if (PropertyChecker (ComputerSystemCs->MemorySummary->MemoryMirroring, ProvisionMode)) {
+      AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"MemorySummary/MemoryMirroring", ConfigureLang);
+      if (AsciiStringValue != NULL) {
+        if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->MemorySummary->MemoryMirroring, AsciiStringValue) != 0) {
+          ComputerSystemCs->MemorySummary->MemoryMirroring = AsciiStringValue;
+          PropertyChanged = TRUE;
+        }
       }
     }
-  }
-
-  if (UnusedProperty)  {
-    FreePool (ComputerSystemCs->MemorySummary);
-    ComputerSystemCs->MemorySummary = NULL;
   }
 
   //
@@ -898,7 +855,7 @@ ProvisioningResource (
 
   Status = ProvisioningProperties (
              Private->JsonStructProtocol,
-             MemoryEmptyJson,
+             EmptyJson,
              ResourceId,
              ConfigureLang,
              TRUE,
@@ -992,7 +949,8 @@ ProvisioningExistResource (
   Json = NULL;
   ConfigureLang = NULL;
 
-  Private->Json = JsonDumpString (RedfishJsonInPayload (Private->Payload), EDKII_JSON_COMPACT);
+  //Private->Json = JsonDumpString (RedfishJsonInPayload (Private->Payload), EDKII_JSON_COMPACT);
+  Private->Json = EmptyJson;
   ASSERT (Private->Json != NULL);
 
   ConfigureLang = RedfishGetConfigLanguage (Private->Uri);
