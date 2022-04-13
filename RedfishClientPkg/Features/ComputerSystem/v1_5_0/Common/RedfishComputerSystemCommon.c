@@ -949,8 +949,7 @@ ProvisioningExistResource (
   Json = NULL;
   ConfigureLang = NULL;
 
-  //Private->Json = JsonDumpString (RedfishJsonInPayload (Private->Payload), EDKII_JSON_COMPACT);
-  Private->Json = EmptyJson;
+  Private->Json = JsonDumpString (RedfishJsonInPayload (Private->Payload), EDKII_JSON_COMPACT);
   ASSERT (Private->Json != NULL);
 
   ConfigureLang = RedfishGetConfigLanguage (Private->Uri);
