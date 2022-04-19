@@ -949,9 +949,6 @@ ProvisioningExistResource (
   Json = NULL;
   ConfigureLang = NULL;
 
-  Private->Json = JsonDumpString (RedfishJsonInPayload (Private->Payload), EDKII_JSON_COMPACT);
-  ASSERT (Private->Json != NULL);
-
   ConfigureLang = RedfishGetConfigLanguage (Private->Uri);
   if (ConfigureLang == NULL) {
     return EFI_NOT_FOUND;
@@ -959,7 +956,7 @@ ProvisioningExistResource (
 
   Status = ProvisioningProperties (
              Private->JsonStructProtocol,
-             Private->Json,
+             EmptyJson,
              NULL,
              ConfigureLang,
              TRUE,

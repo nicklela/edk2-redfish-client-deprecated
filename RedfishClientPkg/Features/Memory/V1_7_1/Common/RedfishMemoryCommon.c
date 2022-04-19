@@ -2088,9 +2088,6 @@ ProvisioningMemoryExistResource (
   Json = NULL;
   ConfigureLang = NULL;
 
-  Private->Json = JsonDumpString (RedfishJsonInPayload (Private->Payload), EDKII_JSON_COMPACT);
-  ASSERT (Private->Json != NULL);
-
   ConfigureLang = RedfishGetConfigLanguage (Private->Uri);
   if (ConfigureLang == NULL) {
     return EFI_NOT_FOUND;
@@ -2098,7 +2095,7 @@ ProvisioningMemoryExistResource (
 
   Status = ProvisioningMemoryProperties (
              Private->JsonStructProtocol,
-             Private->Json,
+             MemoryEmptyJson,
              NULL,
              ConfigureLang,
              TRUE,
