@@ -1,6 +1,6 @@
 /** @file
 
-  (C) Copyright 2018-2021 Hewlett Packard Enterprise Development LP<BR>
+  (C) Copyright 2018-2022 Hewlett Packard Enterprise Development LP<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -795,7 +795,6 @@ RedfishCS_status GetRedfishPropertyVague (void *Cs, json_t *JsonObj, char *Key, 
 RedfishCS_status InsertJsonStringObj (json_t *ParentJsonObj, char *Key, RedfishCS_char *StringValue)
 {
   json_t  *JsonValue;
-  RedfishCS_char NullStr[] = "";
   RedfishCS_char *InsertStr;
 
   InsertStr = StringValue;
@@ -803,8 +802,9 @@ RedfishCS_status InsertJsonStringObj (json_t *ParentJsonObj, char *Key, RedfishC
     return RedfishCS_status_invalid_parameter;
   }
   if (InsertStr == (char *)NULL) {
-    InsertStr = NullStr;
+    return RedfishCS_status_success;
   }
+
   JsonValue = json_string(InsertStr);
   if (JsonValue == NULL) {
     return RedfishCS_status_unsupported;
