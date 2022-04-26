@@ -21,7 +21,6 @@
   MemoryCollectionLib|RedfishClientPkg/ConverterLib/edk2library/MemoryCollection/Lib.inf
   ComputerSystemV1_5_0Lib|RedfishClientPkg/ConverterLib/edk2library/ComputerSystem/v1_5_0/Lib.inf
   ComputerSystemCollectionLib|RedfishClientPkg/ConverterLib/edk2library/ComputerSystemCollection/Lib.inf
-!endif
 
   NetLib|NetworkPkg/Library/DxeNetLib/DxeNetLib.inf
   HttpLib|NetworkPkg/Library/DxeHttpLib/DxeHttpLib.inf
