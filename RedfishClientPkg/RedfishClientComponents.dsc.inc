@@ -16,6 +16,9 @@
   RedfishClientPkg/RedfishFeatureCoreDxe/RedfishFeatureCoreDxe.inf
   RedfishClientPkg/RedfishETagDxe/RedfishETagDxe.inf
   RedfishClientPkg/RedfishConfigLangMapDxe/RedfishConfigLangMapDxe.inf
+  #
+  # Below two modules should be pulled in by build tool.
+  #
   RedfishClientPkg/Features/Memory/V1_7_1/Dxe/RedfishMemoryDxe.inf
   RedfishClientPkg/Features/RedfishMemoryCollectionDxe/RedfishMemoryCollectionDxe.inf
   RedfishClientPkg/Features/ComputerSystem/v1_5_0/Dxe/RedfishComputerSystemDxe.inf {
@@ -25,9 +28,11 @@
   RedfishClientPkg/Features/ComputerSystemCollectionDxe/ComputerSystemCollectionDxe.inf
 !endif
 
-!if $(REDFISH_CLIENT_ALL_AUTOGENED) == TRUE
   !include RedfishClientPkg/RedfishJsonStructureDxe.dsc.inc
-!else
+
+  #
+  # Below two modules should be pulled in by build tool.
+  #
   RedfishClientPkg/Converter/Memory/v1_7_1/RedfishMemory_V1_7_1_Dxe.inf
   RedfishClientPkg/Converter/MemoryCollection/RedfishMemoryCollection_Dxe.inf
   RedfishClientPkg/Converter/ComputerSystem/v1_5_0/RedfishComputerSystem_V1_5_0_Dxe.inf

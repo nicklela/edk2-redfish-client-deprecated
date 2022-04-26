@@ -10,9 +10,13 @@
 #    SPDX-License-Identifier: BSD-2-Clause-Patent
 #
 ##
-!if $(REDFISH_CLIENT_ALL_AUTOGENED) == TRUE
- !include RedfishClientPkg/RedfishJsonStructureLib.dsc.inc
-!else
+!if $(REDFISH_CLIENT) == TRUE
+  !include RedfishClientPkg/RedfishJsonStructureLib.dsc.inc
+!endif
+
+  #
+  # Below two modules should be pulled in by build tool.
+  #
   MemoryV1_7_1Lib|RedfishClientPkg/ConverterLib/edk2library/Memory/v1_7_1/Lib.inf
   MemoryCollectionLib|RedfishClientPkg/ConverterLib/edk2library/MemoryCollection/Lib.inf
   ComputerSystemV1_5_0Lib|RedfishClientPkg/ConverterLib/edk2library/ComputerSystem/v1_5_0/Lib.inf

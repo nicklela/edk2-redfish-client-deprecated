@@ -19,6 +19,10 @@
   INF RedfishClientPkg/Features/ComputerSystem/v1_5_0/Dxe/RedfishComputerSystemDxe.inf
   INF RedfishClientPkg/Features/ComputerSystemCollectionDxe/ComputerSystemCollectionDxe.inf
 
+  !include RedfishClientPkg/RedfishJsonStructureDxe.fdf.inc
+  #
+  # Below two modules should be pulled in by build tool.
+  #
   INF RedfishClientPkg/Converter/Memory/v1_7_1/RedfishMemory_V1_7_1_Dxe.inf
   INF RedfishClientPkg/Converter/MemoryCollection/RedfishMemoryCollection_Dxe.inf
   INF RedfishClientPkg/Converter/ComputerSystem/v1_5_0/RedfishComputerSystem_V1_5_0_Dxe.inf
