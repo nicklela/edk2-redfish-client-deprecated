@@ -27,7 +27,7 @@
       RedfishResourceIdentifyLib|RedfishClientPkg/Library/RedfishResourceIdentifyLibComuterSystem/v1_5_0/RedfishResourceIdentifyLibComuterSystem.inf
   }
   RedfishClientPkg/Features/ComputerSystemCollectionDxe/ComputerSystemCollectionDxe.inf
-!endif
+
 
 
   !include RedfishClientPkg/RedfishJsonStructureDxe.dsc.inc
