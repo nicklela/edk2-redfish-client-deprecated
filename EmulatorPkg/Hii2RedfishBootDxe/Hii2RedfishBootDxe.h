@@ -36,6 +36,7 @@
 extern UINT8 Hii2RedfishBootVfrBin[];
 
 #define COMPUTER_SYSTEM_SECHEMA_VERSION "x-uefi-redfish-ComputerSystem.v1_5_0"
+#define COMPUTER_SYSTEM_BOOT_BOOTORDER  L"/Systems/{1}/Boot/BootOrder"
 
 #pragma pack(1)
 
