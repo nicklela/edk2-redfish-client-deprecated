@@ -46,6 +46,43 @@ HII_VENDOR_DEVICE_PATH  mHiiVendorDevicePath = {
 
   @param[in] HiiHandle                HII handle
   @param[in] StringId                 String token ID
+  @param[in] ConfigLang               Configure language of question
+
+  @retval EFI_STATUS
+
+**/
+EFI_STATUS
+UpdateConfigLanguageToQuestion (
+  IN  EFI_HII_HANDLE                HiiHandle,
+  IN  EFI_STRING_ID                 StringId,
+  IN  EFI_STRING                    ConfigLang
+  )
+{
+  CHAR16  ConfigLanguage[32];
+
+  if (HiiHandle == NULL || StringId == 0 || ConfigLang == NULL) {
+    return EFI_INVALID_LANGUAGE;
+  }
+
+  UnicodeSPrint (ConfigLanguage, sizeof (ConfigLanguage), ConfigLang);
+
+  DEBUG ((DEBUG_INFO, "%a, add config-language for string(%d): %s\n", __FUNCTION__, StringId, ConfigLanguage));
+
+  HiiSetString (
+    HiiHandle,
+    StringId,
+    ConfigLanguage,
+    COMPUTER_SYSTEM_SECHEMA_VERSION
+    );
+
+  return EFI_SUCCESS;
+}
+
+/**
+  This function add 'x-uefi-' configuration language to given string ID.
+
+  @param[in] HiiHandle                HII handle
+  @param[in] StringId                 String token ID
   @param[in] Index                    The index of boot option
   @param[in] BootOption               Boot option context
 
@@ -53,22 +90,22 @@ HII_VENDOR_DEVICE_PATH  mHiiVendorDevicePath = {
 
 **/
 EFI_STATUS
-UpdateConfigLanguage (
+UpdateConfigLanguageToValues (
   IN  EFI_HII_HANDLE                HiiHandle,
   IN  EFI_STRING_ID                 StringId,
   IN  UINTN                         Index,
   IN  EFI_BOOT_MANAGER_LOAD_OPTION  *BootOption
   )
 {
-  CHAR16  ConfigLanguage[64];
+  CHAR16  ConfigLanguage[10];
 
   if (HiiHandle == NULL || StringId == 0 || BootOption == NULL) {
     return EFI_INVALID_LANGUAGE;
   }
 
-  DEBUG ((DEBUG_INFO, "%a, add config-language for string(%d): %m", __FUNCTION__, StringId, BootOption->Description));
+  UnicodeSPrint (ConfigLanguage, sizeof (ConfigLanguage), L"Boot%04x", Index, BootOption->OptionNumber);
 
-  UnicodeSPrint (ConfigLanguage, sizeof (ConfigLanguage), L"/Systems/{1}/Boot/BootOrder[%d]/Boot%04x", Index, BootOption->OptionNumber);
+  DEBUG ((DEBUG_INFO, "%a, add config-language for string(%d): %s\n", __FUNCTION__, StringId, ConfigLanguage));
 
   HiiSetString (
     HiiHandle,
@@ -189,9 +226,9 @@ RefreshBootOrderList (
       );
 
     //
-    // Add x-uefi configure language for boot option
+    // Add x-uefi configure language for boot options.
     //
-    UpdateConfigLanguage (mHiiHandle, Token, OptionIndex, &BootOption[Index]);
+    UpdateConfigLanguageToValues (mHiiHandle, Token, OptionIndex, &BootOption[Index]);
   }
 
   //
@@ -211,6 +248,11 @@ RefreshBootOrderList (
     OptionsOpCodeHandle,                      // Option Opcode list
     NULL                                      // Default Opcode is NULL
     );
+
+  //
+  // Add x-uefi configure language for boot order.
+  //
+  UpdateConfigLanguageToQuestion (mHiiHandle, STRING_TOKEN (STR_BOOT_ORDER_LIST), COMPUTER_SYSTEM_BOOT_BOOTORDER);
 
   //
   // Update HII form
