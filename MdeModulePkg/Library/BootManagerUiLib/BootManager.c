@@ -2,7 +2,6 @@
   The boot manager reference implementation
 
 Copyright (c) 2004 - 2018, Intel Corporation. All rights reserved.<BR>
-(C) Copyright 2022 Hewlett Packard Enterprise Development LP<BR>
 SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
@@ -457,34 +456,6 @@ BmDevicePathToStr (
   return ToText;
 }
 
-EFI_STATUS
-UpdateConfigLanguage (
-  IN  EFI_HII_HANDLE                HiiHandle,
-  IN  EFI_STRING_ID                 StringId,
-  IN  UINTN                         Index,
-  IN  EFI_BOOT_MANAGER_LOAD_OPTION  *BootOption
-  )
-{
-  CHAR16  ConfigLanguage[64];
-
-  if (HiiHandle == NULL || StringId == 0 || BootOption == NULL) {
-    return EFI_INVALID_LANGUAGE;
-  }
-
-  DEBUG ((DEBUG_ERROR, "%a, add config-language for string(%d): %m", __FUNCTION__, StringId, BootOption->Description));
-
-  UnicodeSPrint (ConfigLanguage, sizeof (ConfigLanguage), L"/Systems/{1}/Boot/BootOrder[%d]/Boot%04x", Index, BootOption->OptionNumber);
-
-  HiiSetString (
-    HiiHandle,
-    StringId,
-    ConfigLanguage,
-    "x-uefi-redfish-ComputerSystem.v1_5_0"
-    );
-
-  return EFI_SUCCESS;
-}
-
 /**
   This function invokes Boot Manager. It then enumerate all boot options. If
   a boot option from the Boot Manager page is selected, Boot Manager will boot
@@ -604,7 +575,7 @@ UpdateBootManager (
     ASSERT (BootOption[Index].Description != NULL);
 
     Token = HiiSetString (HiiHandle, 0, BootOption[Index].Description, NULL);
-    UpdateConfigLanguage (HiiHandle, Token, Index, &BootOption[Index]);
+
     TempStr = BmDevicePathToStr (BootOption[Index].FilePath);
     TempSize = StrSize (TempStr);
     HelpString = AllocateZeroPool (TempSize + StrSize (L"Device Path : "));
