@@ -63,6 +63,68 @@ AddRedfishCharArray (
   return EFI_SUCCESS;
 }
 
+
+/**
+
+  Create string array and append to arry node in Redfish JSON convert format.
+
+  @param[in,out]  Head          The head of string array.
+  @param[in]      StringArray   Output string array.
+  @param[in]      ArraySize     The size of StringArray in returned.
+
+  @retval     EFI_SUCCESS       String array is created successfully.
+  @retval     Others            Error happens
+
+**/
+EFI_STATUS
+RedfishCharArrayToStringArray (
+  IN OUT  RedfishCS_char_Array  *Head,
+  OUT     CHAR8                 ***StringArray,
+  OUT     UINTN                 *ArraySize
+  )
+{
+  UINTN                 Count;
+  UINTN                 Index;
+  CHAR8                 **ArrayBuffer;
+  RedfishCS_char_Array  *CharArrayBuffer;
+
+  if (Head == NULL || StringArray == NULL || ArraySize == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  *ArraySize = 0;
+  *StringArray = NULL;
+  Count = 0;
+  CharArrayBuffer = Head;
+  while (CharArrayBuffer != NULL) {
+    ++Count;
+    CharArrayBuffer = CharArrayBuffer->Next;
+  }
+
+  ArrayBuffer = AllocatePool (sizeof (CHAR8 *) * Count);
+  if (ArrayBuffer == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  *ArraySize = Count;
+
+  Index = 0;
+  CharArrayBuffer = Head;
+  while (CharArrayBuffer != NULL) {
+    ArrayBuffer[Index] = AllocateCopyPool (AsciiStrSize (CharArrayBuffer->ArrayValue), CharArrayBuffer->ArrayValue);
+    if (ArrayBuffer[Index] == NULL) {
+      return EFI_OUT_OF_RESOURCES;
+    }
+
+    Index++;
+    CharArrayBuffer = CharArrayBuffer->Next;
+  }
+
+  *StringArray = ArrayBuffer;
+
+  return EFI_SUCCESS;
+}
+
 /**
   Consume resource from given URI.
 
@@ -85,6 +147,8 @@ RedfishConsumeResourceCommon (
   EFI_REDFISH_COMPUTERSYSTEM_V1_5_0     *ComputerSystem;
   EFI_REDFISH_COMPUTERSYSTEM_V1_5_0_CS  *ComputerSystemCs;
   EFI_STRING                    ConfigureLang;
+  UINTN                         ArraySize;
+  CHAR8                         **ArrayValues;
 
   if (Private == NULL || IS_EMPTY_STRING (Json)) {
     return EFI_INVALID_PARAMETER;
@@ -123,7 +187,7 @@ RedfishConsumeResourceCommon (
   //
   if (ComputerSystemCs->SystemType != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "SystemType");
     if (ConfigureLang != NULL) {
@@ -143,7 +207,7 @@ RedfishConsumeResourceCommon (
   //
   if (ComputerSystemCs->AssetTag != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "AssetTag");
     if (ConfigureLang != NULL) {
@@ -163,7 +227,7 @@ RedfishConsumeResourceCommon (
   //
   if (ComputerSystemCs->Manufacturer != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Manufacturer");
     if (ConfigureLang != NULL) {
@@ -183,7 +247,7 @@ RedfishConsumeResourceCommon (
   //
   if (ComputerSystemCs->Model != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Model");
     if (ConfigureLang != NULL) {
@@ -203,7 +267,7 @@ RedfishConsumeResourceCommon (
   //
   if (ComputerSystemCs->SKU != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "SKU");
     if (ConfigureLang != NULL) {
@@ -223,7 +287,7 @@ RedfishConsumeResourceCommon (
   //
   if (ComputerSystemCs->SerialNumber != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "SerialNumber");
     if (ConfigureLang != NULL) {
@@ -243,7 +307,7 @@ RedfishConsumeResourceCommon (
   //
   if (ComputerSystemCs->PartNumber != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "PartNumber");
     if (ConfigureLang != NULL) {
@@ -263,7 +327,7 @@ RedfishConsumeResourceCommon (
   //
   if (ComputerSystemCs->HostName != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "HostName");
     if (ConfigureLang != NULL) {
@@ -283,7 +347,7 @@ RedfishConsumeResourceCommon (
   //
   if (ComputerSystemCs->IndicatorLED != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "IndicatorLED");
     if (ConfigureLang != NULL) {
@@ -303,7 +367,7 @@ RedfishConsumeResourceCommon (
   //
   if (ComputerSystemCs->PowerState != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "PowerState");
     if (ConfigureLang != NULL) {
@@ -323,7 +387,7 @@ RedfishConsumeResourceCommon (
   //
   if (ComputerSystemCs->Boot != NULL && ComputerSystemCs->Boot->BootSourceOverrideTarget != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Boot/BootSourceOverrideTarget");
     if (ConfigureLang != NULL) {
@@ -343,7 +407,7 @@ RedfishConsumeResourceCommon (
   //
   if (ComputerSystemCs->Boot != NULL && ComputerSystemCs->Boot->BootSourceOverrideEnabled != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Boot/BootSourceOverrideEnabled");
     if (ConfigureLang != NULL) {
@@ -363,7 +427,7 @@ RedfishConsumeResourceCommon (
   //
   if (ComputerSystemCs->Boot != NULL && ComputerSystemCs->Boot->UefiTargetBootSourceOverride != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Boot/UefiTargetBootSourceOverride");
     if (ConfigureLang != NULL) {
@@ -383,7 +447,7 @@ RedfishConsumeResourceCommon (
   //
   if (ComputerSystemCs->Boot != NULL && ComputerSystemCs->Boot->BootSourceOverrideMode != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Boot/BootSourceOverrideMode");
     if (ConfigureLang != NULL) {
@@ -399,11 +463,37 @@ RedfishConsumeResourceCommon (
   }
 
   //
+  // Handle BOOT->BOOTORDER
+  //
+  if (ComputerSystemCs->Boot != NULL && ComputerSystemCs->Boot->BootOrder != NULL) {
+    //
+    // Find corresponding configure language for collection resource.
+    //
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Boot/BootOrder");
+    if (ConfigureLang != NULL) {
+      Status = RedfishCharArrayToStringArray (ComputerSystemCs->Boot->BootOrder, &ArrayValues, &ArraySize);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, RedfishCharArrayToStringArray failed: %r\n", __FUNCTION__, Status));
+      } else {
+        Status = ApplyFeatureSettingsArrayType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ArrayValues, ArraySize);
+        if (EFI_ERROR (Status)) {
+          DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+        }
+
+        FreeStringArray (ArrayValues, ArraySize);
+      }
+      FreePool (ConfigureLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
+    }
+  }
+
+  //
   // Handle BIOSVERSION
   //
   if (ComputerSystemCs->BiosVersion != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "BiosVersion");
     if (ConfigureLang != NULL) {
@@ -423,7 +513,7 @@ RedfishConsumeResourceCommon (
   //
   if (ComputerSystemCs->ProcessorSummary != NULL && ComputerSystemCs->ProcessorSummary->Count != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "ProcessorSummary/Count");
     if (ConfigureLang != NULL) {
@@ -443,7 +533,7 @@ RedfishConsumeResourceCommon (
   //
   if (ComputerSystemCs->ProcessorSummary != NULL && ComputerSystemCs->ProcessorSummary->Model != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "ProcessorSummary/Model");
     if (ConfigureLang != NULL) {
@@ -463,7 +553,7 @@ RedfishConsumeResourceCommon (
   //
   if (ComputerSystemCs->ProcessorSummary != NULL && ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "MemorySummary/TotalSystemMemoryGiB");
     if (ConfigureLang != NULL) {
@@ -483,7 +573,7 @@ RedfishConsumeResourceCommon (
   //
   if (ComputerSystemCs->ProcessorSummary != NULL && ComputerSystemCs->MemorySummary->MemoryMirroring != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "MemorySummary/MemoryMirroring");
     if (ConfigureLang != NULL) {
@@ -944,7 +1034,7 @@ ProvisioningResources (
 
   Status = RedfishFeatureGetUnifiedArrayTypeConfigureLang (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, REDPATH_ARRAY_PATTERN, &UnifiedConfigureLangList);
   if (EFI_ERROR (Status) || UnifiedConfigureLangList.Count == 0) {
-    DEBUG ((DEBUG_ERROR, "%a, No HII question found with redpath: %s: %r\n", __FUNCTION__, REDPATH_ARRAY_PATTERN, Status));
+    DEBUG ((DEBUG_ERROR, "%a, No HII question found with configure language: %s: %r\n", __FUNCTION__, REDPATH_ARRAY_PATTERN, Status));
     return EFI_NOT_FOUND;
   }
 
