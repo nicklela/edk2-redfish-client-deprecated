@@ -456,20 +456,34 @@ CheckEtag (
   @param[in]  PropertyName  Property name.
   @param[in]  ConfigureLang Configure Language of this property.
   @param[out] ArraySize     The size of returned array.
-  @param[out] ArrayValue    Returned array.
 
-  @retval     EFI_SUCCESS   property array is retunred successfully.
-  @retval     Others        Error occurs.
+  @retval     CHAR8 **      Returned string array. NULL while error happens.
 
 **/
-EFI_STATUS
+CHAR8 **
 GetPropertyArrayValue (
   IN  CHAR8               *Schema,
   IN  CHAR8               *Version,
   IN  EFI_STRING          PropertyName,
   IN  EFI_STRING          ConfigureLang,
-  OUT UINTN               *ArraySize,
-  OUT EDKII_REDFISH_VALUE **ArrayValue
+  OUT UINTN               *ArraySize
   );
+
+/**
+
+  Check and see if given property is in JSON context or not
+
+  @param[in]  Property      Property name string
+  @param[in]  Json          The JSON context to search.
+
+  @retval     TRUE          Property is found in JSON context
+  @retval     FALSE         Property is not in JSON context
+
+**/
+BOOLEAN
+MatchPropertyWithJsonContext (
+  IN  EFI_STRING  Property,
+  IN  CHAR8       *Json
+);
 
 #endif

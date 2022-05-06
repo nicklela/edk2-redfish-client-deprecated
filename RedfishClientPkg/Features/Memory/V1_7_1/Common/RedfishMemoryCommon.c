@@ -2185,8 +2185,6 @@ RedfishCheckResourceCommon (
   EFI_STRING *ConfigureLangList;
   UINTN      Count;
   EFI_STRING Property;
-  CHAR8      *PropertyAscii;
-  CHAR8      *Match;
 
   if (Private == NULL || IS_EMPTY_STRING (Json)) {
     return EFI_INVALID_PARAMETER;
@@ -2210,24 +2208,11 @@ RedfishCheckResourceCommon (
       continue;
     }
 
-    DEBUG ((DEBUG_INFO, "[%d] check resource from: %s\n", Index, Property));
-
-    PropertyAscii = StrUnicodeToAscii (Property);
-    if (PropertyAscii == NULL) {
-      DEBUG ((DEBUG_ERROR, "%a, StrUnicodeToAscii failed\n", __FUNCTION__));
-      continue;
-    }
-
-    //
-    // check to see if it is partial match.
-    //
-    Match = AsciiStrStr (Json, PropertyAscii);
-    if (Match == NULL || AsciiStrnCmp (Match, PropertyAscii, AsciiStrLen (PropertyAscii)) != 0) {
+    DEBUG ((DEBUG_INFO, "%a, [%d] check attribute for: %s\n", __FUNCTION__, Index, Property));
+    if (!MatchPropertyWithJsonContext (Property, Json)) {
+      DEBUG ((DEBUG_INFO, "%a, property is missing: %s\n", __FUNCTION__, Property));
       Status = EFI_NOT_FOUND;
-      DEBUG ((DEBUG_ERROR, "%a, property %s is missing\n", __FUNCTION__, PropertyAscii));
     }
-
-    FreePool (PropertyAscii);
   }
 
   FreePool (ConfigureLangList);

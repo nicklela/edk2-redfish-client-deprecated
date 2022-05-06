@@ -1225,17 +1225,25 @@ GetPropertyFromConfigureLang (
 {
   EFI_STRING Property;
   UINTN      Index;
+  BOOLEAN    CollectionCharFound;
 
   if (ConfigureLang == NULL) {
     return NULL;
   }
 
   Index = 0;
+  CollectionCharFound = FALSE;
   Property = ConfigureLang;
 
   while (ConfigureLang[Index] != '\0') {
+    if (ConfigureLang[Index] == L'}') {
+      CollectionCharFound = TRUE;
+    }
     if (ConfigureLang[Index] == L'/') {
       Property = &ConfigureLang[Index];
+      if (CollectionCharFound) {
+        break;
+      }
     }
 
     ++Index;
@@ -1471,44 +1479,31 @@ GetAttributeNameFromConfigLanguage (
   @param[in]  PropertyName  Property name.
   @param[in]  ConfigureLang Configure Language of this property.
   @param[out] ArraySize     The size of returned array.
-  @param[out] ArrayValue    Returned array.
 
-  @retval     EFI_SUCCESS   property array is retunred successfully.
-  @retval     Others        Error occurs.
+  @retval     CHAR8 **      Returned string array. NULL while error happens.
 
 **/
-EFI_STATUS
+CHAR8 **
 GetPropertyArrayValue (
   IN  CHAR8               *Schema,
   IN  CHAR8               *Version,
   IN  EFI_STRING          PropertyName,
   IN  EFI_STRING          ConfigureLang,
-  OUT UINTN               *ArraySize,
-  OUT EDKII_REDFISH_VALUE **ArrayValue
+  OUT UINTN               *ArraySize
   )
 {
   EFI_STATUS          Status;
   EDKII_REDFISH_VALUE RedfishValue;
   EFI_STRING          ConfigureLangBuffer;
   UINTN               BufferSize;
-  EFI_STRING          *ConfigureLangList;
-  UINTN               Count;
-  EDKII_REDFISH_VALUE *ReturnArray;
+  CHAR8               **StringArray;
   UINTN               Index;
-  EFI_STRING          BufferString;
 
-  if (IS_EMPTY_STRING (Schema) || IS_EMPTY_STRING (Version) || IS_EMPTY_STRING (ConfigureLang) || IS_EMPTY_STRING (PropertyName)) {
-    return EFI_INVALID_PARAMETER;
-  }
-
-  if (ArraySize == NULL || ArrayValue == NULL) {
-    return EFI_INVALID_PARAMETER;
+  if (IS_EMPTY_STRING (Schema) || IS_EMPTY_STRING (Version) || IS_EMPTY_STRING (ConfigureLang) || IS_EMPTY_STRING (PropertyName) || ArraySize == NULL) {
+    return NULL;
   }
 
   *ArraySize = 0;
-  ConfigureLangList = NULL;
-  ConfigureLangBuffer = NULL;
-  Count = 0;
 
   //
   // Configure Language buffer.
@@ -1516,89 +1511,34 @@ GetPropertyArrayValue (
   BufferSize = sizeof (CHAR16) * MAX_CONF_LANG_LEN;
   ConfigureLangBuffer = AllocatePool (BufferSize);
   if (ConfigureLangBuffer == NULL) {
-    return EFI_OUT_OF_RESOURCES;
+    DEBUG ((DEBUG_ERROR, "%a, out of resource\n", __FUNCTION__));
+    return NULL;
   }
 
-  //
-  // Carving the regular expression pattern. Add '\' to '{' and '}'
-  //
-  Index = 0;
-  while (ConfigureLang[Index] != '\0') {
-
-    if (ConfigureLang[Index] == '{' || ConfigureLang[Index] == '}') {
-      ConfigureLangBuffer[Count++] = '\\';
-    }
-    ConfigureLangBuffer[Count] = ConfigureLang[Index];
-    Index++;
-    Count++;
-  }
-
-  //
-  // Find how many items in this array
-  //
-  UnicodeSPrint (&ConfigureLangBuffer[Count], BufferSize, L"/%s%s", PropertyName, REGULAR_EXPRESSION_ARRAY);
-  Count = 0;
-  Status = RedfishPlatformConfigGetConfigureLang (Schema, Version, ConfigureLangBuffer, &ConfigureLangList, &Count);
+  UnicodeSPrint (ConfigureLangBuffer, BufferSize, L"%s/%s", ConfigureLang, PropertyName);
+  Status = RedfishPlatformConfigGetValue (Schema, Version, ConfigureLangBuffer, &RedfishValue);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, BiosConfigToRedfishGetConfigureLangRegex failed: %r\n", __FUNCTION__, Status));
-    return Status;
+    DEBUG ((DEBUG_ERROR, "%a, %a.%a query current setting for %s failed: %r\n", __FUNCTION__, Schema, Version, ConfigureLangBuffer, Status));
+    return NULL;
   }
 
-  if (Count == 0) {
-    return EFI_NOT_FOUND;
+  if (RedfishValue.Type != REDFISH_VALUE_TYPE_STRING_ARRAY) {
+    DEBUG ((DEBUG_ERROR, "%a, %a.%a %s value is not string array type\n", __FUNCTION__, Schema, Version, ConfigureLang));
+    return NULL;
   }
 
-  *ArraySize = Count;
-  ReturnArray = AllocatePool (sizeof (EDKII_REDFISH_VALUE));
-  if (ReturnArray == NULL) {
-    Status = EFI_OUT_OF_RESOURCES;
-    goto ON_RELEASE;
+  StringArray = AllocatePool (sizeof (CHAR8 *) * RedfishValue.ArrayCount);
+  if (StringArray == NULL) {
+    DEBUG ((DEBUG_ERROR, "%a, out of resource\n", __FUNCTION__));
+    return NULL;
   }
 
-  for (Index = 0; Index < Count; Index++) {
-    Status = RedfishPlatformConfigGetValue (Schema, Version, ConfigureLangList[Index], &RedfishValue);
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "%a, %a.%a query current setting for %s failed: %r\n", __FUNCTION__, Schema, Version, ConfigureLangList[Index], Status));
-      break;
-    }
-
-    DEBUG ((REDFISH_DEBUG_TRACE, "%a, %d) %s type: 0x%x value: 0x%x\n", __FUNCTION__, Index, ConfigureLangList[Index], RedfishValue.Type, RedfishValue.Value));
-
-    ReturnArray[Index].Type = RedfishValue.Type;
-    switch (RedfishValue.Type) {
-      case REDFISH_VALUE_TYPE_STRING:
-        ReturnArray[Index].Value.Buffer = RedfishValue.Value.Buffer;
-        break;
-      case REDFISH_VALUE_TYPE_BOOLEAN:
-        ReturnArray[Index].Value.Boolean = RedfishValue.Value.Boolean;
-        break;
-      case REDFISH_VALUE_TYPE_INTEGER:
-        ReturnArray[Index].Value.Integer = RedfishValue.Value.Integer;
-        break;
-      default:
-        //
-        // Unknown type. Use configure language string
-        //
-        BufferString = GetAttributeNameFromConfigLanguage (ConfigureLangList[Index]);
-        ReturnArray[Index].Type = REDFISH_VALUE_TYPE_STRING;
-        ReturnArray[Index].Value.Buffer = StrUnicodeToAscii (BufferString);
-        break;
-    }
+  *ArraySize = RedfishValue.ArrayCount;
+  for (Index = 0; Index < RedfishValue.ArrayCount; Index++) {
+    StringArray[Index] = RedfishValue.Value.ArrayBuffer[Index];
   }
 
-  *ArrayValue = ReturnArray;
-
-ON_RELEASE:
-
-  if (ConfigureLangList != NULL) {
-    FreePool (ConfigureLangList);
-  }
-
-  if (ConfigureLangBuffer != NULL) {
-    FreePool (ConfigureLangBuffer);
-  }
-
-  return EFI_SUCCESS;
+  return StringArray;
 }
 
 /**
@@ -1685,6 +1625,144 @@ CheckEtag (
   FreePool (EtagInDb);
 
   return FALSE;
+}
+
+/**
+  Check and see if given ObjectName can be found in JsonObj or not
+
+  @param[in]  JsonObj       JSON object to search
+  @param[in]  ObjectName    Object name
+
+  @retval     EDKII_JSON_VALUE *  Pointer to Json object is found. NULL otherwise.
+
+**/
+EDKII_JSON_VALUE *
+MatchJsonObject (
+  IN EDKII_JSON_VALUE *JsonObj,
+  IN CHAR8            *ObjectName
+  )
+{
+  EDKII_JSON_VALUE  N;
+  CHAR8             *Key;
+  EDKII_JSON_VALUE  Value;
+
+  if (JsonObj == NULL || IS_EMPTY_STRING (ObjectName)) {
+    return NULL;
+  }
+
+  if (!JsonValueIsObject (JsonObj)) {
+    return NULL;
+  }
+
+  EDKII_JSON_OBJECT_FOREACH_SAFE (JsonObj, N, Key, Value) {
+    if (AsciiStrCmp (Key, ObjectName) == 0) {
+      return Value;
+    }
+  }
+
+  return NULL;
+}
+
+/**
+
+  Check and see if given property is in JSON context or not
+
+  @param[in]  Property      Property name string
+  @param[in]  Json          The JSON context to search.
+
+  @retval     TRUE          Property is found in JSON context
+  @retval     FALSE         Property is not in JSON context
+
+**/
+BOOLEAN
+MatchPropertyWithJsonContext (
+  IN  EFI_STRING  Property,
+  IN  CHAR8       *Json
+  )
+{
+  CHAR8 *AsciiProperty;
+  CHAR8 *PropertyNode;
+  UINTN Index;
+  EDKII_JSON_VALUE *JsonObj;
+  EDKII_JSON_VALUE *MatchObj;
+  EDKII_JSON_TYPE   JsonType;
+
+  if (IS_EMPTY_STRING (Property) || IS_EMPTY_STRING (Json)) {
+    return FALSE;
+  }
+
+  JsonObj = JsonLoadString (Json, 0, NULL);
+  if (JsonObj == NULL || !JsonValueIsObject (JsonObj)) {
+    return FALSE;
+  }
+
+  AsciiProperty = StrUnicodeToAscii (Property);
+  if (AsciiProperty == NULL) {
+    return FALSE;
+  }
+
+  Index = 0;
+  PropertyNode = AsciiProperty;
+  MatchObj = JsonObj;
+
+  //
+  // Walk through property and find corresponding object in JSON input
+  //
+  while (AsciiProperty[Index] != '\0') {
+
+    if (AsciiProperty[Index] == '/') {
+      AsciiProperty[Index] = '\0';
+      MatchObj = MatchJsonObject (MatchObj, PropertyNode);
+      if (MatchObj == NULL) {
+        PropertyNode = NULL;
+        break;
+      }
+
+      PropertyNode = &AsciiProperty[Index + 1];
+    }
+
+    Index++;
+  }
+
+  if (PropertyNode != NULL) {
+    MatchObj = MatchJsonObject (MatchObj, PropertyNode);
+  }
+
+  //
+  // Value check
+  //
+  if (MatchObj != NULL) {
+    //
+    // If object has empty value, treat it as not matching
+    //
+    JsonType = JsonGetType (MatchObj);
+    switch (JsonType) {
+      case EdkiiJsonTypeObject:
+        if (JsonValueIsNull (MatchObj)) {
+          MatchObj = NULL;
+        }
+        break;
+      case EdkiiJsonTypeArray:
+        if (JsonArrayCount (MatchObj) == 0) {
+          MatchObj = NULL;
+        }
+        break;
+      case EdkiiJsonTypeString:
+        if (IS_EMPTY_STRING (JsonValueGetString (MatchObj))) {
+          MatchObj = NULL;
+        }
+        break;
+      case EdkiiJsonTypeNull:
+        MatchObj = NULL;
+        break;
+      default:
+        break;
+    }
+  }
+
+  FreePool (AsciiProperty);
+
+  return (MatchObj == NULL ? FALSE : TRUE);
 }
 
 /**
