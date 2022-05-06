@@ -258,6 +258,30 @@ HiiGetRedfishString (
   );
 
 /**
+  Retrieves a string from a string package in a English language. The
+  returned string is allocated using AllocatePool().  The caller is responsible
+  for freeing the allocated buffer using FreePool().
+
+  If HiiHandle is NULL, then ASSERT().
+  If StringId is 0, then ASSET.
+
+  @param[in]  HiiStringProtocol EFI_HII_STRING_PROTOCOL instance.
+  @param[in]  HiiHandle         A handle that was previously registered in the HII Database.
+  @param[in]  StringId          The identifier of the string to retrieved from the string
+                                package associated with HiiHandle.
+
+  @retval NULL   The string specified by StringId is not present in the string package.
+  @retval Other  The string was returned.
+
+**/
+CHAR8 *
+HiiGetRedfishAsciiString (
+  IN EFI_HII_HANDLE           HiiHandle,
+  IN CHAR8                    *Language,
+  IN EFI_STRING_ID            StringId
+  );
+
+/**
   Release all resource in statement list.
 
   @param[in]  StatementList   Statement list to be released.
