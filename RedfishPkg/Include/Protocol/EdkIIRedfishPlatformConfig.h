@@ -1,7 +1,7 @@
 /** @file
   This file defines the EDKII_REDFISH_PLATFORM_CONFIG_PROTOCOL interface.
 
-  (C) Copyright 2021 Hewlett Packard Enterprise Development LP<BR>
+  (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -19,6 +19,7 @@ typedef union {
   INT64           Integer;
   BOOLEAN         Boolean;
   CHAR8           *Buffer;
+  CHAR8           **ArrayBuffer;
 } EDKII_REDFISH_TYPE_VALUE;
 
 /**
@@ -29,6 +30,7 @@ typedef enum {
   REDFISH_VALUE_TYPE_INTEGER,
   REDFISH_VALUE_TYPE_BOOLEAN,
   REDFISH_VALUE_TYPE_STRING,
+  REDFISH_VALUE_TYPE_STRING_ARRAY,
   REDFISH_VALUE_TYPE_MAX
 } EDKII_REDFISH_VALUE_TYPES;
 
@@ -38,6 +40,7 @@ typedef enum {
 typedef struct {
   EDKII_REDFISH_VALUE_TYPES Type;
   EDKII_REDFISH_TYPE_VALUE  Value;
+  UINTN                     ArrayCount;
 } EDKII_REDFISH_VALUE;
 
 /**
