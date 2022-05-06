@@ -446,6 +446,89 @@ ApplyFeatureSettingsBooleanType (
   return Status;
 }
 
+
+/**
+
+  Apply property value to UEFI HII database in array type.
+
+  @param[in]  Schema        Property schema.
+  @param[in]  Version       Property schema version.
+  @param[in]  ConfigureLang Configure language refers to this property.
+  @param[in]  ArrayValues   String values in array.
+  @param[in]  ArraySize     Size of ArrayValues.
+
+  @retval     EFI_SUCCESS     New value is applied successfully.
+  @retval     Others          Errors occur.
+
+**/
+EFI_STATUS
+ApplyFeatureSettingsArrayType (
+  IN  CHAR8      *Schema,
+  IN  CHAR8      *Version,
+  IN  EFI_STRING ConfigureLang,
+  IN  CHAR8      **ArrayValues,
+  IN  UINTN      ArraySize
+  )
+{
+  EFI_STATUS          Status;
+  EDKII_REDFISH_VALUE RedfishValue;
+  UINTN               Index;
+  BOOLEAN             ValueChanged;
+
+  if (IS_EMPTY_STRING (Schema) || IS_EMPTY_STRING (Version) || IS_EMPTY_STRING (ConfigureLang) || ArrayValues == NULL || ArraySize == 0) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  ValueChanged = FALSE;
+
+  //
+  // Get the current value from HII
+  //
+  Status = RedfishPlatformConfigGetValue (Schema, Version, ConfigureLang, &RedfishValue);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, %a.%a %s failed: %r\n", __FUNCTION__, Schema, Version, ConfigureLang, Status));
+  } else {
+
+    if (RedfishValue.Type != REDFISH_VALUE_TYPE_STRING_ARRAY) {
+       DEBUG ((DEBUG_ERROR, "%a, %a.%a %s value is not string array type\n", __FUNCTION__, Schema, Version, ConfigureLang));
+      return EFI_DEVICE_ERROR;
+    }
+
+    if (ArraySize != RedfishValue.ArrayCount) {
+      ValueChanged = TRUE;
+    } else {
+      for (Index = 0; Index < ArraySize; Index++) {
+        if (AsciiStrCmp (ArrayValues[Index], RedfishValue.Value.ArrayBuffer[Index]) != 0) {
+          ValueChanged = TRUE;
+          break;
+        }
+      }
+    }
+
+    if (ValueChanged) {
+      //
+      // Apply settings from redfish
+      //
+      DEBUG ((DEBUG_INFO, "%a, %a.%a apply %s for array\n", __FUNCTION__, Schema, Version, ConfigureLang));
+      FreeStringArray (RedfishValue.Value.ArrayBuffer, RedfishValue.ArrayCount);
+
+      RedfishValue.ArrayCount = ArraySize;
+      for (Index = 0; Index < ArraySize; Index++) {
+        RedfishValue.Value.ArrayBuffer[Index] = ArrayValues[Index];
+      }
+
+      Status = RedfishPlatformConfigSetValue (Schema, Version, ConfigureLang, RedfishValue);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply %s array failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, %a.%a %s array value has no change\n", __FUNCTION__, Schema, Version, ConfigureLang));
+    }
+  }
+
+  return Status;
+}
+
 /**
 
   Read redfish resource by given resource URI.
@@ -1764,6 +1847,29 @@ MatchPropertyWithJsonContext (
 
   return (MatchObj == NULL ? FALSE : TRUE);
 }
+
+VOID
+FreeStringArray (
+  IN  CHAR8   **StringArray,
+  IN  UINTN   ArraySize
+  )
+{
+  UINTN Index;
+
+  if (StringArray == NULL || ArraySize == 0) {
+    return;
+  }
+
+  for (Index = 0; Index < ArraySize; Index++) {
+    if (StringArray[Index] != NULL) {
+      FreePool (StringArray[Index]);
+    }
+  }
+
+  FreePool (StringArray);
+}
+
+
 
 /**
 

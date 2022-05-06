@@ -151,6 +151,29 @@ ApplyFeatureSettingsBooleanType (
 
 /**
 
+  Apply property value to UEFI HII database in array type.
+
+  @param[in]  Schema        Property schema.
+  @param[in]  Version       Property schema version.
+  @param[in]  ConfigureLang Configure language refers to this property.
+  @param[in]  ArrayValues   String values in array.
+  @param[in]  ArraySize     Size of ArrayValues.
+
+  @retval     EFI_SUCCESS     New value is applied successfully.
+  @retval     Others          Errors occur.
+
+**/
+EFI_STATUS
+ApplyFeatureSettingsArrayType (
+  IN  CHAR8      *Schema,
+  IN  CHAR8      *Version,
+  IN  EFI_STRING ConfigureLang,
+  IN  CHAR8      **ArrayValues,
+  IN  UINTN      ArraySize
+  );
+
+/**
+
   Create HTTP payload and send them to redfish service with POST method.
 
   @param[in]  Service         Redfish service.
@@ -485,5 +508,11 @@ MatchPropertyWithJsonContext (
   IN  EFI_STRING  Property,
   IN  CHAR8       *Json
 );
+
+VOID
+FreeStringArray (
+  IN  CHAR8   **StringArray,
+  IN  UINTN   ArraySize
+  );
 
 #endif
