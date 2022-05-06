@@ -14,6 +14,56 @@ CHAR8 EmptyJson[] = "{\"@odata.id\": \"\", \"@odata.type\": \"#ComputerSystem.v1
 REDFISH_RESOURCE_COMMON_PRIVATE *mRedfishResourcePrivate = NULL;
 
 /**
+
+  Create string array and append to arry node in Redfish JSON convert format.
+
+  @param[in,out]  Head          The head of string array.
+  @param[in]      StringArray   Input string array.
+  @param[in]      ArraySize     The size of StringArray.
+
+  @retval     EFI_SUCCESS       String array is created successfully.
+  @retval     Others            Error happens
+
+**/
+EFI_STATUS
+AddRedfishCharArray (
+  IN OUT  RedfishCS_char_Array **Head,
+  IN      CHAR8                 **StringArray,
+  IN      UINTN                 ArraySize
+  )
+{
+  UINTN                                 Index;
+  RedfishCS_char_Array                  *CharArrayBuffer;
+  RedfishCS_char_Array                  *PreArrayBuffer;
+
+  if (Head == NULL || StringArray == NULL || ArraySize == 0) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  PreArrayBuffer = NULL;
+  for (Index = 0; Index < ArraySize; Index++) {
+    CharArrayBuffer = AllocatePool (sizeof (RedfishCS_char_Array));
+    if (CharArrayBuffer == NULL) {
+      ASSERT (CharArrayBuffer != NULL);
+      continue;
+    }
+
+    if (Index == 0) {
+     *Head = CharArrayBuffer;
+    }
+
+    CharArrayBuffer->ArrayValue = StringArray[Index];
+    CharArrayBuffer->Next = NULL;
+    if (PreArrayBuffer != NULL) {
+      PreArrayBuffer->Next = CharArrayBuffer;
+    }
+    PreArrayBuffer = CharArrayBuffer;
+  }
+
+  return EFI_SUCCESS;
+}
+
+/**
   Consume resource from given URI.
 
   @param[in]   This                Pointer to REDFISH_RESOURCE_COMMON_PRIVATE instance.
@@ -481,10 +531,8 @@ ProvisioningProperties (
   CHAR8                                 *AsciiStringValue;
   BOOLEAN                               PropertyChanged;
   UINTN                                 ArraySize;
-  EDKII_REDFISH_VALUE                   *ArrayValue;
-  UINTN                                 Index;
-  RedfishCS_char_Array                  *CharArrayBuffer;
-  RedfishCS_char_Array                  *PreArrayBuffer;
+  CHAR8                                 **ArrayValue;
+
 
   if (JsonStructProtocol == NULL || ResultJson == NULL || IS_EMPTY_STRING (IputJson) || IS_EMPTY_STRING (ConfigureLang)) {
     return EFI_INVALID_PARAMETER;
@@ -496,7 +544,6 @@ ProvisioningProperties (
   PropertyChanged = FALSE;
   ArraySize = 0;
   ArrayValue = NULL;
-  PreArrayBuffer = NULL;
 
   ComputerSystem = NULL;
   Status = JsonStructProtocol->ToStructure (
@@ -706,30 +753,10 @@ ProvisioningProperties (
     // Handle BOOT->BOOTORDER
     //
     if (PropertyChecker (ComputerSystemCs->Boot->BootOrder, ProvisionMode)) {
-      Status = GetPropertyArrayValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootOrder", ConfigureLang, &ArraySize, &ArrayValue);
-      if (!EFI_ERROR (Status)) {
-        if (ArraySize > 0) {
-
-          CharArrayBuffer = AllocatePool (sizeof (RedfishCS_char_Array));
-          ASSERT (CharArrayBuffer != NULL);
-          ASSERT (ArrayValue[0].Type == REDFISH_VALUE_TYPE_STRING);
-
-          CharArrayBuffer->ArrayValue = ArrayValue[0].Value.Buffer;
-          CharArrayBuffer->Next = NULL;
-          PreArrayBuffer = CharArrayBuffer;
-          ComputerSystemCs->Boot->BootOrder = CharArrayBuffer;
-          for (Index = 1; Index < ArraySize; Index++) {
-
-            CharArrayBuffer = AllocatePool (sizeof (RedfishCS_char_Array));
-            ASSERT (CharArrayBuffer != NULL);
-            ASSERT (ArrayValue[Index].Type == REDFISH_VALUE_TYPE_STRING);
-            CharArrayBuffer->ArrayValue = ArrayValue[Index].Value.Buffer;
-            CharArrayBuffer->Next = NULL;
-            PreArrayBuffer->Next = CharArrayBuffer;
-            PreArrayBuffer = CharArrayBuffer;
-          }
-          PropertyChanged = TRUE;
-        }
+      ArrayValue = GetPropertyArrayValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootOrder", ConfigureLang, &ArraySize);
+      if (ArrayValue != NULL && ArraySize > 0) {
+        Status = AddRedfishCharArray (&ComputerSystemCs->Boot->BootOrder, ArrayValue, ArraySize);
+        PropertyChanged = TRUE;
       }
     }
   }
@@ -1046,8 +1073,6 @@ RedfishCheckResourceCommon (
   EFI_STRING *ConfigureLangList;
   UINTN      Count;
   EFI_STRING Property;
-  CHAR8      *PropertyAscii;
-  CHAR8      *Match;
 
   if (Private == NULL || IS_EMPTY_STRING (Json)) {
     return EFI_INVALID_PARAMETER;
@@ -1071,24 +1096,11 @@ RedfishCheckResourceCommon (
       continue;
     }
 
-    DEBUG ((DEBUG_INFO, "%a, [%d] check resource from: %s\n", __FUNCTION__, Index, Property));
-
-    PropertyAscii = StrUnicodeToAscii (Property);
-    if (PropertyAscii == NULL) {
-      DEBUG ((DEBUG_ERROR, "%a, StrUnicodeToAscii failed\n", __FUNCTION__));
-      continue;
-    }
-
-    //
-    // check to see if it is partial match.
-    //
-    Match = AsciiStrStr (Json, PropertyAscii);
-    if (Match == NULL || AsciiStrnCmp (Match, PropertyAscii, AsciiStrLen (PropertyAscii)) != 0) {
+    DEBUG ((DEBUG_INFO, "%a, [%d] check attribute for: %s\n", __FUNCTION__, Index, Property));
+    if (!MatchPropertyWithJsonContext (Property, Json)) {
+      DEBUG ((DEBUG_INFO, "%a, property is missing: %s\n", __FUNCTION__, Property));
       Status = EFI_NOT_FOUND;
-      DEBUG ((DEBUG_ERROR, "%a, property %a is missing\n", __FUNCTION__, PropertyAscii));
     }
-
-    FreePool (PropertyAscii);
   }
 
   FreePool (ConfigureLangList);
