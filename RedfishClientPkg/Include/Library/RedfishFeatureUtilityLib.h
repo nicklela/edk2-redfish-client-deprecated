@@ -11,6 +11,7 @@
 #define REDFISH_FEATURE_UTILITY_LIB_H_
 
 #include <Protocol/EdkIIRedfishPlatformConfig.h>
+#include <RedfishJsonStructure/RedfishCsCommon.h>
 
 //
 // Definition of REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG
@@ -156,8 +157,7 @@ ApplyFeatureSettingsBooleanType (
   @param[in]  Schema        Property schema.
   @param[in]  Version       Property schema version.
   @param[in]  ConfigureLang Configure language refers to this property.
-  @param[in]  ArrayValues   String values in array.
-  @param[in]  ArraySize     Size of ArrayValues.
+  @param[in]  ArrayHead     Head of array value.
 
   @retval     EFI_SUCCESS     New value is applied successfully.
   @retval     Others          Errors occur.
@@ -165,11 +165,10 @@ ApplyFeatureSettingsBooleanType (
 **/
 EFI_STATUS
 ApplyFeatureSettingsArrayType (
-  IN  CHAR8      *Schema,
-  IN  CHAR8      *Version,
-  IN  EFI_STRING ConfigureLang,
-  IN  CHAR8      **ArrayValues,
-  IN  UINTN      ArraySize
+  IN  CHAR8                 *Schema,
+  IN  CHAR8                 *Version,
+  IN  EFI_STRING            ConfigureLang,
+  IN  RedfishCS_char_Array  *ArrayHead
   );
 
 /**
@@ -509,10 +508,63 @@ MatchPropertyWithJsonContext (
   IN  CHAR8       *Json
 );
 
-VOID
-FreeStringArray (
-  IN  CHAR8   **StringArray,
-  IN  UINTN   ArraySize
+/**
+
+  Create string array and append to arry node in Redfish JSON convert format.
+
+  @param[in,out]  Head          The head of string array.
+  @param[in]      StringArray   Input string array.
+  @param[in]      ArraySize     The size of StringArray.
+
+  @retval     EFI_SUCCESS       String array is created successfully.
+  @retval     Others            Error happens
+
+**/
+EFI_STATUS
+AddRedfishCharArray (
+  IN OUT  RedfishCS_char_Array **Head,
+  IN      CHAR8                 **StringArray,
+  IN      UINTN                 ArraySize
+  );
+
+/**
+
+  Check and see if value in Redfish array are all the same as the one from
+  HII configuration.
+
+  @param[in]  Head          The head of string array.
+  @param[in]  StringArray   Input string array.
+  @param[in]  ArraySize     The size of StringArray.
+
+  @retval     TRUE          All string in Redfish array are as same as string
+                            in HII configuration array.
+              FALSE         These two array are not identical.
+
+**/
+BOOLEAN
+CompareRedfishArrayValues (
+  IN RedfishCS_char_Array *Head,
+  IN CHAR8                **StringArray,
+  IN UINTN                ArraySize
+  );
+
+/**
+
+  Find "ETag" and "Location" from either HTTP header or Redfish response.
+
+  @param[in]  Response    HTTP response
+  @param[out] Etag        String buffer to return ETag
+  @param[out] Location    String buffer to return Location
+
+  @retval     EFI_SUCCESS     Data is found and returned.
+  @retval     Others          Errors occur.
+
+**/
+EFI_STATUS
+GetEtagAndLocation (
+  IN  REDFISH_RESPONSE  *Response,
+  OUT CHAR8             **Etag,       OPTIONAL
+  OUT EFI_STRING        *Location    OPTIONAL
   );
 
 #endif
