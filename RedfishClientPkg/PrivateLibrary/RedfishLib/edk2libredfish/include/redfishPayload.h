@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------
 
   Copyright (c) 2019, Intel Corporation. All rights reserved.<BR>
-  (C) Copyright 2021 Hewlett Packard Enterprise Development LP<BR>
+  (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -29,8 +29,11 @@ redfishPayload* getPayloadByIndex(redfishPayload* payload, size_t index, EFI_HTT
 redfishPayload* getPayloadForPath(redfishPayload* payload, redPathNode* redpath, EFI_HTTP_STATUS_CODE** StatusCode);
 redfishPayload* getPayloadForPathString(redfishPayload* payload, const char* string, EFI_HTTP_STATUS_CODE** StatusCode);
 redfishPayload* patchPayload(redfishPayload* target, redfishPayload* payload, EFI_HTTP_STATUS_CODE** StatusCode);
+redfishPayload* patchPayloadEx(redfishPayload* target, redfishPayload* payload, EFI_HTTP_HEADER **Headers, UINTN *HeaderCount, EFI_HTTP_STATUS_CODE** StatusCode);
 redfishPayload* postContentToPayload(redfishPayload* target, const char* data, size_t dataSize, const char* contentType, EFI_HTTP_STATUS_CODE** StatusCode);
+redfishPayload* postContentToPayloadEx(redfishPayload* target, const char* data, size_t dataSize, const char* contentType, EFI_HTTP_HEADER **Headers, UINTN *HeaderCount, EFI_HTTP_STATUS_CODE** StatusCode);
 redfishPayload* postPayload(redfishPayload* target, redfishPayload* payload, EFI_HTTP_STATUS_CODE** StatusCode);
+redfishPayload* postPayloadEx(redfishPayload* target, redfishPayload* payload, EFI_HTTP_HEADER **Headers, UINTN *HeaderCount, EFI_HTTP_STATUS_CODE** StatusCode);
 void            cleanupPayload(redfishPayload* payload);
 bool            isPayloadCollection (redfishPayload *Payload);
 size_t          getCollectionSize(redfishPayload* payload);
