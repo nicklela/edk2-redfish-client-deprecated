@@ -65,6 +65,7 @@ RedfishConsumeResourceCommon (
     // No change
     //
     DEBUG ((DEBUG_INFO, "%a, ETAG: %s has no change, ignore consume action\n", __FUNCTION__, Private->Uri));
+    Status = EFI_ALREADY_STARTED;
     goto ON_RELEASE;
   }
 

@@ -129,7 +129,16 @@ RedfishResourceConsumeResource (
 
   Status = RedfishConsumeResourceCommon (Private, Private->Json, Etag);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, failed to consume resource from: %s: %r\n", __FUNCTION__, Uri, Status));
+    if (Status != EFI_ALREADY_STARTED) {
+      DEBUG ((DEBUG_ERROR, "%a, failed to consume resource from: %s: %r\n", __FUNCTION__, Uri, Status));
+    }
+  } else {
+    //
+    // Keep etag after consuming pending settings.
+    //
+    if (Etag != NULL) {
+      SetEtagWithUri (Etag, Private->Uri);
+    }
   }
 
   //
