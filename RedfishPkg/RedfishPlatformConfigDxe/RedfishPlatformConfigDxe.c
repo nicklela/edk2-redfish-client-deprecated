@@ -13,6 +13,186 @@
 
 REDFISH_PLATFORM_CONFIG_PRIVATE *mRedfishPlatformConfigPrivate = NULL;
 
+
+/**
+  Zero extend integer/boolean to UINT64 for comparing.
+
+  @param  Value                  HII Value to be converted.
+
+**/
+UINT64
+ExtendHiiValueToU64 (
+  IN HII_STATEMENT_VALUE    *Value
+  )
+{
+  UINT64  Temp;
+
+  Temp = 0;
+  switch (Value->Type) {
+  case EFI_IFR_TYPE_NUM_SIZE_8:
+    Temp = Value->Value.u8;
+    break;
+
+  case EFI_IFR_TYPE_NUM_SIZE_16:
+    Temp = Value->Value.u16;
+    break;
+
+  case EFI_IFR_TYPE_NUM_SIZE_32:
+    Temp = Value->Value.u32;
+    break;
+
+  case EFI_IFR_TYPE_BOOLEAN:
+    Temp = Value->Value.b;
+    break;
+
+  case EFI_IFR_TYPE_TIME:
+  case EFI_IFR_TYPE_DATE:
+  default:
+    break;
+  }
+
+  return Temp;
+}
+
+/**
+  Set value of a data element in an Array by its Index in ordered list buffer.
+
+  @param  Array                  The data array.
+  @param  Type                   Type of the data in this array.
+  @param  Index                  Zero based index for data in this array.
+  @param  Value                  The value to be set.
+
+**/
+VOID
+OrderedListSetArrayData (
+  IN VOID                     *Array,
+  IN UINT8                    Type,
+  IN UINTN                    Index,
+  IN UINT64                   Value
+  )
+{
+
+  ASSERT (Array != NULL);
+
+  switch (Type) {
+  case EFI_IFR_TYPE_NUM_SIZE_8:
+    *(((UINT8 *) Array) + Index) = (UINT8) Value;
+    break;
+
+  case EFI_IFR_TYPE_NUM_SIZE_16:
+    *(((UINT16 *) Array) + Index) = (UINT16) Value;
+    break;
+
+  case EFI_IFR_TYPE_NUM_SIZE_32:
+    *(((UINT32 *) Array) + Index) = (UINT32) Value;
+    break;
+
+  case EFI_IFR_TYPE_NUM_SIZE_64:
+    *(((UINT64 *) Array) + Index) = (UINT64) Value;
+    break;
+
+  default:
+    break;
+  }
+}
+
+
+/**
+  Return data element in an Array by its Index in ordered list array buffer.
+
+  @param  Array                  The data array.
+  @param  Type                   Type of the data in this array.
+  @param  Index                  Zero based index for data in this array.
+
+  @retval Value                  The data to be returned
+
+**/
+UINT64
+OrderedListGetArrayData (
+  IN VOID                     *Array,
+  IN UINT8                    Type,
+  IN UINTN                    Index
+  )
+{
+  UINT64 Data;
+
+  ASSERT (Array != NULL);
+
+  Data = 0;
+  switch (Type) {
+  case EFI_IFR_TYPE_NUM_SIZE_8:
+    Data = (UINT64) *(((UINT8 *) Array) + Index);
+    break;
+
+  case EFI_IFR_TYPE_NUM_SIZE_16:
+    Data = (UINT64) *(((UINT16 *) Array) + Index);
+    break;
+
+  case EFI_IFR_TYPE_NUM_SIZE_32:
+    Data = (UINT64) *(((UINT32 *) Array) + Index);
+    break;
+
+  case EFI_IFR_TYPE_NUM_SIZE_64:
+    Data = (UINT64) *(((UINT64 *) Array) + Index);
+    break;
+
+  default:
+    break;
+  }
+
+  return Data;
+}
+
+
+/**
+  Find string ID of option if its value equals to given value.
+
+  @param[in]  HiiStatement  Statement to search.
+  @param[in]  Value         Target value.
+
+  @retval EFI_SUCCESS       HII value is returned successfully.
+  @retval Others            Errors occur
+
+**/
+EFI_STRING_ID
+OrderedListOptionValueToStringId (
+  IN  HII_STATEMENT *HiiStatement,
+  IN  UINT64        Value
+  )
+{
+  LIST_ENTRY            *Link;
+  HII_QUESTION_OPTION   *Option;
+  BOOLEAN               Found;
+  UINT64                CurrentValue;
+
+  if (HiiStatement == NULL) {
+    return 0;
+  }
+
+  if (HiiStatement->Operand != EFI_IFR_ORDERED_LIST_OP) {
+    return 0;
+  }
+
+  if (IsListEmpty (&HiiStatement->OptionListHead)) {
+    return 0;
+  }
+
+  Found = FALSE;
+  Link = GetFirstNode (&HiiStatement->OptionListHead);
+  while (!IsNull (&HiiStatement->OptionListHead, Link)) {
+    Option = HII_QUESTION_OPTION_FROM_LINK (Link);
+
+    CurrentValue = ExtendHiiValueToU64 (&Option->Value);
+    if (Value == CurrentValue) {
+      return Option->Text;
+    }
+
+    Link = GetNextNode (&HiiStatement->OptionListHead, Link);
+  }
+
+  return 0;
+}
+
 /**
   Compare two value in HII statement format.
 
@@ -369,6 +549,8 @@ HiiValueToOrderedListOptionStringId (
   HII_QUESTION_OPTION   *Option;
   UINTN                 OptionCount;
   EFI_STRING_ID         *ReturnedArray;
+  UINTN                 Index;
+  UINT64                Value;
 
   if (Statement == NULL || ReturnSize == NULL) {
     return NULL;
@@ -406,62 +588,16 @@ HiiValueToOrderedListOptionStringId (
     return NULL;
   }
 
-  OptionCount = 0;
-  Link = GetFirstNode (&Statement->HiiStatement->OptionListHead);
-  while (!IsNull (&Statement->HiiStatement->OptionListHead, Link)) {
-    Option = HII_QUESTION_OPTION_FROM_LINK (Link);
-
-    ReturnedArray[OptionCount] = Option->Text;
-    OptionCount++;
-    Link = GetNextNode (&Statement->HiiStatement->OptionListHead, Link);
+  for (Index = 0; Index < OptionCount; Index++) {
+    Value = OrderedListGetArrayData (Statement->HiiStatement->Value.Buffer, Statement->HiiStatement->Value.BufferValueType, Index);
+    ReturnedArray[Index] = OrderedListOptionValueToStringId (Statement->HiiStatement, Value);
   }
 
   return ReturnedArray;
 }
 
-
 /**
-  Zero extend integer/boolean to UINT64 for comparing.
-
-  @param  Value                  HII Value to be converted.
-
-**/
-UINT64
-ExtendHiiValueToU64 (
-  IN HII_STATEMENT_VALUE    *Value
-  )
-{
-  UINT64  Temp;
-
-  Temp = 0;
-  switch (Value->Type) {
-  case EFI_IFR_TYPE_NUM_SIZE_8:
-    Temp = Value->Value.u8;
-    break;
-
-  case EFI_IFR_TYPE_NUM_SIZE_16:
-    Temp = Value->Value.u16;
-    break;
-
-  case EFI_IFR_TYPE_NUM_SIZE_32:
-    Temp = Value->Value.u32;
-    break;
-
-  case EFI_IFR_TYPE_BOOLEAN:
-    Temp = Value->Value.b;
-    break;
-
-  case EFI_IFR_TYPE_TIME:
-  case EFI_IFR_TYPE_DATE:
-  default:
-    break;
-  }
-
-  return Temp;
-}
-
-/**
-  Convert HII string to the value in HII one-of opcode.
+  Convert HII string to the value in HII ordered list opcode.
 
   @param[in]  Statement     Statement private instance
   @param[in]  Schema        Schema string
@@ -521,48 +657,6 @@ HiiStringToOrderedListOptionValue (
   }
 
   return EFI_NOT_FOUND;
-}
-
-/**
-  Set value of a data element in an Array by its Index.
-
-  @param  Array                  The data array.
-  @param  Type                   Type of the data in this array.
-  @param  Index                  Zero based index for data in this array.
-  @param  Value                  The value to be set.
-
-**/
-VOID
-OrderedListSetArrayData (
-  IN VOID                     *Array,
-  IN UINT8                    Type,
-  IN UINTN                    Index,
-  IN UINT64                   Value
-  )
-{
-
-  ASSERT (Array != NULL);
-
-  switch (Type) {
-  case EFI_IFR_TYPE_NUM_SIZE_8:
-    *(((UINT8 *) Array) + Index) = (UINT8) Value;
-    break;
-
-  case EFI_IFR_TYPE_NUM_SIZE_16:
-    *(((UINT16 *) Array) + Index) = (UINT16) Value;
-    break;
-
-  case EFI_IFR_TYPE_NUM_SIZE_32:
-    *(((UINT32 *) Array) + Index) = (UINT32) Value;
-    break;
-
-  case EFI_IFR_TYPE_NUM_SIZE_64:
-    *(((UINT64 *) Array) + Index) = (UINT64) Value;
-    break;
-
-  default:
-    break;
-  }
 }
 
 /**
@@ -830,6 +924,7 @@ RedfishPlatformConfigProtocolGetValue (
       }
 
       for (Index = 0; Index < Count; Index++) {
+        ASSERT (StringIdArray[Index] != 0);
         Value->Value.ArrayBuffer[Index] = HiiGetRedfishAsciiString (TargetStatement->ParentForm->ParentFormset->HiiHandle, FullSchema, StringIdArray[Index]);
       }
 
