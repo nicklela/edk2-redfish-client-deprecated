@@ -529,7 +529,13 @@ Hii2RedfishBootRouteConfig (
                                   );
 
     if (CompareMem (BootOptionsVar.BootOptionOrder, mBootOptionsVarData.BootOptionOrder, (sizeof (UINT32) * MAX_BOOT_OPTIONS))) {
-      UpdateBootorderList (&BootOptionsVar);
+      Status = UpdateBootorderList (&BootOptionsVar);
+      if (!EFI_ERROR (Status)) {
+        //
+        // Boot order update successed. Copy it to local copy.
+        //
+        CopyMem (mBootOptionsVarData.BootOptionOrder, BootOptionsVar.BootOptionOrder, (sizeof (UINT32) * MAX_BOOT_OPTIONS));
+      }
     }
 
     return EFI_SUCCESS;
