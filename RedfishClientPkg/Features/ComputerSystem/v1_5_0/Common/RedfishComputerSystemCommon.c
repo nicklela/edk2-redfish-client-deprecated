@@ -726,7 +726,7 @@ ProvisioningProperties (
     if (PropertyChecker (ComputerSystemCs->Boot->BootOrder, ProvisionMode)) {
       ArrayValue = GetPropertyArrayValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootOrder", ConfigureLang, &ArraySize);
       if (ArrayValue != NULL && ArraySize > 0) {
-        if (ProvisionMode && !CompareRedfishArrayValues (ComputerSystemCs->Boot->BootOrder, ArrayValue, ArraySize)) {
+        if (ProvisionMode || !CompareRedfishArrayValues (ComputerSystemCs->Boot->BootOrder, ArrayValue, ArraySize)) {
           Status = AddRedfishCharArray (&ComputerSystemCs->Boot->BootOrder, ArrayValue, ArraySize);
           PropertyChanged = TRUE;
         }
