@@ -269,6 +269,85 @@ RedfishNumericToHiiValue (
   return EFI_SUCCESS;
 }
 
+/**
+  Dump the vlaue in ordered list buffer.
+
+  @param[in]   OrderedListStatement Ordered list statement.
+
+**/
+VOID
+DumpOrderedListValue (
+  IN  HII_STATEMENT *OrderedListStatement
+  )
+{
+  UINT8 *Value8;
+  UINT16 *Value16;
+  UINT32 *Value32;
+  UINT64 *Value64;
+  UINTN  Count;
+  UINTN  Index;
+
+  if (OrderedListStatement == NULL || OrderedListStatement->Operand != EFI_IFR_ORDERED_LIST_OP) {
+    return;
+  }
+
+  DEBUG ((DEBUG_ERROR, "Value.Type= 0x%x\n", OrderedListStatement->Value.Type));
+  DEBUG ((DEBUG_ERROR, "Value.BufferValueType= 0x%x\n", OrderedListStatement->Value.BufferValueType));
+  DEBUG ((DEBUG_ERROR, "Value.BufferLen= 0x%x\n", OrderedListStatement->Value.BufferLen));
+  DEBUG ((DEBUG_ERROR, "Value.Buffer= 0x%x\n", OrderedListStatement->Value.Buffer));
+  DEBUG ((DEBUG_ERROR, "Value.MaxContainers= 0x%x\n", OrderedListStatement->ExtraData.OrderListData.MaxContainers));
+  DEBUG ((DEBUG_ERROR, "StorageWidth= 0x%x\n", OrderedListStatement->StorageWidth));
+
+  if (OrderedListStatement->Value.Buffer == NULL) {
+    return;
+  }
+
+  Value8 = NULL;
+  Value16 = NULL;
+  Value32 = NULL;
+  Value64 = NULL;
+  Count = 0;
+
+  switch (OrderedListStatement->Value.BufferValueType) {
+    case EFI_IFR_TYPE_NUM_SIZE_8:
+      Value8 = (UINT8 *)OrderedListStatement->Value.Buffer;
+      Count = OrderedListStatement->StorageWidth / sizeof (UINT8);
+      for (Index = 0; Index < Count; Index++) {
+        DEBUG ((DEBUG_ERROR, "%d ", Value8[Index]));
+      }
+      break;
+    case EFI_IFR_TYPE_NUM_SIZE_16:
+      Value16 = (UINT16 *)OrderedListStatement->Value.Buffer;
+      Count = OrderedListStatement->StorageWidth / sizeof (UINT16);
+      for (Index = 0; Index < Count; Index++) {
+        DEBUG ((DEBUG_ERROR, "%d ", Value16[Index]));
+      }
+      break;
+    case EFI_IFR_TYPE_NUM_SIZE_32:
+      Value32 = (UINT32 *)OrderedListStatement->Value.Buffer;
+      Count = OrderedListStatement->StorageWidth / sizeof (UINT32);
+      for (Index = 0; Index < Count; Index++) {
+        DEBUG ((DEBUG_ERROR, "%d ", Value32[Index]));
+      }
+      break;
+    case EFI_IFR_TYPE_NUM_SIZE_64:
+      Value64 = (UINT64 *)OrderedListStatement->Value.Buffer;
+      Count = OrderedListStatement->StorageWidth / sizeof (UINT64);
+      for (Index = 0; Index < Count; Index++) {
+        DEBUG ((DEBUG_ERROR, "%d ", Value64[Index]));
+      }
+      break;
+    default:
+      Value8 = (UINT8 *)OrderedListStatement->Value.Buffer;
+      Count = OrderedListStatement->StorageWidth / sizeof (UINT8);
+      for (Index = 0; Index < Count; Index++) {
+        DEBUG ((DEBUG_ERROR, "%d ", Value8[Index]));
+      }
+      break;
+  }
+
+  DEBUG ((DEBUG_ERROR, "\n"));
+}
 
 /**
   Convert HII value to the string in HII ordered list opcode. It's caller's
@@ -305,6 +384,10 @@ HiiValueToOrderedListOptionStringId (
     return NULL;
   }
 
+  DEBUG_CODE (
+    DumpOrderedListValue (Statement->HiiStatement);
+  );
+
   OptionCount = 0;
   Link = GetFirstNode (&Statement->HiiStatement->OptionListHead);
   while (!IsNull (&Statement->HiiStatement->OptionListHead, Link)) {
@@ -335,6 +418,190 @@ HiiValueToOrderedListOptionStringId (
 
   return ReturnedArray;
 }
+
+
+/**
+  Zero extend integer/boolean to UINT64 for comparing.
+
+  @param  Value                  HII Value to be converted.
+
+**/
+UINT64
+ExtendHiiValueToU64 (
+  IN HII_STATEMENT_VALUE    *Value
+  )
+{
+  UINT64  Temp;
+
+  Temp = 0;
+  switch (Value->Type) {
+  case EFI_IFR_TYPE_NUM_SIZE_8:
+    Temp = Value->Value.u8;
+    break;
+
+  case EFI_IFR_TYPE_NUM_SIZE_16:
+    Temp = Value->Value.u16;
+    break;
+
+  case EFI_IFR_TYPE_NUM_SIZE_32:
+    Temp = Value->Value.u32;
+    break;
+
+  case EFI_IFR_TYPE_BOOLEAN:
+    Temp = Value->Value.b;
+    break;
+
+  case EFI_IFR_TYPE_TIME:
+  case EFI_IFR_TYPE_DATE:
+  default:
+    break;
+  }
+
+  return Temp;
+}
+
+/**
+  Convert HII string to the value in HII one-of opcode.
+
+  @param[in]  Statement     Statement private instance
+  @param[in]  Schema        Schema string
+  @param[in]  HiiString     Input string
+  @param[out] Value         Value returned
+
+  @retval EFI_SUCCESS       HII value is returned successfully.
+  @retval Others            Errors occur
+
+**/
+EFI_STATUS
+HiiStringToOrderedListOptionValue (
+  IN  REDFISH_PLATFORM_CONFIG_STATEMENT_PRIVATE *Statement,
+  IN  CHAR8                           *Schema,
+  IN  EFI_STRING                      HiiString,
+  OUT UINT64                          *Value
+  )
+{
+  LIST_ENTRY            *Link;
+  HII_QUESTION_OPTION   *Option;
+  EFI_STRING            TmpString;
+  BOOLEAN               Found;
+
+  if (Statement == NULL || IS_EMPTY_STRING (HiiString) || Value == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  *Value = 0;
+
+  if (Statement->HiiStatement->Operand != EFI_IFR_ORDERED_LIST_OP) {
+    return EFI_UNSUPPORTED;
+  }
+
+  if (IsListEmpty (&Statement->HiiStatement->OptionListHead)) {
+    return EFI_NOT_FOUND;
+  }
+
+  Found = FALSE;
+  Link = GetFirstNode (&Statement->HiiStatement->OptionListHead);
+  while (!IsNull (&Statement->HiiStatement->OptionListHead, Link)) {
+    Option = HII_QUESTION_OPTION_FROM_LINK (Link);
+
+    TmpString = HiiGetRedfishString (Statement->ParentForm->ParentFormset->HiiHandle, Schema, Option->Text);
+    if (TmpString != NULL) {
+      if (StrCmp (TmpString, HiiString) == 0) {
+        *Value = ExtendHiiValueToU64 (&Option->Value);
+        Found = TRUE;
+      }
+      FreePool (TmpString);
+    }
+
+    if (Found) {
+      return EFI_SUCCESS;
+    }
+
+    Link = GetNextNode (&Statement->HiiStatement->OptionListHead, Link);
+  }
+
+  return EFI_NOT_FOUND;
+}
+
+/**
+  Set value of a data element in an Array by its Index.
+
+  @param  Array                  The data array.
+  @param  Type                   Type of the data in this array.
+  @param  Index                  Zero based index for data in this array.
+  @param  Value                  The value to be set.
+
+**/
+VOID
+OrderedListSetArrayData (
+  IN VOID                     *Array,
+  IN UINT8                    Type,
+  IN UINTN                    Index,
+  IN UINT64                   Value
+  )
+{
+
+  ASSERT (Array != NULL);
+
+  switch (Type) {
+  case EFI_IFR_TYPE_NUM_SIZE_8:
+    *(((UINT8 *) Array) + Index) = (UINT8) Value;
+    break;
+
+  case EFI_IFR_TYPE_NUM_SIZE_16:
+    *(((UINT16 *) Array) + Index) = (UINT16) Value;
+    break;
+
+  case EFI_IFR_TYPE_NUM_SIZE_32:
+    *(((UINT32 *) Array) + Index) = (UINT32) Value;
+    break;
+
+  case EFI_IFR_TYPE_NUM_SIZE_64:
+    *(((UINT64 *) Array) + Index) = (UINT64) Value;
+    break;
+
+  default:
+    break;
+  }
+}
+
+/**
+  Convert input ascii string to unicode string. It's caller's
+  responsibility to free returned buffer using FreePool().
+
+  @param[in]  AsciiString     Ascii string to be converted.
+
+  @retval CHAR16 *            Unicode string on return.
+
+**/
+EFI_STRING
+StrToUnicodeStr (
+  IN  CHAR8 *AsciiString
+ )
+{
+  UINTN       StringLen;
+  EFI_STRING  Buffer;
+  EFI_STATUS  Status;
+
+  if (AsciiString == NULL || AsciiString[0] == '\0') {
+    return NULL;
+  }
+
+  StringLen = AsciiStrLen (AsciiString) + 1;
+  Buffer = AllocatePool (StringLen * sizeof (CHAR16));
+  if (Buffer == NULL) {
+    return NULL;
+  }
+
+  Status = AsciiStrToUnicodeStrS (AsciiString, Buffer, StringLen);
+  if (EFI_ERROR (Status)) {
+    FreePool (Buffer);
+    return NULL;
+  }
+
+  return Buffer;
+}
+
 
 /**
   Return the full Redfish schema string from the given Schema and Version.
@@ -662,12 +929,17 @@ RedfishPlatformConfigSetStatementCommon (
   EFI_STATUS                                Status;
   REDFISH_PLATFORM_CONFIG_STATEMENT_PRIVATE *TargetStatement;
   EFI_STRING                                TempBuffer;
+  UINT8                                     *ArrayBuffer;
+  UINTN                                     Index;
+  UINT64                                    Value;
+  CHAR8                                     **CharArray;
 
   if (RedfishPlatformConfigPrivate == NULL || IS_EMPTY_STRING (Schema) || IS_EMPTY_STRING (ConfigureLang) || StatementValue == NULL) {
     return EFI_INVALID_PARAMETER;
   }
 
   TempBuffer = NULL;
+  ArrayBuffer = NULL;
 
   Status = ProcessPendingList (&RedfishPlatformConfigPrivate->FormsetList, &RedfishPlatformConfigPrivate->PendingList);
   if (EFI_ERROR (Status)) {
@@ -687,12 +959,11 @@ RedfishPlatformConfigSetStatementCommon (
     // in string format from HII point of view. Do a patch here.
     //
     if (TargetStatement->HiiStatement->Operand == EFI_IFR_ONE_OF_OP && StatementValue->Type == EFI_IFR_TYPE_STRING) {
-      TempBuffer = AllocatePool (StatementValue->BufferLen * sizeof (CHAR16));
+
+      TempBuffer = StrToUnicodeStr ((CHAR8 *)StatementValue->Buffer);
       if (TempBuffer == NULL) {
         return EFI_OUT_OF_RESOURCES;
       }
-
-      AsciiStrToUnicodeStrS (StatementValue->Buffer, TempBuffer, StatementValue->BufferLen);
       FreePool (StatementValue->Buffer);
       StatementValue->Buffer = NULL;
       StatementValue->BufferLen = 0;
@@ -705,6 +976,39 @@ RedfishPlatformConfigSetStatementCommon (
       }
 
       FreePool (TempBuffer);
+    } else if (TargetStatement->HiiStatement->Operand == EFI_IFR_ORDERED_LIST_OP && StatementValue->Type == EFI_IFR_TYPE_STRING) {
+      //
+      // We treat ordered list type as string in Redfish. But ordered list statement is not
+      // in string format from HII point of view. Do a patch here.
+      //
+      ArrayBuffer = AllocateZeroPool (TargetStatement->HiiStatement->StorageWidth);
+      if (ArrayBuffer == NULL) {
+        return EFI_OUT_OF_RESOURCES;
+      }
+
+      //
+      // Arrage new option order from input string array
+      //
+      CharArray = (CHAR8 **)StatementValue->Buffer;
+      for (Index = 0; Index < StatementValue->BufferLen; Index++) {
+        TempBuffer = StrToUnicodeStr (CharArray[Index]);
+        if (TempBuffer == NULL) {
+          return EFI_OUT_OF_RESOURCES;
+        }
+
+        Status = HiiStringToOrderedListOptionValue (TargetStatement, Schema, TempBuffer, &Value);
+        if (EFI_ERROR (Status)) {
+          ASSERT (FALSE);
+          continue;
+        }
+        FreePool (TempBuffer);
+        OrderedListSetArrayData (ArrayBuffer, TargetStatement->HiiStatement->Value.BufferValueType, Index, Value);
+      }
+
+      StatementValue->Type = EFI_IFR_TYPE_BUFFER;
+      StatementValue->Buffer = ArrayBuffer;
+      StatementValue->BufferLen = TargetStatement->HiiStatement->StorageWidth;
+      StatementValue->BufferValueType = TargetStatement->HiiStatement->Value.BufferValueType;
     } else if (TargetStatement->HiiStatement->Operand == EFI_IFR_NUMERIC_OP && StatementValue->Type == EFI_IFR_TYPE_NUM_SIZE_64) {
       //
       // Redfish only has numeric value type and it does not care about the value size.
@@ -794,6 +1098,11 @@ RedfishPlatformConfigProtocolSetValue (
         Status = EFI_OUT_OF_RESOURCES;
         goto RELEASE_RESOURCE;
       }
+      break;
+    case REDFISH_VALUE_TYPE_STRING_ARRAY:
+      NewValue.Type = EFI_IFR_TYPE_STRING;
+      NewValue.BufferLen = (UINT16)Value.ArrayCount;
+      NewValue.Buffer = (UINT8 *)Value.Value.ArrayBuffer;
       break;
     default:
       ASSERT (FALSE);
