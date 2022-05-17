@@ -269,7 +269,8 @@
   gEmulatorPkgTokenSpaceGuid.PcdEmuGop|L"GOP Window"
   gEmulatorPkgTokenSpaceGuid.PcdEmuFileSystem|L"."
   gEmulatorPkgTokenSpaceGuid.PcdEmuSerialPort|L"/dev/ttyS0"
-  gEmulatorPkgTokenSpaceGuid.PcdEmuNetworkInterface|L"1"
+  #gEmulatorPkgTokenSpaceGuid.PcdEmuNetworkInterface|L"1"
+  gEmulatorPkgTokenSpaceGuid.PcdEmuNetworkInterface|L"5"
 
   gEmulatorPkgTokenSpaceGuid.PcdEmuCpuModel|L"Intel(R) Processor Model"
   gEmulatorPkgTokenSpaceGuid.PcdEmuCpuSpeed|L"3000"
@@ -284,7 +285,8 @@
   # Below is the MAC address of network adapter on EDK2 Emulator platform.
   # You can use ifconfig under EFI shell to get the MAC address of network adapter on EDK2 Emulator platform.
   #
-  gEfiRedfishPkgTokenSpaceGuid.PcdRedfishRestExServiceDevicePath.DevicePath|{DEVICE_PATH("MAC(34298F749107,0x1)")}
+  #gEfiRedfishPkgTokenSpaceGuid.PcdRedfishRestExServiceDevicePath.DevicePath|{DEVICE_PATH("MAC(34298F749107,0x1)")}
+  gEfiRedfishPkgTokenSpaceGuid.PcdRedfishRestExServiceDevicePath.DevicePath|{DEVICE_PATH("MAC(14CB19687C05,0x1)")}
   gEfiRedfishPkgTokenSpaceGuid.PcdRedfishRestExServiceAccessModeInBand|False
   gEfiRedfishPkgTokenSpaceGuid.PcdRedfishDiscoverAccessModeInBand|False
   gEmulatorPkgTokenSpaceGuid.PcdRedfishServieStopIfSecureBootDisabled|False
