@@ -96,7 +96,6 @@ OrderedListSetArrayData (
   }
 }
 
-
 /**
   Return data element in an Array by its Index in ordered list array buffer.
 
@@ -142,7 +141,6 @@ OrderedListGetArrayData (
 
   return Data;
 }
-
 
 /**
   Find string ID of option if its value equals to given value.
@@ -199,12 +197,12 @@ OrderedListOptionValueToStringId (
   @param[in]  Value1        Firt value to compare.
   @param[in]  Value2        Second value to be compared.
 
-  @retval UINTN         0 is retuned when two values are equal.
+  @retval INTN          0 is retuned when two values are equal.
                         1 is returned when first value is greater than second value.
                         -1 is returned when second value is greater than first value.
 
 **/
-UINTN
+INTN
 CompareHiiStatementValue (
   IN HII_STATEMENT_VALUE  *Value1,
   IN HII_STATEMENT_VALUE  *Value2
@@ -215,7 +213,7 @@ CompareHiiStatementValue (
   UINT64 Data2;
 
   if (Value1 == NULL || Value2 == NULL) {
-    return 0xFF;
+    return -1;
   }
 
   switch (Value1->Type) {
@@ -235,7 +233,7 @@ CompareHiiStatementValue (
       Data1 = (Value1->Value.b ? 1 : 0);
       break;
     default:
-      return 0xFF;
+      return -1;
   }
 
   switch (Value2->Type) {
@@ -255,7 +253,7 @@ CompareHiiStatementValue (
       Data2 = (Value2->Value.b ? 1 : 0);
       break;
     default:
-      return 0xFF;
+      return -1;
   }
 
   Result = (Data1 == Data2 ? 0 : (Data1 > Data2 ? 1 : -1));
@@ -450,7 +448,7 @@ RedfishNumericToHiiValue (
 }
 
 /**
-  Dump the vlaue in ordered list buffer.
+  Dump the value in ordered list buffer.
 
   @param[in]   OrderedListStatement Ordered list statement.
 
@@ -696,7 +694,6 @@ StrToUnicodeStr (
   return Buffer;
 }
 
-
 /**
   Return the full Redfish schema string from the given Schema and Version.
 
@@ -916,8 +913,8 @@ RedfishPlatformConfigProtocolGetValue (
         goto RELEASE_RESOURCE;
       }
 
-      Value->Value.ArrayBuffer = AllocatePool (sizeof (CHAR8 *) * Count);
-      if (Value->Value.ArrayBuffer == NULL) {
+      Value->Value.StringArray = AllocatePool (sizeof (CHAR8 *) * Count);
+      if (Value->Value.StringArray == NULL) {
         ASSERT (FALSE);
         Status = EFI_OUT_OF_RESOURCES;
         goto RELEASE_RESOURCE;
@@ -925,7 +922,7 @@ RedfishPlatformConfigProtocolGetValue (
 
       for (Index = 0; Index < Count; Index++) {
         ASSERT (StringIdArray[Index] != 0);
-        Value->Value.ArrayBuffer[Index] = HiiGetRedfishAsciiString (TargetStatement->ParentForm->ParentFormset->HiiHandle, FullSchema, StringIdArray[Index]);
+        Value->Value.StringArray[Index] = HiiGetRedfishAsciiString (TargetStatement->ParentForm->ParentFormset->HiiHandle, FullSchema, StringIdArray[Index]);
       }
 
       Value->ArrayCount = Count;
@@ -1024,7 +1021,7 @@ RedfishPlatformConfigSetStatementCommon (
   EFI_STATUS                                Status;
   REDFISH_PLATFORM_CONFIG_STATEMENT_PRIVATE *TargetStatement;
   EFI_STRING                                TempBuffer;
-  UINT8                                     *ArrayBuffer;
+  UINT8                                     *StringArray;
   UINTN                                     Index;
   UINT64                                    Value;
   CHAR8                                     **CharArray;
@@ -1034,7 +1031,7 @@ RedfishPlatformConfigSetStatementCommon (
   }
 
   TempBuffer = NULL;
-  ArrayBuffer = NULL;
+  StringArray = NULL;
 
   Status = ProcessPendingList (&RedfishPlatformConfigPrivate->FormsetList, &RedfishPlatformConfigPrivate->PendingList);
   if (EFI_ERROR (Status)) {
@@ -1076,8 +1073,8 @@ RedfishPlatformConfigSetStatementCommon (
       // We treat ordered list type as string in Redfish. But ordered list statement is not
       // in string format from HII point of view. Do a patch here.
       //
-      ArrayBuffer = AllocateZeroPool (TargetStatement->HiiStatement->StorageWidth);
-      if (ArrayBuffer == NULL) {
+      StringArray = AllocateZeroPool (TargetStatement->HiiStatement->StorageWidth);
+      if (StringArray == NULL) {
         return EFI_OUT_OF_RESOURCES;
       }
 
@@ -1097,11 +1094,11 @@ RedfishPlatformConfigSetStatementCommon (
           continue;
         }
         FreePool (TempBuffer);
-        OrderedListSetArrayData (ArrayBuffer, TargetStatement->HiiStatement->Value.BufferValueType, Index, Value);
+        OrderedListSetArrayData (StringArray, TargetStatement->HiiStatement->Value.BufferValueType, Index, Value);
       }
 
       StatementValue->Type = EFI_IFR_TYPE_BUFFER;
-      StatementValue->Buffer = ArrayBuffer;
+      StatementValue->Buffer = StringArray;
       StatementValue->BufferLen = TargetStatement->HiiStatement->StorageWidth;
       StatementValue->BufferValueType = TargetStatement->HiiStatement->Value.BufferValueType;
     } else if (TargetStatement->HiiStatement->Operand == EFI_IFR_NUMERIC_OP && StatementValue->Type == EFI_IFR_TYPE_NUM_SIZE_64) {
@@ -1197,7 +1194,7 @@ RedfishPlatformConfigProtocolSetValue (
     case REDFISH_VALUE_TYPE_STRING_ARRAY:
       NewValue.Type = EFI_IFR_TYPE_STRING;
       NewValue.BufferLen = (UINT16)Value.ArrayCount;
-      NewValue.Buffer = (UINT8 *)Value.Value.ArrayBuffer;
+      NewValue.Buffer = (UINT8 *)Value.Value.StringArray;
       break;
     default:
       ASSERT (FALSE);
@@ -1219,13 +1216,13 @@ RELEASE_RESOURCE:
 }
 
 /**
-  Get the list of Configure Language from platform configuration by the given Schema and Pattern.
+  Get the list of Configure Language from platform configuration by the given Schema and RegexPattern.
 
   @param[in]   This                Pointer to EDKII_REDFISH_PLATFORM_CONFIG_PROTOCOL instance.
   @param[in]   Schema              The Redfish schema to query.
   @param[in]   Version             The Redfish version to query.
-  @param[in]   Pattern             The target Configure Language pattern.
-  @param[out]  ConfigureLangList         The list of Configure Language.
+  @param[in]   RegexPattern        The target Configure Language pattern. This is used for regular expression matching.
+  @param[out]  ConfigureLangList   The list of Configure Language.
   @param[out]  Count               The number of Configure Language in ConfigureLangList.
 
   @retval EFI_SUCCESS              ConfigureLangList is returned successfully.
@@ -1238,7 +1235,7 @@ RedfishPlatformConfigProtocolGetConfigureLang (
   IN     EDKII_REDFISH_PLATFORM_CONFIG_PROTOCOL *This,
   IN     CHAR8                                  *Schema,
   IN     CHAR8                                  *Version,
-  IN     EFI_STRING                             Pattern,
+  IN     EFI_STRING                             RegexPattern,
   OUT    EFI_STRING                             **ConfigureLangList,
   OUT    UINTN                                  *Count
   )
@@ -1253,7 +1250,7 @@ RedfishPlatformConfigProtocolGetConfigureLang (
   UINTN                                           Index;
   CHAR8                                           *FullSchema;
 
-  if (This == NULL || IS_EMPTY_STRING (Schema) || IS_EMPTY_STRING (Version) || Count == NULL || ConfigureLangList == NULL || IS_EMPTY_STRING (Pattern)) {
+  if (This == NULL || IS_EMPTY_STRING (Schema) || IS_EMPTY_STRING (Version) || Count == NULL || ConfigureLangList == NULL || IS_EMPTY_STRING (RegexPattern)) {
     return EFI_INVALID_PARAMETER;
   }
 
@@ -1277,7 +1274,7 @@ RedfishPlatformConfigProtocolGetConfigureLang (
              RedfishPlatformConfigPrivate->RegularExpressionProtocol,
              &RedfishPlatformConfigPrivate->FormsetList,
              FullSchema,
-             Pattern,
+             RegexPattern,
              &StatementList
              );
   if (EFI_ERROR (Status)) {
@@ -1326,7 +1323,6 @@ RELEASE_RESOURCE:
 
   return Status;
 }
-
 
 /**
   Get the list of supported Redfish schema from paltform configuration on give HII handle.
@@ -1593,23 +1589,6 @@ HiiDatabaseProtocolInstalled (
     DEBUG ((DEBUG_ERROR, "%a, RegisterPackageNotify for EFI_HII_DATABASE_NOTIFY_NEW_PACK failure: %r\n", __FUNCTION__, Status));
   }
 
-#if REDFISH_PLATFORM_CONFIG_DELETE_EXPIRED_FORMSET
-  //
-  // Register package notification when new form package is removed.
-  //
-  Status = mRedfishPlatformConfigPrivate->HiiDatabase->RegisterPackageNotify (
-                                             mRedfishPlatformConfigPrivate->HiiDatabase,
-                                             EFI_HII_PACKAGE_FORMS,
-                                             NULL,
-                                             RedfishPlatformConfigFormUpdateNotify,
-                                             EFI_HII_DATABASE_NOTIFY_REMOVE_PACK,
-                                             &mRedfishPlatformConfigPrivate->NotifyHandle
-                                             );
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, RegisterPackageNotify for EFI_HII_DATABASE_NOTIFY_NEW_PACK failure: %r\n", __FUNCTION__, Status));
-  }
-#endif
-
   gBS->CloseEvent (Event);
   mRedfishPlatformConfigPrivate->HiiDbNotify.ProtocolEvent = NULL;
 
@@ -1707,7 +1686,6 @@ RedfishPlatformConfigDxeUnload (
 
   return EFI_SUCCESS;
 }
-
 
 /**
   This is the declaration of an EFI image entry point. This entry point is
