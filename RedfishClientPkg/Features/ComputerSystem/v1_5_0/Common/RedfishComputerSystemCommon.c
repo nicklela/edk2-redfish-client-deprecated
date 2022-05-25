@@ -358,7 +358,7 @@ RedfishConsumeResourceCommon (
     //
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Boot/BootOrder");
     if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettingsArrayType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->BootOrder);
+      Status = ApplyFeatureSettingsStringArrayType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->BootOrder);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -724,9 +724,9 @@ ProvisioningProperties (
     // Handle BOOT->BOOTORDER
     //
     if (PropertyChecker (ComputerSystemCs->Boot->BootOrder, ProvisionMode)) {
-      ArrayValue = GetPropertyArrayValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootOrder", ConfigureLang, &ArraySize);
+      ArrayValue = GetPropertyStringArrayValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootOrder", ConfigureLang, &ArraySize);
       if (ArrayValue != NULL && ArraySize > 0) {
-        if (ProvisionMode || !CompareRedfishArrayValues (ComputerSystemCs->Boot->BootOrder, ArrayValue, ArraySize)) {
+        if (ProvisionMode || !CompareRedfishStringArrayValues (ComputerSystemCs->Boot->BootOrder, ArrayValue, ArraySize)) {
           Status = AddRedfishCharArray (&ComputerSystemCs->Boot->BootOrder, ArrayValue, ArraySize);
           PropertyChanged = TRUE;
         }

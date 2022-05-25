@@ -152,7 +152,7 @@ ApplyFeatureSettingsBooleanType (
 
 /**
 
-  Apply property value to UEFI HII database in array type.
+  Apply property value to UEFI HII database in string array type.
 
   @param[in]  Schema        Property schema.
   @param[in]  Version       Property schema version.
@@ -164,7 +164,7 @@ ApplyFeatureSettingsBooleanType (
 
 **/
 EFI_STATUS
-ApplyFeatureSettingsArrayType (
+ApplyFeatureSettingsStringArrayType (
   IN  CHAR8                 *Schema,
   IN  CHAR8                 *Version,
   IN  EFI_STRING            ConfigureLang,
@@ -471,7 +471,7 @@ CheckEtag (
 
 /**
 
-  Get the property value in array type.
+  Get the property string value in array type.
 
   @param[in]  Schema        Schema of this property.
   @param[in]  Version       Schema version.
@@ -483,7 +483,7 @@ CheckEtag (
 
 **/
 CHAR8 **
-GetPropertyArrayValue (
+GetPropertyStringArrayValue (
   IN  CHAR8               *Schema,
   IN  CHAR8               *Version,
   IN  EFI_STRING          PropertyName,
@@ -529,8 +529,8 @@ AddRedfishCharArray (
 
 /**
 
-  Check and see if value in Redfish array are all the same as the one from
-  HII configuration.
+  Check and see if value in Redfish string array are all the same as the one
+  from HII configuration.
 
   @param[in]  Head          The head of string array.
   @param[in]  StringArray   Input string array.
@@ -542,7 +542,7 @@ AddRedfishCharArray (
 
 **/
 BOOLEAN
-CompareRedfishArrayValues (
+CompareRedfishStringArrayValues (
   IN RedfishCS_char_Array *Head,
   IN CHAR8                **StringArray,
   IN UINTN                ArraySize

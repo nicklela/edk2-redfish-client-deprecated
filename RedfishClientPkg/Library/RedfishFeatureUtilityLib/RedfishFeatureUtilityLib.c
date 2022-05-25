@@ -448,7 +448,7 @@ ApplyFeatureSettingsBooleanType (
 
 /**
 
-  Release the memory in RedfishValue while value type is string array.
+  Release the memory in RedfishValue while value type is array.
 
   @param[in]  RedfishValue   Pointer to Redfish value
 
@@ -460,24 +460,37 @@ FreeArrayTypeRedfishValue (
 {
   UINTN Index;
 
-  if (RedfishValue == NULL || RedfishValue->Type != REDFISH_VALUE_TYPE_STRING_ARRAY) {
+  if (RedfishValue == NULL) {
     return;
   }
 
-  for (Index = 0; Index < RedfishValue->ArrayCount; Index++) {
-    FreePool (RedfishValue->Value.ArrayBuffer[Index]);
+  if (RedfishValue->Type != REDFISH_VALUE_TYPE_INTEGER_ARRAY && RedfishValue->Type != REDFISH_VALUE_TYPE_STRING_ARRAY) {
+    return;
   }
 
-  FreePool (RedfishValue->Value.ArrayBuffer);
+  switch (RedfishValue->Type) {
+    case REDFISH_VALUE_TYPE_STRING_ARRAY:
+      for (Index = 0; Index < RedfishValue->ArrayCount; Index++) {
+        FreePool (RedfishValue->Value.StringArray[Index]);
+      }
+      FreePool (RedfishValue->Value.StringArray);
+      RedfishValue->Value.StringArray = NULL;
+      break;
+    case REDFISH_VALUE_TYPE_INTEGER_ARRAY:
+      FreePool (RedfishValue->Value.IntegerArray);
+      RedfishValue->Value.IntegerArray = NULL;
+      break;
+    default:
+      return;
+  }
 
   RedfishValue->ArrayCount = 0;
-  RedfishValue->Value.ArrayBuffer = NULL;
 }
 
 
 /**
 
-  Apply property value to UEFI HII database in array type.
+  Apply property value to UEFI HII database in string array type.
 
   @param[in]  Schema        Property schema.
   @param[in]  Version       Property schema version.
@@ -489,7 +502,7 @@ FreeArrayTypeRedfishValue (
 
 **/
 EFI_STATUS
-ApplyFeatureSettingsArrayType (
+ApplyFeatureSettingsStringArrayType (
   IN  CHAR8                 *Schema,
   IN  CHAR8                 *Version,
   IN  EFI_STRING            ConfigureLang,
@@ -521,7 +534,7 @@ ApplyFeatureSettingsArrayType (
     //
     // If there is no change in array, do nothing
     //
-    if (!CompareRedfishArrayValues (ArrayHead, RedfishValue.Value.ArrayBuffer, RedfishValue.ArrayCount)) {
+    if (!CompareRedfishStringArrayValues (ArrayHead, RedfishValue.Value.StringArray, RedfishValue.ArrayCount)) {
       //
       // Apply settings from redfish
       //
@@ -541,8 +554,8 @@ ApplyFeatureSettingsArrayType (
       //
       // Allocate pool for new values
       //
-      RedfishValue.Value.ArrayBuffer = AllocatePool (RedfishValue.ArrayCount *sizeof (CHAR8 *));
-      if (RedfishValue.Value.ArrayBuffer == NULL) {
+      RedfishValue.Value.StringArray = AllocatePool (RedfishValue.ArrayCount *sizeof (CHAR8 *));
+      if (RedfishValue.Value.StringArray == NULL) {
         ASSERT (FALSE);
         return EFI_OUT_OF_RESOURCES;
       }
@@ -550,8 +563,8 @@ ApplyFeatureSettingsArrayType (
       Buffer = ArrayHead;
       Index = 0;
       while (Buffer != NULL) {
-        RedfishValue.Value.ArrayBuffer[Index] = AllocateCopyPool (AsciiStrSize (Buffer->ArrayValue), Buffer->ArrayValue);
-        if (RedfishValue.Value.ArrayBuffer[Index] == NULL) {
+        RedfishValue.Value.StringArray[Index] = AllocateCopyPool (AsciiStrSize (Buffer->ArrayValue), Buffer->ArrayValue);
+        if (RedfishValue.Value.StringArray[Index] == NULL) {
           ASSERT (FALSE);
           return EFI_OUT_OF_RESOURCES;
         }
@@ -1627,7 +1640,7 @@ GetAttributeNameFromConfigLanguage (
 
 /**
 
-  Get the property value in array type.
+  Get the property string value in array type.
 
   @param[in]  Schema        Schema of this property.
   @param[in]  Version       Schema version.
@@ -1639,7 +1652,7 @@ GetAttributeNameFromConfigLanguage (
 
 **/
 CHAR8 **
-GetPropertyArrayValue (
+GetPropertyStringArrayValue (
   IN  CHAR8               *Schema,
   IN  CHAR8               *Version,
   IN  EFI_STRING          PropertyName,
@@ -1690,7 +1703,7 @@ GetPropertyArrayValue (
 
   *ArraySize = RedfishValue.ArrayCount;
   for (Index = 0; Index < RedfishValue.ArrayCount; Index++) {
-    StringArray[Index] = RedfishValue.Value.ArrayBuffer[Index];
+    StringArray[Index] = RedfishValue.Value.StringArray[Index];
   }
 
   return StringArray;
@@ -1972,8 +1985,8 @@ AddRedfishCharArray (
 
 /**
 
-  Check and see if value in Redfish array are all the same as the one from
-  HII configuration.
+  Check and see if value in Redfish string array are all the same as the one
+  from HII configuration.
 
   @param[in]  Head          The head of string array.
   @param[in]  StringArray   Input string array.
@@ -1985,7 +1998,7 @@ AddRedfishCharArray (
 
 **/
 BOOLEAN
-CompareRedfishArrayValues (
+CompareRedfishStringArrayValues (
   IN RedfishCS_char_Array *Head,
   IN CHAR8                **StringArray,
   IN UINTN                ArraySize
