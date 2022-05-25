@@ -103,7 +103,7 @@ UpdateConfigLanguageToValues (
     return EFI_INVALID_LANGUAGE;
   }
 
-  UnicodeSPrint (ConfigLanguage, sizeof (ConfigLanguage), L"Boot%04x", Index, BootOption->OptionNumber);
+  UnicodeSPrint (ConfigLanguage, sizeof (ConfigLanguage), L"Boot%04x", BootOption->OptionNumber);
 
   DEBUG ((DEBUG_INFO, "%a, add config-language for string(%d): %s\n", __FUNCTION__, StringId, ConfigLanguage));
 
