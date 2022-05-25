@@ -446,6 +446,34 @@ ApplyFeatureSettingsBooleanType (
   return Status;
 }
 
+/**
+
+  Release the memory in RedfishValue while value type is string array.
+
+  @param[in]  RedfishValue   Pointer to Redfish value
+
+**/
+VOID
+FreeArrayTypeRedfishValue (
+  EDKII_REDFISH_VALUE *RedfishValue
+  )
+{
+  UINTN Index;
+
+  if (RedfishValue == NULL || RedfishValue->Type != REDFISH_VALUE_TYPE_STRING_ARRAY) {
+    return;
+  }
+
+  for (Index = 0; Index < RedfishValue->ArrayCount; Index++) {
+    FreePool (RedfishValue->Value.ArrayBuffer[Index]);
+  }
+
+  FreePool (RedfishValue->Value.ArrayBuffer);
+
+  RedfishValue->ArrayCount = 0;
+  RedfishValue->Value.ArrayBuffer = NULL;
+}
+
 
 /**
 
@@ -454,8 +482,7 @@ ApplyFeatureSettingsBooleanType (
   @param[in]  Schema        Property schema.
   @param[in]  Version       Property schema version.
   @param[in]  ConfigureLang Configure language refers to this property.
-  @param[in]  ArrayValues   String values in array.
-  @param[in]  ArraySize     Size of ArrayValues.
+  @param[in]  ArrayHead     Head of array value.
 
   @retval     EFI_SUCCESS     New value is applied successfully.
   @retval     Others          Errors occur.
@@ -463,23 +490,20 @@ ApplyFeatureSettingsBooleanType (
 **/
 EFI_STATUS
 ApplyFeatureSettingsArrayType (
-  IN  CHAR8      *Schema,
-  IN  CHAR8      *Version,
-  IN  EFI_STRING ConfigureLang,
-  IN  CHAR8      **ArrayValues,
-  IN  UINTN      ArraySize
+  IN  CHAR8                 *Schema,
+  IN  CHAR8                 *Version,
+  IN  EFI_STRING            ConfigureLang,
+  IN  RedfishCS_char_Array  *ArrayHead
   )
 {
-  EFI_STATUS          Status;
-  EDKII_REDFISH_VALUE RedfishValue;
-  UINTN               Index;
-  BOOLEAN             ValueChanged;
+  EFI_STATUS            Status;
+  EDKII_REDFISH_VALUE   RedfishValue;
+  UINTN                 Index;
+  RedfishCS_char_Array  *Buffer;
 
-  if (IS_EMPTY_STRING (Schema) || IS_EMPTY_STRING (Version) || IS_EMPTY_STRING (ConfigureLang) || ArrayValues == NULL || ArraySize == 0) {
+  if (IS_EMPTY_STRING (Schema) || IS_EMPTY_STRING (Version) || IS_EMPTY_STRING (ConfigureLang) || ArrayHead == NULL) {
     return EFI_INVALID_PARAMETER;
   }
-
-  ValueChanged = FALSE;
 
   //
   // Get the current value from HII
@@ -494,28 +518,48 @@ ApplyFeatureSettingsArrayType (
       return EFI_DEVICE_ERROR;
     }
 
-    if (ArraySize != RedfishValue.ArrayCount) {
-      ValueChanged = TRUE;
-    } else {
-      for (Index = 0; Index < ArraySize; Index++) {
-        if (AsciiStrCmp (ArrayValues[Index], RedfishValue.Value.ArrayBuffer[Index]) != 0) {
-          ValueChanged = TRUE;
-          break;
-        }
-      }
-    }
-
-    if (ValueChanged) {
+    //
+    // If there is no change in array, do nothing
+    //
+    if (!CompareRedfishArrayValues (ArrayHead, RedfishValue.Value.ArrayBuffer, RedfishValue.ArrayCount)) {
       //
       // Apply settings from redfish
       //
       DEBUG ((DEBUG_INFO, "%a, %a.%a apply %s for array\n", __FUNCTION__, Schema, Version, ConfigureLang));
-      FreeStringArray (RedfishValue.Value.ArrayBuffer, RedfishValue.ArrayCount);
+      FreeArrayTypeRedfishValue (&RedfishValue);
 
-      RedfishValue.ArrayCount = ArraySize;
-      for (Index = 0; Index < ArraySize; Index++) {
-        RedfishValue.Value.ArrayBuffer[Index] = ArrayValues[Index];
+      //
+      // Convert array from RedfishCS_char_Array to EDKII_REDFISH_VALUE
+      //
+      RedfishValue.ArrayCount = 0;
+      Buffer = ArrayHead;
+      while (Buffer != NULL) {
+        RedfishValue.ArrayCount += 1;
+        Buffer = Buffer->Next;
       }
+
+      //
+      // Allocate pool for new values
+      //
+      RedfishValue.Value.ArrayBuffer = AllocatePool (RedfishValue.ArrayCount *sizeof (CHAR8 *));
+      if (RedfishValue.Value.ArrayBuffer == NULL) {
+        ASSERT (FALSE);
+        return EFI_OUT_OF_RESOURCES;
+      }
+
+      Buffer = ArrayHead;
+      Index = 0;
+      while (Buffer != NULL) {
+        RedfishValue.Value.ArrayBuffer[Index] = AllocateCopyPool (AsciiStrSize (Buffer->ArrayValue), Buffer->ArrayValue);
+        if (RedfishValue.Value.ArrayBuffer[Index] == NULL) {
+          ASSERT (FALSE);
+          return EFI_OUT_OF_RESOURCES;
+        }
+        Buffer = Buffer->Next;
+        Index++;
+      }
+
+      ASSERT (Index <= RedfishValue.ArrayCount);
 
       Status = RedfishPlatformConfigSetValue (Schema, Version, ConfigureLang, RedfishValue);
       if (EFI_ERROR (Status)) {
@@ -767,6 +811,117 @@ RedfishFeatureGetUnifiedArrayTypeConfigureLang (
 
 /**
 
+  Find "ETag" and "Location" from either HTTP header or Redfish response.
+
+  @param[in]  Response    HTTP response
+  @param[out] Etag        String buffer to return ETag
+  @param[out] Location    String buffer to return Location
+
+  @retval     EFI_SUCCESS     Data is found and returned.
+  @retval     Others          Errors occur.
+
+**/
+EFI_STATUS
+GetEtagAndLocation (
+  IN  REDFISH_RESPONSE  *Response,
+  OUT CHAR8             **Etag,       OPTIONAL
+  OUT EFI_STRING        *Location    OPTIONAL
+  )
+{
+  EDKII_JSON_VALUE   JsonValue;
+  EDKII_JSON_VALUE   OdataValue;
+  CHAR8              *OdataString;
+  CHAR8              *AsciiLocation;
+  EFI_HTTP_HEADER    *Header;
+  EFI_STATUS         Status;
+
+  if (Response == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  if (Etag == NULL && Location == NULL) {
+    return EFI_SUCCESS;
+  }
+
+  Status = EFI_SUCCESS;
+
+  if (Etag != NULL) {
+    *Etag = NULL;
+
+    if (*(Response->StatusCode) == HTTP_STATUS_200_OK) {
+      Header = HttpFindHeader (Response->HeaderCount, Response->Headers, HTTP_HEADER_ETAG);
+      if (Header != NULL) {
+        *Etag = AllocateCopyPool (AsciiStrSize (Header->FieldValue), Header->FieldValue);
+        ASSERT (*Etag != NULL);
+      }
+    }
+
+    //
+    // No header is returned. Search payload for location.
+    //
+    if (*Etag == NULL && Response->Payload != NULL) {
+      JsonValue = RedfishJsonInPayload (Response->Payload);
+      if (JsonValue != NULL) {
+        OdataValue = JsonObjectGetValue (JsonValueGetObject (JsonValue), "@odata.etag");
+        if (OdataValue != NULL) {
+          OdataString = (CHAR8 *)JsonValueGetAsciiString (OdataValue);
+          if (OdataString != NULL) {
+            *Etag = AllocateCopyPool (AsciiStrSize (OdataString), OdataString);
+            ASSERT (*Etag != NULL);
+          }
+        }
+
+        JsonValueFree (JsonValue);
+      }
+    }
+
+    if (*Etag == NULL) {
+      Status = EFI_NOT_FOUND;
+    }
+  }
+
+  if (Location != NULL) {
+    *Location = NULL;
+
+    if (*(Response->StatusCode) == HTTP_STATUS_200_OK) {
+      Header = HttpFindHeader (Response->HeaderCount, Response->Headers, HTTP_HEADER_LOCATION);
+      if (Header != NULL) {
+        AsciiLocation = AllocateCopyPool (AsciiStrSize (Header->FieldValue), Header->FieldValue);
+        ASSERT (AsciiLocation != NULL);
+      }
+    }
+
+    //
+    // No header is returned. Search payload for location.
+    //
+    if (*Location == NULL && Response->Payload != NULL) {
+      JsonValue = RedfishJsonInPayload (Response->Payload);
+      if (JsonValue != NULL) {
+        OdataValue = JsonObjectGetValue (JsonValueGetObject (JsonValue), "@odata.id");
+        if (OdataValue != NULL) {
+          OdataString = (CHAR8 *)JsonValueGetAsciiString (OdataValue);
+          if (OdataString != NULL) {
+            AsciiLocation = AllocateCopyPool (AsciiStrSize (OdataString), OdataString);
+            ASSERT (AsciiLocation != NULL);
+          }
+        }
+
+        JsonValueFree (JsonValue);
+      }
+    }
+
+    if (AsciiLocation != NULL) {
+      *Location = StrAsciiToUnicode (AsciiLocation);
+      FreePool (AsciiLocation);
+    } else {
+      Status = EFI_NOT_FOUND;
+    }
+  }
+
+  return Status;
+}
+/**
+
   Create HTTP payload and send them to redfish service with PATCH method.
 
   @param[in]  Service         Redfish service.
@@ -790,10 +945,6 @@ CreatePayloadToPatchResource (
   EDKII_JSON_VALUE   ResourceJsonValue;
   REDFISH_RESPONSE   PostResponse;
   EFI_STATUS         Status;
-  UINTN              Index;
-  EDKII_JSON_VALUE   JsonValue;
-  EDKII_JSON_VALUE   OdataIdValue;
-  CHAR8              *OdataIdString;
 
   if (Service == NULL || TargetPayload == NULL || IS_EMPTY_STRING (Json) || Etag == NULL) {
     return EFI_INVALID_PARAMETER;
@@ -814,33 +965,12 @@ CreatePayloadToPatchResource (
     goto EXIT_FREE_JSON_VALUE;
   }
 
-
   //
-  // Keep etag.
+  // Find ETag
   //
-  *Etag = NULL;
-  if (*PostResponse.StatusCode == HTTP_STATUS_200_OK) {
-    if (PostResponse.HeaderCount != 0) {
-      for (Index = 0; Index < PostResponse.HeaderCount; Index++) {
-        if (AsciiStrnCmp (PostResponse.Headers[Index].FieldName, "ETag", 4) == 0) {
-          *Etag = AllocateCopyPool (AsciiStrSize (PostResponse.Headers[Index].FieldValue), PostResponse.Headers[Index].FieldValue);
-        }
-      }
-    } else if (PostResponse.Payload != NULL) {
-      //
-      // No header is returned. Search payload for location.
-      //
-      JsonValue = RedfishJsonInPayload (PostResponse.Payload);
-      if (JsonValue != NULL) {
-        OdataIdValue = JsonObjectGetValue (JsonValueGetObject (JsonValue), "@odata.etag");
-        if (OdataIdValue != NULL) {
-          OdataIdString = (CHAR8 *)JsonValueGetAsciiString (OdataIdValue);
-          if (OdataIdString != NULL) {
-            *Etag = AllocateCopyPool (AsciiStrSize (OdataIdString), OdataIdString);
-          }
-        }
-      }
-    }
+  Status = GetEtagAndLocation (&PostResponse, Etag, NULL);
+  if (EFI_ERROR (Status)) {
+    Status = EFI_DEVICE_ERROR;
   }
 
   RedfishFreeResponse (
@@ -887,12 +1017,6 @@ CreatePayloadToPostResource (
   EDKII_JSON_VALUE   ResourceJsonValue;
   REDFISH_RESPONSE   PostResponse;
   EFI_STATUS         Status;
-  UINTN              Index;
-  EDKII_JSON_VALUE   JsonValue;
-  EDKII_JSON_VALUE   OdataIdValue;
-  CHAR8              *OdataIdString;
-  CHAR8              *AsciiLocation;
-  UINTN              StringSize;
 
   if (Service == NULL || TargetPayload == NULL || IS_EMPTY_STRING (Json) || Location == NULL || Etag == NULL) {
     return EFI_INVALID_PARAMETER;
@@ -916,47 +1040,8 @@ CreatePayloadToPostResource (
   //
   // per Redfish spec. the URL of new eresource will be returned in "Location" header.
   //
-  *Location = NULL;
-  AsciiLocation = NULL;
-  *Etag = NULL;
-  if (*PostResponse.StatusCode == HTTP_STATUS_200_OK) {
-    if (PostResponse.HeaderCount != 0) {
-      for (Index = 0; Index < PostResponse.HeaderCount; Index++) {
-        if (AsciiStrnCmp (PostResponse.Headers[Index].FieldName, "Location", 8) == 0) {
-          AsciiLocation = AllocateCopyPool (AsciiStrSize (PostResponse.Headers[Index].FieldValue), PostResponse.Headers[Index].FieldValue);
-        } else if (AsciiStrnCmp (PostResponse.Headers[Index].FieldName, "ETag", 4) == 0) {
-          *Etag = AllocateCopyPool (AsciiStrSize (PostResponse.Headers[Index].FieldValue), PostResponse.Headers[Index].FieldValue);
-        }
-      }
-    } else if (PostResponse.Payload != NULL) {
-      //
-      // No header is returned. Search payload for location.
-      //
-      JsonValue = RedfishJsonInPayload (PostResponse.Payload);
-      if (JsonValue != NULL) {
-        OdataIdValue = JsonObjectGetValue (JsonValueGetObject (JsonValue), "@odata.id");
-        if (OdataIdValue != NULL) {
-          OdataIdString = (CHAR8 *)JsonValueGetAsciiString (OdataIdValue);
-          if (OdataIdString != NULL) {
-            AsciiLocation = AllocateCopyPool (AsciiStrSize (OdataIdString), OdataIdString);
-          }
-        }
-
-        OdataIdValue = JsonObjectGetValue (JsonValueGetObject (JsonValue), "@odata.etag");
-        if (OdataIdValue != NULL) {
-          OdataIdString = (CHAR8 *)JsonValueGetAsciiString (OdataIdValue);
-          if (OdataIdString != NULL) {
-            *Etag = AllocateCopyPool (AsciiStrSize (OdataIdString), OdataIdString);
-          }
-        }
-      }
-    }
-  }
-
-  //
-  // This is not expected as service does not follow spec.
-  //
-  if (AsciiLocation == NULL) {
+  Status = GetEtagAndLocation (&PostResponse, Etag, Location);
+  if (EFI_ERROR (Status)) {
     Status = EFI_DEVICE_ERROR;
   }
 
@@ -970,20 +1055,7 @@ CreatePayloadToPostResource (
   RedfishCleanupPayload (Payload);
 
 EXIT_FREE_JSON_VALUE:
-  JsonValueFree (JsonValue);
   JsonValueFree (ResourceJsonValue);
-
-  if (AsciiLocation != NULL) {
-    StringSize = (AsciiStrLen (AsciiLocation) + 1);
-    *Location = AllocatePool (StringSize * sizeof (CHAR16));
-    if (*Location == NULL) {
-      Status = EFI_OUT_OF_RESOURCES;
-    } else {
-      Status = AsciiStrToUnicodeStrS (AsciiLocation, *Location, StringSize);
-    }
-
-    FreePool (AsciiLocation);
-  }
 
   return Status;
 }
@@ -1204,7 +1276,7 @@ GetConfigureLang (
     return ConfigLang;
   }
 
-  StringSize = StrSize (ConfigLang) + (AsciiStrLen (PropertyName) * sizeof (CHAR16));
+  StringSize = StrSize (ConfigLang) + ((AsciiStrLen (PropertyName) + 1) * sizeof (CHAR16));
   ResultStr = AllocatePool (StringSize);
   if (ResultStr == NULL) {
     return NULL;
@@ -1848,28 +1920,102 @@ MatchPropertyWithJsonContext (
   return (MatchObj == NULL ? FALSE : TRUE);
 }
 
-VOID
-FreeStringArray (
-  IN  CHAR8   **StringArray,
-  IN  UINTN   ArraySize
+/**
+
+  Create string array and append to arry node in Redfish JSON convert format.
+
+  @param[in,out]  Head          The head of string array.
+  @param[in]      StringArray   Input string array.
+  @param[in]      ArraySize     The size of StringArray.
+
+  @retval     EFI_SUCCESS       String array is created successfully.
+  @retval     Others            Error happens
+
+**/
+EFI_STATUS
+AddRedfishCharArray (
+  IN OUT  RedfishCS_char_Array **Head,
+  IN      CHAR8                 **StringArray,
+  IN      UINTN                 ArraySize
   )
 {
-  UINTN Index;
+  UINTN                                 Index;
+  RedfishCS_char_Array                  *CharArrayBuffer;
+  RedfishCS_char_Array                  *PreArrayBuffer;
 
-  if (StringArray == NULL || ArraySize == 0) {
-    return;
+  if (Head == NULL || StringArray == NULL || ArraySize == 0) {
+    return EFI_INVALID_PARAMETER;
   }
 
+  PreArrayBuffer = NULL;
   for (Index = 0; Index < ArraySize; Index++) {
-    if (StringArray[Index] != NULL) {
-      FreePool (StringArray[Index]);
+    CharArrayBuffer = AllocatePool (sizeof (RedfishCS_char_Array));
+    if (CharArrayBuffer == NULL) {
+      ASSERT (CharArrayBuffer != NULL);
+      continue;
     }
+
+    if (Index == 0) {
+     *Head = CharArrayBuffer;
+    }
+
+    CharArrayBuffer->ArrayValue = StringArray[Index];
+    CharArrayBuffer->Next = NULL;
+    if (PreArrayBuffer != NULL) {
+      PreArrayBuffer->Next = CharArrayBuffer;
+    }
+    PreArrayBuffer = CharArrayBuffer;
   }
 
-  FreePool (StringArray);
+  return EFI_SUCCESS;
 }
 
+/**
 
+  Check and see if value in Redfish array are all the same as the one from
+  HII configuration.
+
+  @param[in]  Head          The head of string array.
+  @param[in]  StringArray   Input string array.
+  @param[in]  ArraySize     The size of StringArray.
+
+  @retval     TRUE          All string in Redfish array are as same as string
+                            in HII configuration array.
+              FALSE         These two array are not identical.
+
+**/
+BOOLEAN
+CompareRedfishArrayValues (
+  IN RedfishCS_char_Array *Head,
+  IN CHAR8                **StringArray,
+  IN UINTN                ArraySize
+  )
+{
+  UINTN                 Index;
+  RedfishCS_char_Array  *CharArrayBuffer;
+
+  if (Head == NULL || StringArray == NULL || ArraySize == 0) {
+    return FALSE;
+  }
+
+  CharArrayBuffer = Head;
+  Index = 0;
+  while (CharArrayBuffer != NULL && Index < ArraySize) {
+
+    if (AsciiStrCmp (StringArray[Index], CharArrayBuffer->ArrayValue) != 0) {
+      break;
+    }
+
+    Index++;
+    CharArrayBuffer = CharArrayBuffer->Next;
+  }
+
+  if (CharArrayBuffer != NULL || Index < ArraySize) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
 
 /**
 

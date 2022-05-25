@@ -14,118 +14,6 @@ CHAR8 EmptyJson[] = "{\"@odata.id\": \"\", \"@odata.type\": \"#ComputerSystem.v1
 REDFISH_RESOURCE_COMMON_PRIVATE *mRedfishResourcePrivate = NULL;
 
 /**
-
-  Create string array and append to arry node in Redfish JSON convert format.
-
-  @param[in,out]  Head          The head of string array.
-  @param[in]      StringArray   Input string array.
-  @param[in]      ArraySize     The size of StringArray.
-
-  @retval     EFI_SUCCESS       String array is created successfully.
-  @retval     Others            Error happens
-
-**/
-EFI_STATUS
-AddRedfishCharArray (
-  IN OUT  RedfishCS_char_Array **Head,
-  IN      CHAR8                 **StringArray,
-  IN      UINTN                 ArraySize
-  )
-{
-  UINTN                                 Index;
-  RedfishCS_char_Array                  *CharArrayBuffer;
-  RedfishCS_char_Array                  *PreArrayBuffer;
-
-  if (Head == NULL || StringArray == NULL || ArraySize == 0) {
-    return EFI_INVALID_PARAMETER;
-  }
-
-  PreArrayBuffer = NULL;
-  for (Index = 0; Index < ArraySize; Index++) {
-    CharArrayBuffer = AllocatePool (sizeof (RedfishCS_char_Array));
-    if (CharArrayBuffer == NULL) {
-      ASSERT (CharArrayBuffer != NULL);
-      continue;
-    }
-
-    if (Index == 0) {
-     *Head = CharArrayBuffer;
-    }
-
-    CharArrayBuffer->ArrayValue = StringArray[Index];
-    CharArrayBuffer->Next = NULL;
-    if (PreArrayBuffer != NULL) {
-      PreArrayBuffer->Next = CharArrayBuffer;
-    }
-    PreArrayBuffer = CharArrayBuffer;
-  }
-
-  return EFI_SUCCESS;
-}
-
-
-/**
-
-  Create string array and append to arry node in Redfish JSON convert format.
-
-  @param[in,out]  Head          The head of string array.
-  @param[in]      StringArray   Output string array.
-  @param[in]      ArraySize     The size of StringArray in returned.
-
-  @retval     EFI_SUCCESS       String array is created successfully.
-  @retval     Others            Error happens
-
-**/
-EFI_STATUS
-RedfishCharArrayToStringArray (
-  IN OUT  RedfishCS_char_Array  *Head,
-  OUT     CHAR8                 ***StringArray,
-  OUT     UINTN                 *ArraySize
-  )
-{
-  UINTN                 Count;
-  UINTN                 Index;
-  CHAR8                 **ArrayBuffer;
-  RedfishCS_char_Array  *CharArrayBuffer;
-
-  if (Head == NULL || StringArray == NULL || ArraySize == NULL) {
-    return EFI_INVALID_PARAMETER;
-  }
-
-  *ArraySize = 0;
-  *StringArray = NULL;
-  Count = 0;
-  CharArrayBuffer = Head;
-  while (CharArrayBuffer != NULL) {
-    ++Count;
-    CharArrayBuffer = CharArrayBuffer->Next;
-  }
-
-  ArrayBuffer = AllocatePool (sizeof (CHAR8 *) * Count);
-  if (ArrayBuffer == NULL) {
-    return EFI_OUT_OF_RESOURCES;
-  }
-
-  *ArraySize = Count;
-
-  Index = 0;
-  CharArrayBuffer = Head;
-  while (CharArrayBuffer != NULL) {
-    ArrayBuffer[Index] = AllocateCopyPool (AsciiStrSize (CharArrayBuffer->ArrayValue), CharArrayBuffer->ArrayValue);
-    if (ArrayBuffer[Index] == NULL) {
-      return EFI_OUT_OF_RESOURCES;
-    }
-
-    Index++;
-    CharArrayBuffer = CharArrayBuffer->Next;
-  }
-
-  *StringArray = ArrayBuffer;
-
-  return EFI_SUCCESS;
-}
-
-/**
   Consume resource from given URI.
 
   @param[in]   This                Pointer to REDFISH_RESOURCE_COMMON_PRIVATE instance.
@@ -147,8 +35,6 @@ RedfishConsumeResourceCommon (
   EFI_REDFISH_COMPUTERSYSTEM_V1_5_0     *ComputerSystem;
   EFI_REDFISH_COMPUTERSYSTEM_V1_5_0_CS  *ComputerSystemCs;
   EFI_STRING                    ConfigureLang;
-  UINTN                         ArraySize;
-  CHAR8                         **ArrayValues;
 
   if (Private == NULL || IS_EMPTY_STRING (Json)) {
     return EFI_INVALID_PARAMETER;
@@ -471,17 +357,11 @@ RedfishConsumeResourceCommon (
     //
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Boot/BootOrder");
     if (ConfigureLang != NULL) {
-      Status = RedfishCharArrayToStringArray (ComputerSystemCs->Boot->BootOrder, &ArrayValues, &ArraySize);
+      Status = ApplyFeatureSettingsArrayType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->BootOrder);
       if (EFI_ERROR (Status)) {
-        DEBUG ((DEBUG_ERROR, "%a, RedfishCharArrayToStringArray failed: %r\n", __FUNCTION__, Status));
-      } else {
-        Status = ApplyFeatureSettingsArrayType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ArrayValues, ArraySize);
-        if (EFI_ERROR (Status)) {
-          DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
-        }
-
-        FreeStringArray (ArrayValues, ArraySize);
+        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
+
       FreePool (ConfigureLang);
     } else {
       DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
@@ -845,8 +725,10 @@ ProvisioningProperties (
     if (PropertyChecker (ComputerSystemCs->Boot->BootOrder, ProvisionMode)) {
       ArrayValue = GetPropertyArrayValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootOrder", ConfigureLang, &ArraySize);
       if (ArrayValue != NULL && ArraySize > 0) {
-        Status = AddRedfishCharArray (&ComputerSystemCs->Boot->BootOrder, ArrayValue, ArraySize);
-        PropertyChanged = TRUE;
+        if (ProvisionMode && !CompareRedfishArrayValues (ComputerSystemCs->Boot->BootOrder, ArrayValue, ArraySize)) {
+          Status = AddRedfishCharArray (&ComputerSystemCs->Boot->BootOrder, ArrayValue, ArraySize);
+          PropertyChanged = TRUE;
+        }
       }
     }
   }

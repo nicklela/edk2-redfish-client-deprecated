@@ -94,7 +94,6 @@ RedfishResourceConsumeResource (
   EFI_STATUS                    Status;
   REDFISH_RESPONSE              Response;
   CHAR8                         *Etag;
-  UINTN                         Index;
 
   if (This == NULL || IS_EMPTY_STRING (Uri)) {
     return EFI_INVALID_PARAMETER;
@@ -123,14 +122,9 @@ RedfishResourceConsumeResource (
   // Find etag in HTTP response header
   //
   Etag = NULL;
-  if (Response.StatusCode != NULL && *Response.StatusCode == HTTP_STATUS_200_OK) {
-    if (Response.HeaderCount > 0) {
-      for (Index = 0; Index < Response.HeaderCount; Index++) {
-        if (AsciiStrnCmp (Response.Headers[Index].FieldName, "ETag", 4) == 0) {
-          Etag = AllocateCopyPool (AsciiStrSize (Response.Headers[Index].FieldValue), Response.Headers[Index].FieldValue);
-        }
-      }
-    }
+  Status = GetEtagAndLocation (&Response, &Etag, NULL);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, failed to get ETag from HTTP header\n", __FUNCTION__));
   }
 
   Status = RedfishConsumeResourceCommon (Private, Private->Json, Etag);

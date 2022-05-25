@@ -13,6 +13,8 @@
 #include <Uefi.h>
 #include <RedfishBase.h>
 
+#include <IndustryStandard/Http11.h>
+
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
@@ -25,6 +27,7 @@
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <Library/UefiLib.h>
 #include <Library/PrintLib.h>
+#include <Library/HttpLib.h>
 
 #include <Guid/VariableFormat.h>
 
