@@ -2,7 +2,7 @@
 
   The implementation of EDKII Redfidh Platform Config Protocol.
 
-  (C) Copyright 2021 Hewlett Packard Enterprise Development LP<BR>
+  (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
