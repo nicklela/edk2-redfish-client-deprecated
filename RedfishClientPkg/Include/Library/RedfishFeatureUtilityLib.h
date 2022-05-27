@@ -173,6 +173,48 @@ ApplyFeatureSettingsStringArrayType (
 
 /**
 
+  Apply property value to UEFI HII database in numeric array type (INT64).
+
+  @param[in]  Schema        Property schema.
+  @param[in]  Version       Property schema version.
+  @param[in]  ConfigureLang Configure language refers to this property.
+  @param[in]  ArrayHead     Head of array value.
+
+  @retval     EFI_SUCCESS     New value is applied successfully.
+  @retval     Others          Errors occur.
+
+**/
+EFI_STATUS
+ApplyFeatureSettingsNumericArrayType (
+  IN  CHAR8                 *Schema,
+  IN  CHAR8                 *Version,
+  IN  EFI_STRING            ConfigureLang,
+  IN  RedfishCS_int64_Array  *ArrayHead
+  );
+
+/**
+
+  Apply property value to UEFI HII database in boolean array type (INT64).
+
+  @param[in]  Schema        Property schema.
+  @param[in]  Version       Property schema version.
+  @param[in]  ConfigureLang Configure language refers to this property.
+  @param[in]  ArrayHead     Head of Redfich CS boolean array value.
+
+  @retval     EFI_SUCCESS     New value is applied successfully.
+  @retval     Others          Errors occur.
+
+**/
+EFI_STATUS
+ApplyFeatureSettingsBooleanArrayType (
+  IN  CHAR8                 *Schema,
+  IN  CHAR8                 *Version,
+  IN  EFI_STRING            ConfigureLang,
+  IN  RedfishCS_bool_Array  *ArrayHead
+  );
+
+/**
+
   Create HTTP payload and send them to redfish service with POST method.
 
   @param[in]  Service         Redfish service.
@@ -493,6 +535,50 @@ GetPropertyStringArrayValue (
 
 /**
 
+  Get the property numeric value in array type.
+
+  @param[in]  Schema        Schema of this property.
+  @param[in]  Version       Schema version.
+  @param[in]  PropertyName  Property name.
+  @param[in]  ConfigureLang Configure Language of this property.
+  @param[out] ArraySize     The size of returned array.
+
+  @retval     INT64 **      Returned integer array. NULL while error happens.
+
+**/
+INT64 *
+GetPropertyNumericArrayValue (
+  IN  CHAR8               *Schema,
+  IN  CHAR8               *Version,
+  IN  EFI_STRING          PropertyName,
+  IN  EFI_STRING          ConfigureLang,
+  OUT UINTN               *ArraySize
+  );
+
+/**
+
+  Get the property boolean value in array type.
+
+  @param[in]  Schema        Schema of this property.
+  @param[in]  Version       Schema version.
+  @param[in]  PropertyName  Property name.
+  @param[in]  ConfigureLang Configure Language of this property.
+  @param[out] ArraySize     The size of returned array.
+
+  @retval     BOOLEAN *      Returned boolean array. NULL while error happens.
+
+**/
+BOOLEAN *
+GetPropertyBooleanArrayValue (
+  IN  CHAR8               *Schema,
+  IN  CHAR8               *Version,
+  IN  EFI_STRING          PropertyName,
+  IN  EFI_STRING          ConfigureLang,
+  OUT UINTN               *ArraySize
+  );
+
+/**
+
   Check and see if given property is in JSON context or not
 
   @param[in]  Property      Property name string
@@ -529,6 +615,43 @@ AddRedfishCharArray (
 
 /**
 
+  Create numeric array and append to arry node in Redfish JSON convert format.
+
+  @param[in,out]  Head           The head of string array.
+  @param[in]      NumericArray   Input numeric array.
+  @param[in]      ArraySize      The size of StringArray.
+
+  @retval     EFI_SUCCESS       String array is created successfully.
+  @retval     Others            Error happens
+
+**/
+EFI_STATUS
+AddRedfishNumericArray (
+  IN OUT  RedfishCS_int64_Array **Head,
+  IN      INT64                 *NumericArray,
+  IN      UINTN                 ArraySize
+  );
+
+/**
+
+  Create boolean array and append to arry node in Redfish JSON convert format.
+
+  @param[in,out]  Head           The head of string array.
+  @param[in]      BooleanArray   Input boolean array.
+  @param[in]      ArraySize      The size of BooleanArray.
+
+  @retval     EFI_SUCCESS       String array is created successfully.
+  @retval     Others            Error happens
+
+**/
+EFI_STATUS
+AddRedfishBooleanArray (
+  IN OUT  RedfishCS_bool_Array  **Head,
+  IN      BOOLEAN               *BooleanArray,
+  IN      UINTN                 ArraySize
+  );
+/**
+
   Check and see if value in Redfish string array are all the same as the one
   from HII configuration.
 
@@ -546,6 +669,48 @@ CompareRedfishStringArrayValues (
   IN RedfishCS_char_Array *Head,
   IN CHAR8                **StringArray,
   IN UINTN                ArraySize
+  );
+
+/**
+
+  Check and see if value in Redfish numeric array are all the same as the one
+  from HII configuration.
+
+  @param[in]  Head          The head of Redfish CS numeraic array.
+  @param[in]  NumericArray  Input numeric array.
+  @param[in]  ArraySize     The size of NumericArray.
+
+  @retval     TRUE          All string in Redfish array are as same as integer
+                            in HII configuration array.
+              FALSE         These two array are not identical.
+
+**/
+BOOLEAN
+CompareRedfishNumericArrayValues (
+  IN RedfishCS_int64_Array *Head,
+  IN INT64                 *NumericArray,
+  IN UINTN                 ArraySize
+  );
+
+/**
+
+  Check and see if value in Redfish boolean array are all the same as the one
+  from HII configuration.
+
+  @param[in]  Head          The head of Redfish CS boolean array.
+  @param[in]  BooleanArray  Input boolean array.
+  @param[in]  ArraySize     The size of BooleanArray.
+
+  @retval     TRUE          All string in Redfish array are as same as integer
+                            in HII configuration array.
+              FALSE         These two array are not identical.
+
+**/
+BOOLEAN
+CompareRedfishBooleanArrayValues (
+  IN RedfishCS_bool_Array  *Head,
+  IN BOOLEAN               *BooleanArray,
+  IN UINTN                 ArraySize
   );
 
 /**

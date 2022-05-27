@@ -476,10 +476,17 @@ FreeArrayTypeRedfishValue (
       FreePool (RedfishValue->Value.StringArray);
       RedfishValue->Value.StringArray = NULL;
       break;
+
     case REDFISH_VALUE_TYPE_INTEGER_ARRAY:
       FreePool (RedfishValue->Value.IntegerArray);
       RedfishValue->Value.IntegerArray = NULL;
       break;
+
+    case REDFISH_VALUE_TYPE_BOOLEAN_ARRAY:
+      FreePool (RedfishValue->Value.BooleanArray);
+      RedfishValue->Value.BooleanArray = NULL;
+      break;
+
     default:
       return;
   }
@@ -568,6 +575,194 @@ ApplyFeatureSettingsStringArrayType (
           ASSERT (FALSE);
           return EFI_OUT_OF_RESOURCES;
         }
+        Buffer = Buffer->Next;
+        Index++;
+      }
+
+      ASSERT (Index <= RedfishValue.ArrayCount);
+
+      Status = RedfishPlatformConfigSetValue (Schema, Version, ConfigureLang, RedfishValue);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply %s array failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, %a.%a %s array value has no change\n", __FUNCTION__, Schema, Version, ConfigureLang));
+    }
+  }
+
+  return Status;
+}
+
+/**
+
+  Apply property value to UEFI HII database in numeric array type (INT64).
+
+  @param[in]  Schema        Property schema.
+  @param[in]  Version       Property schema version.
+  @param[in]  ConfigureLang Configure language refers to this property.
+  @param[in]  ArrayHead     Head of array value.
+
+  @retval     EFI_SUCCESS     New value is applied successfully.
+  @retval     Others          Errors occur.
+
+**/
+EFI_STATUS
+ApplyFeatureSettingsNumericArrayType (
+  IN  CHAR8                 *Schema,
+  IN  CHAR8                 *Version,
+  IN  EFI_STRING            ConfigureLang,
+  IN  RedfishCS_int64_Array  *ArrayHead
+  )
+{
+  EFI_STATUS            Status;
+  EDKII_REDFISH_VALUE   RedfishValue;
+  UINTN                 Index;
+  RedfishCS_int64_Array *Buffer;
+
+  if (IS_EMPTY_STRING (Schema) || IS_EMPTY_STRING (Version) || IS_EMPTY_STRING (ConfigureLang) || ArrayHead == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  //
+  // Get the current value from HII
+  //
+  Status = RedfishPlatformConfigGetValue (Schema, Version, ConfigureLang, &RedfishValue);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, %a.%a %s failed: %r\n", __FUNCTION__, Schema, Version, ConfigureLang, Status));
+  } else {
+
+    if (RedfishValue.Type != REDFISH_VALUE_TYPE_INTEGER_ARRAY) {
+      DEBUG ((DEBUG_ERROR, "%a, %a.%a %s value is not string array type\n", __FUNCTION__, Schema, Version, ConfigureLang));
+      return EFI_DEVICE_ERROR;
+    }
+
+    //
+    // If there is no change in array, do nothing
+    //
+    if (!CompareRedfishNumericArrayValues (ArrayHead, RedfishValue.Value.IntegerArray, RedfishValue.ArrayCount)) {
+      //
+      // Apply settings from redfish
+      //
+      DEBUG ((DEBUG_INFO, "%a, %a.%a apply %s for array\n", __FUNCTION__, Schema, Version, ConfigureLang));
+      FreeArrayTypeRedfishValue (&RedfishValue);
+
+      //
+      // Convert array from RedfishCS_int64_Array to EDKII_REDFISH_VALUE
+      //
+      RedfishValue.ArrayCount = 0;
+      Buffer = ArrayHead;
+      while (Buffer != NULL) {
+        RedfishValue.ArrayCount += 1;
+        Buffer = Buffer->Next;
+      }
+
+      //
+      // Allocate pool for new values
+      //
+      RedfishValue.Value.IntegerArray = AllocatePool (RedfishValue.ArrayCount * sizeof (INT64));
+      if (RedfishValue.Value.IntegerArray == NULL) {
+        ASSERT (FALSE);
+        return EFI_OUT_OF_RESOURCES;
+      }
+
+      Buffer = ArrayHead;
+      Index = 0;
+      while (Buffer != NULL) {
+        RedfishValue.Value.IntegerArray[Index] = (INT64)*Buffer->ArrayValue;
+        Buffer = Buffer->Next;
+        Index++;
+      }
+
+      ASSERT (Index <= RedfishValue.ArrayCount);
+
+      Status = RedfishPlatformConfigSetValue (Schema, Version, ConfigureLang, RedfishValue);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply %s array failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, %a.%a %s array value has no change\n", __FUNCTION__, Schema, Version, ConfigureLang));
+    }
+  }
+
+  return Status;
+}
+
+/**
+
+  Apply property value to UEFI HII database in boolean array type (INT64).
+
+  @param[in]  Schema        Property schema.
+  @param[in]  Version       Property schema version.
+  @param[in]  ConfigureLang Configure language refers to this property.
+  @param[in]  ArrayHead     Head of Redfich CS boolean array value.
+
+  @retval     EFI_SUCCESS     New value is applied successfully.
+  @retval     Others          Errors occur.
+
+**/
+EFI_STATUS
+ApplyFeatureSettingsBooleanArrayType (
+  IN  CHAR8                 *Schema,
+  IN  CHAR8                 *Version,
+  IN  EFI_STRING            ConfigureLang,
+  IN  RedfishCS_bool_Array  *ArrayHead
+  )
+{
+  EFI_STATUS            Status;
+  EDKII_REDFISH_VALUE   RedfishValue;
+  UINTN                 Index;
+  RedfishCS_bool_Array *Buffer;
+
+  if (IS_EMPTY_STRING (Schema) || IS_EMPTY_STRING (Version) || IS_EMPTY_STRING (ConfigureLang) || ArrayHead == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  //
+  // Get the current value from HII
+  //
+  Status = RedfishPlatformConfigGetValue (Schema, Version, ConfigureLang, &RedfishValue);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, %a.%a %s failed: %r\n", __FUNCTION__, Schema, Version, ConfigureLang, Status));
+  } else {
+
+    if (RedfishValue.Type != REDFISH_VALUE_TYPE_BOOLEAN_ARRAY) {
+      DEBUG ((DEBUG_ERROR, "%a, %a.%a %s value is not string array type\n", __FUNCTION__, Schema, Version, ConfigureLang));
+      return EFI_DEVICE_ERROR;
+    }
+
+    //
+    // If there is no change in array, do nothing
+    //
+    if (!CompareRedfishBooleanArrayValues (ArrayHead, RedfishValue.Value.BooleanArray, RedfishValue.ArrayCount)) {
+      //
+      // Apply settings from redfish
+      //
+      DEBUG ((DEBUG_INFO, "%a, %a.%a apply %s for array\n", __FUNCTION__, Schema, Version, ConfigureLang));
+      FreeArrayTypeRedfishValue (&RedfishValue);
+
+      //
+      // Convert array from RedfishCS_int64_Array to EDKII_REDFISH_VALUE
+      //
+      RedfishValue.ArrayCount = 0;
+      Buffer = ArrayHead;
+      while (Buffer != NULL) {
+        RedfishValue.ArrayCount += 1;
+        Buffer = Buffer->Next;
+      }
+
+      //
+      // Allocate pool for new values
+      //
+      RedfishValue.Value.BooleanArray = AllocatePool (RedfishValue.ArrayCount * sizeof (BOOLEAN));
+      if (RedfishValue.Value.BooleanArray == NULL) {
+        ASSERT (FALSE);
+        return EFI_OUT_OF_RESOURCES;
+      }
+
+      Buffer = ArrayHead;
+      Index = 0;
+      while (Buffer != NULL) {
+        RedfishValue.Value.BooleanArray[Index] = (BOOLEAN)*Buffer->ArrayValue;
         Buffer = Buffer->Next;
         Index++;
       }
@@ -1711,6 +1906,148 @@ GetPropertyStringArrayValue (
 
 /**
 
+  Get the property numeric value in array type.
+
+  @param[in]  Schema        Schema of this property.
+  @param[in]  Version       Schema version.
+  @param[in]  PropertyName  Property name.
+  @param[in]  ConfigureLang Configure Language of this property.
+  @param[out] ArraySize     The size of returned array.
+
+  @retval     INT64 *      Returned integer array. NULL while error happens.
+
+**/
+INT64 *
+GetPropertyNumericArrayValue (
+  IN  CHAR8               *Schema,
+  IN  CHAR8               *Version,
+  IN  EFI_STRING          PropertyName,
+  IN  EFI_STRING          ConfigureLang,
+  OUT UINTN               *ArraySize
+  )
+{
+  EFI_STATUS          Status;
+  EDKII_REDFISH_VALUE RedfishValue;
+  EFI_STRING          ConfigureLangBuffer;
+  UINTN               BufferSize;
+  INT64               *IntegerArray;
+  UINTN               Index;
+
+  if (IS_EMPTY_STRING (Schema) || IS_EMPTY_STRING (Version) || IS_EMPTY_STRING (ConfigureLang) || IS_EMPTY_STRING (PropertyName) || ArraySize == NULL) {
+    return NULL;
+  }
+
+  *ArraySize = 0;
+
+  //
+  // Configure Language buffer.
+  //
+  BufferSize = sizeof (CHAR16) * MAX_CONF_LANG_LEN;
+  ConfigureLangBuffer = AllocatePool (BufferSize);
+  if (ConfigureLangBuffer == NULL) {
+    DEBUG ((DEBUG_ERROR, "%a, out of resource\n", __FUNCTION__));
+    return NULL;
+  }
+
+  UnicodeSPrint (ConfigureLangBuffer, BufferSize, L"%s/%s", ConfigureLang, PropertyName);
+  Status = RedfishPlatformConfigGetValue (Schema, Version, ConfigureLangBuffer, &RedfishValue);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, %a.%a query current setting for %s failed: %r\n", __FUNCTION__, Schema, Version, ConfigureLangBuffer, Status));
+    return NULL;
+  }
+
+  if (RedfishValue.Type != REDFISH_VALUE_TYPE_INTEGER_ARRAY) {
+    DEBUG ((DEBUG_ERROR, "%a, %a.%a %s value is not string array type\n", __FUNCTION__, Schema, Version, ConfigureLang));
+    return NULL;
+  }
+
+  IntegerArray = AllocatePool (sizeof (INT64) * RedfishValue.ArrayCount);
+  if (IntegerArray == NULL) {
+    DEBUG ((DEBUG_ERROR, "%a, out of resource\n", __FUNCTION__));
+    return NULL;
+  }
+
+  *ArraySize = RedfishValue.ArrayCount;
+  for (Index = 0; Index < RedfishValue.ArrayCount; Index++) {
+    IntegerArray[Index] = RedfishValue.Value.IntegerArray[Index];
+  }
+
+  return IntegerArray;
+}
+
+/**
+
+  Get the property boolean value in array type.
+
+  @param[in]  Schema        Schema of this property.
+  @param[in]  Version       Schema version.
+  @param[in]  PropertyName  Property name.
+  @param[in]  ConfigureLang Configure Language of this property.
+  @param[out] ArraySize     The size of returned array.
+
+  @retval     BOOLEAN *      Returned boolean array. NULL while error happens.
+
+**/
+BOOLEAN *
+GetPropertyBooleanArrayValue (
+  IN  CHAR8               *Schema,
+  IN  CHAR8               *Version,
+  IN  EFI_STRING          PropertyName,
+  IN  EFI_STRING          ConfigureLang,
+  OUT UINTN               *ArraySize
+  )
+{
+  EFI_STATUS          Status;
+  EDKII_REDFISH_VALUE RedfishValue;
+  EFI_STRING          ConfigureLangBuffer;
+  UINTN               BufferSize;
+  BOOLEAN             *BooleanArray;
+  UINTN               Index;
+
+  if (IS_EMPTY_STRING (Schema) || IS_EMPTY_STRING (Version) || IS_EMPTY_STRING (ConfigureLang) || IS_EMPTY_STRING (PropertyName) || ArraySize == NULL) {
+    return NULL;
+  }
+
+  *ArraySize = 0;
+
+  //
+  // Configure Language buffer.
+  //
+  BufferSize = sizeof (CHAR16) * MAX_CONF_LANG_LEN;
+  ConfigureLangBuffer = AllocatePool (BufferSize);
+  if (ConfigureLangBuffer == NULL) {
+    DEBUG ((DEBUG_ERROR, "%a, out of resource\n", __FUNCTION__));
+    return NULL;
+  }
+
+  UnicodeSPrint (ConfigureLangBuffer, BufferSize, L"%s/%s", ConfigureLang, PropertyName);
+  Status = RedfishPlatformConfigGetValue (Schema, Version, ConfigureLangBuffer, &RedfishValue);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, %a.%a query current setting for %s failed: %r\n", __FUNCTION__, Schema, Version, ConfigureLangBuffer, Status));
+    return NULL;
+  }
+
+  if (RedfishValue.Type != REDFISH_VALUE_TYPE_BOOLEAN_ARRAY) {
+    DEBUG ((DEBUG_ERROR, "%a, %a.%a %s value is not string array type\n", __FUNCTION__, Schema, Version, ConfigureLang));
+    return NULL;
+  }
+
+  BooleanArray = AllocatePool (sizeof (INT64) * RedfishValue.ArrayCount);
+  if (BooleanArray == NULL) {
+    DEBUG ((DEBUG_ERROR, "%a, out of resource\n", __FUNCTION__));
+    return NULL;
+  }
+
+  *ArraySize = RedfishValue.ArrayCount;
+  for (Index = 0; Index < RedfishValue.ArrayCount; Index++) {
+    BooleanArray[Index] = RedfishValue.Value.BooleanArray[Index];
+  }
+
+  return BooleanArray;
+}
+
+/**
+
   Check and see if we need to do provisioning for this property.
 
   @param[in]  PropertyBuffer   Pointer to property instance.
@@ -1985,6 +2322,115 @@ AddRedfishCharArray (
 
 /**
 
+  Create numeric array and append to arry node in Redfish JSON convert format.
+
+  @param[in,out]  Head           The head of string array.
+  @param[in]      NumericArray   Input numeric array.
+  @param[in]      ArraySize      The size of NumericArray.
+
+  @retval     EFI_SUCCESS       String array is created successfully.
+  @retval     Others            Error happens
+
+**/
+EFI_STATUS
+AddRedfishNumericArray (
+  IN OUT  RedfishCS_int64_Array **Head,
+  IN      INT64                 *NumericArray,
+  IN      UINTN                 ArraySize
+  )
+{
+  UINTN                                 Index;
+  RedfishCS_int64_Array                 *NumericArrayBuffer;
+  RedfishCS_int64_Array                 *PreArrayBuffer;
+
+  if (Head == NULL || NumericArray == NULL || ArraySize == 0) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  PreArrayBuffer = NULL;
+  for (Index = 0; Index < ArraySize; Index++) {
+    NumericArrayBuffer = AllocatePool (sizeof (RedfishCS_int64_Array));
+    if (NumericArrayBuffer == NULL) {
+      ASSERT (NumericArrayBuffer != NULL);
+      continue;
+    }
+
+    if (Index == 0) {
+     *Head = NumericArrayBuffer;
+    }
+    NumericArrayBuffer->ArrayValue =  AllocatePool (sizeof (RedfishCS_int64));
+    if (NumericArrayBuffer->ArrayValue == NULL) {
+      ASSERT (NumericArrayBuffer->ArrayValue != NULL);
+      continue;
+    }
+    *NumericArrayBuffer->ArrayValue = NumericArray[Index];
+    NumericArrayBuffer->Next = NULL;
+    if (PreArrayBuffer != NULL) {
+      PreArrayBuffer->Next = NumericArrayBuffer;
+    }
+    PreArrayBuffer = NumericArrayBuffer;
+  }
+
+  return EFI_SUCCESS;
+}
+
+/**
+
+  Create boolean array and append to arry node in Redfish JSON convert format.
+
+  @param[in,out]  Head           The head of string array.
+  @param[in]      BooleanArray   Input boolean array.
+  @param[in]      ArraySize      The size of BooleanArray.
+
+  @retval     EFI_SUCCESS       String array is created successfully.
+  @retval     Others            Error happens
+
+**/
+EFI_STATUS
+AddRedfishBooleanArray (
+  IN OUT  RedfishCS_bool_Array  **Head,
+  IN      BOOLEAN               *BooleanArray,
+  IN      UINTN                 ArraySize
+  )
+{
+  UINTN                                 Index;
+  RedfishCS_bool_Array                 *BooleanArrayBuffer;
+  RedfishCS_bool_Array                 *PreArrayBuffer;
+
+  if (Head == NULL || BooleanArrayBuffer == NULL || ArraySize == 0) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  PreArrayBuffer = NULL;
+  for (Index = 0; Index < ArraySize; Index++) {
+    BooleanArrayBuffer = AllocatePool (sizeof (RedfishCS_bool_Array));
+    if (BooleanArrayBuffer == NULL) {
+      ASSERT (BooleanArrayBuffer != NULL);
+      continue;
+    }
+
+    if (Index == 0) {
+     *Head = BooleanArrayBuffer;
+    }
+
+    BooleanArrayBuffer->ArrayValue =  AllocatePool (sizeof (RedfishCS_bool));
+    if (BooleanArrayBuffer->ArrayValue == NULL) {
+      ASSERT (BooleanArrayBuffer->ArrayValue != NULL);
+      continue;
+    }
+    *BooleanArrayBuffer->ArrayValue = BooleanArray[Index];
+    BooleanArrayBuffer->Next = NULL;
+    if (PreArrayBuffer != NULL) {
+      PreArrayBuffer->Next = BooleanArrayBuffer;
+    }
+    PreArrayBuffer = BooleanArrayBuffer;
+  }
+
+  return EFI_SUCCESS;
+}
+
+/**
+
   Check and see if value in Redfish string array are all the same as the one
   from HII configuration.
 
@@ -2024,6 +2470,98 @@ CompareRedfishStringArrayValues (
   }
 
   if (CharArrayBuffer != NULL || Index < ArraySize) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+
+  Check and see if value in Redfish numeric array are all the same as the one
+  from HII configuration.
+
+  @param[in]  Head          The head of Redfish CS numeraic array.
+  @param[in]  NumericArray  Input numeric array.
+  @param[in]  ArraySize     The size of NumericArray.
+
+  @retval     TRUE          All string in Redfish array are as same as integer
+                            in HII configuration array.
+              FALSE         These two array are not identical.
+
+**/
+BOOLEAN
+CompareRedfishNumericArrayValues (
+  IN RedfishCS_int64_Array *Head,
+  IN INT64                 *NumericArray,
+  IN UINTN                 ArraySize
+  )
+{
+  UINTN                  Index;
+  RedfishCS_int64_Array  *NumericArrayBuffer;
+
+  if (Head == NULL || NumericArray == NULL || ArraySize == 0) {
+    return FALSE;
+  }
+
+  NumericArrayBuffer = Head;
+  Index = 0;
+  while (NumericArrayBuffer != NULL && Index < ArraySize) {
+    if (NumericArray[Index] != *NumericArrayBuffer->ArrayValue) {
+      break;
+    }
+
+    Index++;
+    NumericArrayBuffer = NumericArrayBuffer->Next;
+  }
+
+  if (NumericArrayBuffer != NULL || Index < ArraySize) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+
+  Check and see if value in Redfish boolean array are all the same as the one
+  from HII configuration.
+
+  @param[in]  Head          The head of Redfish CS boolean array.
+  @param[in]  BooleanArray  Input boolean array.
+  @param[in]  ArraySize     The size of BooleanArray.
+
+  @retval     TRUE          All string in Redfish array are as same as integer
+                            in HII configuration array.
+              FALSE         These two array are not identical.
+
+**/
+BOOLEAN
+CompareRedfishBooleanArrayValues (
+  IN RedfishCS_bool_Array  *Head,
+  IN BOOLEAN               *BooleanArray,
+  IN UINTN                 ArraySize
+  )
+{
+  UINTN                  Index;
+  RedfishCS_bool_Array  *BooleanArrayBuffer;
+
+  if (Head == NULL || BooleanArray == NULL || ArraySize == 0) {
+    return FALSE;
+  }
+
+  BooleanArrayBuffer = Head;
+  Index = 0;
+  while (BooleanArrayBuffer != NULL && Index < ArraySize) {
+    if (BooleanArray[Index] != *BooleanArrayBuffer->ArrayValue) {
+      break;
+    }
+
+    Index++;
+    BooleanArrayBuffer = BooleanArrayBuffer->Next;
+  }
+
+  if (BooleanArrayBuffer != NULL || Index < ArraySize) {
     return FALSE;
   }
 

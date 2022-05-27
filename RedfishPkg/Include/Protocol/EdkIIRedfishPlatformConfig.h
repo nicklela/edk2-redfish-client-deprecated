@@ -21,6 +21,7 @@ typedef union {
   CHAR8           *Buffer;
   CHAR8           **StringArray;
   INT64           *IntegerArray;
+  BOOLEAN         *BooleanArray;
 } EDKII_REDFISH_TYPE_VALUE;
 
 /**
@@ -33,6 +34,7 @@ typedef enum {
   REDFISH_VALUE_TYPE_STRING,
   REDFISH_VALUE_TYPE_STRING_ARRAY,
   REDFISH_VALUE_TYPE_INTEGER_ARRAY,
+  REDFISH_VALUE_TYPE_BOOLEAN_ARRAY,
   REDFISH_VALUE_TYPE_MAX
 } EDKII_REDFISH_VALUE_TYPES;
 
