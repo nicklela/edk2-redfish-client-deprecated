@@ -152,6 +152,29 @@ ApplyFeatureSettingsBooleanType (
 
 /**
 
+  Apply property value to UEFI HII database in vague type.
+
+  @param[in]  Schema          Property schema.
+  @param[in]  Version         Property schema version.
+  @param[in]  ConfigureLang   Configure language refers to this property.
+  @param[in]  VagueValuePtr   Pointer of vague values to to set.
+  @param[in]  NumVagueValues  Number of vague values.
+
+  @retval     EFI_SUCCESS     New value is applied successfully.
+  @retval     Others          Errors occur.
+
+**/
+EFI_STATUS
+ApplyFeatureSettingsVagueType (
+  IN  CHAR8                             *Schema,
+  IN  CHAR8                             *Version,
+  IN  EFI_STRING                        ConfigureLang,
+  IN  RedfishCS_EmptyProp_KeyValue      *VagueValuePtr,
+  IN  UINT32                            NumberOfVagueValues
+  );
+
+/**
+
   Apply property value to UEFI HII database in string array type.
 
   @param[in]  Schema        Property schema.
@@ -579,6 +602,41 @@ GetPropertyBooleanArrayValue (
 
 /**
 
+  Get the property value in the vague type.
+
+  @param[in]  Schema          Schema of this property.
+  @param[in]  Version         Schema version.
+  @param[in]  PropertyName    Property name.
+  @param[in]  ConfigureLang   Configure Language of this property.
+  @param[out] NumberOfValues  Return the number of vague type of values
+
+  @retval     RedfishCS_EmptyProp_KeyValue   The pointer to the structure
+                                             of vague type of values.
+
+**/
+RedfishCS_EmptyProp_KeyValue *
+GetPropertyVagueValue (
+  IN CHAR8      *Schema,
+  IN CHAR8      *Version,
+  IN EFI_STRING PropertyName,
+  IN EFI_STRING ConfigureLang,
+  OUT UINT32    *NumberOfValues
+  );
+
+/**
+
+  Free the list of empty property key values.
+
+  @param[in]  EmptyPropKeyValueListHead  The head of RedfishCS_EmptyProp_KeyValue
+
+**/
+VOID
+FreeEmptyPropKeyValueList (
+  RedfishCS_EmptyProp_KeyValue *EmptyPropKeyValueListHead
+  );
+
+/**
+
   Check and see if given property is in JSON context or not
 
   @param[in]  Property      Property name string
@@ -711,6 +769,28 @@ CompareRedfishBooleanArrayValues (
   IN RedfishCS_bool_Array  *Head,
   IN BOOLEAN               *BooleanArray,
   IN UINTN                 ArraySize
+  );
+
+/**
+
+  Check and see if any difference between two vague value set.
+  This is just a simple check.
+
+  @param[in]  RedfishVagueKeyValuePtr     The vague key value sets on Redfish service.
+  @param[in]  RedfishVagueKeyValueNumber  The numebr of vague key value sets
+  @param[in]  ConfigVagueKeyValuePtr      The vague configuration on platform.
+  @param[in]  ConfigVagueKeyValueNumber   The numebr of vague key value sets
+
+  @retval     TRUE          All values are the same.
+              FALSE         There is some difference.
+
+**/
+BOOLEAN
+CompareRedfishPropertyVagueValues (
+  IN RedfishCS_EmptyProp_KeyValue *RedfishVagueKeyValuePtr,
+  IN UINT32                       RedfishVagueKeyValueNumber,
+  IN RedfishCS_EmptyProp_KeyValue *ConfigVagueKeyValuePtr,
+  IN UINT32                       ConfigVagueKeyValueNumber
   );
 
 /**
