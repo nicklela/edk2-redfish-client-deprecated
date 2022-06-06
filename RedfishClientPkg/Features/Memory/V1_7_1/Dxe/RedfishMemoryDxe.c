@@ -25,9 +25,9 @@ extern REDFISH_RESOURCE_COMMON_PRIVATE *mRedfishResourcePrivate;
 **/
 EFI_STATUS
 RedfishResourceProvisioningResource (
-  IN     EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL   *This,
-  IN     EFI_STRING                               Uri,
-  IN     BOOLEAN                                  PostMode
+  IN     EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL    *This,
+  IN     EFI_STRING                                Uri,
+  IN     BOOLEAN                                   PostMode
   )
 {
   REDFISH_RESOURCE_COMMON_PRIVATE *Private;

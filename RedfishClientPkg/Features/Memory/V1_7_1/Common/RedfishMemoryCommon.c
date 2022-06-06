@@ -40,7 +40,7 @@ RedfishConsumeResourceCommon (
     return EFI_INVALID_PARAMETER;
   }
 
-  Memory= NULL;
+  Memory = NULL;
   MemoryCs = NULL;
   ConfigureLang = NULL;
 
@@ -432,7 +432,7 @@ RedfishConsumeResourceCommon (
   //
   // Handle MEMORYLOCATION
   //
-  if(MemoryCs->MemoryLocation == NULL) {
+  if (MemoryCs->MemoryLocation == NULL) {
     MemoryCs->MemoryLocation = AllocateZeroPool (sizeof (RedfishMemory_V1_7_1_MemoryLocation_CS));
     ASSERT (MemoryCs->MemoryLocation != NULL);
   }
@@ -740,7 +740,7 @@ RedfishConsumeResourceCommon (
   //
   // Handle POWERMANAGEMENTPOLICY
   //
-  if(MemoryCs->PowerManagementPolicy == NULL) {
+  if (MemoryCs->PowerManagementPolicy == NULL) {
     MemoryCs->PowerManagementPolicy = AllocateZeroPool (sizeof (RedfishMemory_V1_7_1_PowerManagementPolicy_CS));
     ASSERT (MemoryCs->PowerManagementPolicy != NULL);
   }
@@ -848,7 +848,7 @@ RedfishConsumeResourceCommon (
   //
   // Handle SECURITYCAPABILITIES
   //
-  if(MemoryCs->SecurityCapabilities == NULL) {
+  if (MemoryCs->SecurityCapabilities == NULL) {
     MemoryCs->SecurityCapabilities = AllocateZeroPool (sizeof (RedfishMemory_V1_7_1_SecurityCapabilities_CS));
     ASSERT (MemoryCs->SecurityCapabilities != NULL);
   }
@@ -1307,6 +1307,7 @@ ProvisioningMemoryProperties (
         if (IntegerValue != NULL) {
           *IntegerValue = (BooleanValue ? 0x01 : 0x00);
           MemoryCs->ConfigurationLocked = IntegerValue;
+          PropertyChanged = TRUE;
         }
       }
     }
@@ -1401,6 +1402,7 @@ ProvisioningMemoryProperties (
         if (IntegerValue != NULL) {
           *IntegerValue = (BooleanValue ? 0x01 : 0x00);
           MemoryCs->IsRankSpareEnabled = IntegerValue;
+          PropertyChanged = TRUE;
         }
       }
     }
@@ -1417,6 +1419,7 @@ ProvisioningMemoryProperties (
         if (IntegerValue != NULL) {
           *IntegerValue = (BooleanValue ? 0x01 : 0x00);
           MemoryCs->IsSpareDeviceEnabled = IntegerValue;
+          PropertyChanged = TRUE;
         }
       }
     }
@@ -1464,7 +1467,7 @@ ProvisioningMemoryProperties (
   //
   // Handle MEMORYLOCATION
   //
-  if(MemoryCs->MemoryLocation != NULL) {
+  if (MemoryCs->MemoryLocation != NULL) {
     //
     // Handle MEMORYLOCATION->CHANNEL
     //
@@ -1516,6 +1519,7 @@ ProvisioningMemoryProperties (
         }
       }
     }
+
   }
 
   //
@@ -1664,7 +1668,7 @@ ProvisioningMemoryProperties (
   //
   // Handle POWERMANAGEMENTPOLICY
   //
-  if(MemoryCs->PowerManagementPolicy != NULL) {
+  if (MemoryCs->PowerManagementPolicy != NULL) {
     //
     // Handle POWERMANAGEMENTPOLICY->AVERAGEPOWERBUDGETMILLIWATTS
     //
@@ -1720,6 +1724,7 @@ ProvisioningMemoryProperties (
         }
       }
     }
+
   }
 
   //
@@ -1738,7 +1743,7 @@ ProvisioningMemoryProperties (
   //
   // Handle SECURITYCAPABILITIES
   //
-  if(MemoryCs->SecurityCapabilities != NULL) {
+  if (MemoryCs->SecurityCapabilities != NULL) {
     //
     // Handle SECURITYCAPABILITIES->CONFIGURATIONLOCKCAPABLE
     //
@@ -1815,6 +1820,7 @@ ProvisioningMemoryProperties (
         }
       }
     }
+
   }
 
   //
@@ -1989,7 +1995,7 @@ ProvisioningMemoryResource (
   if (IS_EMPTY_STRING (ConfigureLang) || Private == NULL) {
     return EFI_INVALID_PARAMETER;
   }
-
+  
   EtagStr = NULL;
   AsciiSPrint (ResourceId, sizeof (ResourceId), "%d", Index);
 
@@ -2008,7 +2014,7 @@ ProvisioningMemoryResource (
 
   Status = CreatePayloadToPostResource (Private->RedfishService, Private->Payload, Json, &NewResourceLocation, &EtagStr);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, post memory resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+    DEBUG ((DEBUG_ERROR, "%a, post Memory resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
     goto RELEASE_RESOURCE;
   }
 
@@ -2062,7 +2068,7 @@ ProvisioningMemoryResources (
   }
 
   for (Index = 0; Index < UnifiedConfigureLangList.Count; Index++) {
-    DEBUG ((DEBUG_INFO, "[%d] create memory resource from: %s\n", UnifiedConfigureLangList.List[Index].Index, UnifiedConfigureLangList.List[Index].ConfigureLang));
+    DEBUG ((DEBUG_INFO, "[%d] create Memory resource from: %s\n", UnifiedConfigureLangList.List[Index].Index, UnifiedConfigureLangList.List[Index].ConfigureLang));
     ProvisioningMemoryResource (Private, UnifiedConfigureLangList.List[Index].Index, UnifiedConfigureLangList.List[Index].ConfigureLang);
     FreePool (UnifiedConfigureLangList.List[Index].ConfigureLang);
   }
@@ -2220,7 +2226,6 @@ RedfishCheckResourceCommon (
 
   return Status;
 }
-
 
 /**
   Update resource to given URI.
