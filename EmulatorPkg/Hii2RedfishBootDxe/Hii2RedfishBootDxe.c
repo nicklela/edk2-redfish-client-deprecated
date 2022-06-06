@@ -208,7 +208,7 @@ RefreshBootOrderList (
       continue;
     }
 
-    mBootOptionsVarData.BootOptionOrder[OptionIndex++] = BootOption[Index].OptionNumber;
+    mBootOptionsVarData.BootOptionOrder[OptionIndex++] = (UINT32)BootOption[Index].OptionNumber;
 
     ASSERT (BootOption[Index].Description != NULL);
 
