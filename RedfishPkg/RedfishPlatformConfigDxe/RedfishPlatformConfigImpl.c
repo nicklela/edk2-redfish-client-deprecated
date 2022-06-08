@@ -746,7 +746,9 @@ ReleaseFormset (
     FormsetPrivate->HiiFormSet = NULL;
   }
 
-  FreePool (FormsetPrivate->DevicePathStr);
+  if (FormsetPrivate->DevicePathStr != NULL) {
+    FreePool(FormsetPrivate->DevicePathStr);
+  }
 
   //
   // Release schema list
