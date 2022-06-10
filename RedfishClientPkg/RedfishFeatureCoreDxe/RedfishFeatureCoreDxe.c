@@ -280,7 +280,7 @@ RedfishFeatureRegister (
       ASSERT (FALSE);
     }
     NodeName[Index - AnchorIndex] = *(FeatureManagedUri + Index);
-    if (NodeName [Index - AnchorIndex] == NodeSeperator || NodeName [Index - AnchorIndex] == (CHAR16)0) {
+    if (NodeName [Index - AnchorIndex] == NodeSeperator || NodeName [Index - AnchorIndex] == NewNodeSeperator || NodeName [Index - AnchorIndex] == (CHAR16)0) {
       NodeName [Index - AnchorIndex] = 0;
       AnchorIndex = Index + 1;
       //

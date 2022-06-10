@@ -21,6 +21,7 @@
 
 #define MaxNodeNameLength 64
 #define NodeSeperator L'/'
+#define NewNodeSeperator L';'
 #define NodeIsCollectionLeftBracket '{'
 #define NodeIsCollectionRightBracket '}'
 
