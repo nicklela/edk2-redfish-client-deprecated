@@ -14,9 +14,9 @@
   INF RedfishClientPkg/RedfishFeatureCoreDxe/RedfishFeatureCoreDxe.inf
   INF RedfishClientPkg/RedfishETagDxe/RedfishETagDxe.inf
   INF RedfishClientPkg/RedfishConfigLangMapDxe/RedfishConfigLangMapDxe.inf
-  INF RedfishClientPkg/Features/Memory/V1_7_1/Dxe/RedfishMemoryDxe.inf
-  INF RedfishClientPkg/Features/RedfishMemoryCollectionDxe/RedfishMemoryCollectionDxe.inf
-  INF RedfishClientPkg/Features/ComputerSystem/v1_5_0/Dxe/RedfishComputerSystemDxe.inf
+  INF RedfishClientPkg/Features/Memory/V1_7_1/Dxe/MemoryDxe.inf
+  INF RedfishClientPkg/Features/MemoryCollectionDxe/MemoryCollectionDxe.inf
+  INF RedfishClientPkg/Features/ComputerSystem/v1_5_0/Dxe/ComputerSystemDxe.inf
   INF RedfishClientPkg/Features/ComputerSystemCollectionDxe/ComputerSystemCollectionDxe.inf
   INF RedfishClientPkg/Features/Bios/v1_0_9/Dxe/BiosDxe.inf
 

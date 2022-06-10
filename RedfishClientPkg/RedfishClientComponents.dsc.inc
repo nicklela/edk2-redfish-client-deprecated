@@ -20,9 +20,9 @@
   #
   # Below two modules should be pulled in by build tool.
   #
-  RedfishClientPkg/Features/Memory/V1_7_1/Dxe/RedfishMemoryDxe.inf
-  RedfishClientPkg/Features/RedfishMemoryCollectionDxe/RedfishMemoryCollectionDxe.inf
-  RedfishClientPkg/Features/ComputerSystem/v1_5_0/Dxe/RedfishComputerSystemDxe.inf {
+  RedfishClientPkg/Features/Memory/V1_7_1/Dxe/MemoryDxe.inf
+  RedfishClientPkg/Features/MemoryCollectionDxe/MemoryCollectionDxe.inf
+  RedfishClientPkg/Features/ComputerSystem/v1_5_0/Dxe/ComputerSystemDxe.inf {
     <LibraryClasses>
       RedfishResourceIdentifyLib|RedfishClientPkg/Library/RedfishResourceIdentifyLibComuterSystem/v1_5_0/RedfishResourceIdentifyLibComuterSystem.inf
   }
