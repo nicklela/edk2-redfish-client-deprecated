@@ -27,11 +27,23 @@ typedef enum {
   InformationTypeNone = 0,            ///< Invalid information.
   InformationTypeCollectionMemberUri, ///< URI to the new created collection member.
   InformationTypeMax
-} FEATURE_RETURNED_INFORMATION_TYPE;
+} RESOURCE_INFORMATION_EXCHANGE_TYPE;
 
 typedef struct {
-  FEATURE_RETURNED_INFORMATION_TYPE Type;
-} FEATURE_RETURNED_INFORMATION;
+  RESOURCE_INFORMATION_EXCHANGE_TYPE Type;
+  EFI_STRING     ParentUri;          ///< The parent URI (in configure language) of the resource to process.
+  EFI_STRING     PropertyName;       ///< The property name of the resource to process.
+  EFI_STRING     FullUri;            ///< The full URI (in configure language) of the resource to process.
+} RESOURCE_INFORMATION_SEND;
+
+typedef struct {
+  RESOURCE_INFORMATION_EXCHANGE_TYPE Type;
+} RESOURCE_INFORMATION_RETURNED;
+
+typedef struct {
+  RESOURCE_INFORMATION_SEND        SendInformation;
+  RESOURCE_INFORMATION_RETURNED    ReturnedInformation;
+} RESOURCE_INFORMATION_EXCHANGE;
 
 /**
   The callback function provided by Redfish Feature driver.
@@ -39,9 +51,7 @@ typedef struct {
   @param[in]     This                Pointer to EDKII_REDFISH_FEATURE_PROTOCOL instance.
   @param[in]     FeatureAction       The action Redfish feature driver should take.
   @param[in]     Context             The context of Redfish feature driver.
-  @param[in,out] InformationReturned The pointer to retrive the pointer to
-                                     FEATURE_RETURNED_INFOMATION. The memory block of this
-                                     information should be freed by caller.
+  @param[in,out] ExchangeInformation The pointer to RESOURCE_INFORMATION_EXCHANGE.
 
   @retval EFI_SUCCESS              Redfish feature driver callback is executed successfully.
   @retval Others                   Some errors happened.
@@ -53,7 +63,7 @@ EFI_STATUS
   IN     EDKII_REDFISH_FEATURE_PROTOCOL *This,
   IN     FEATURE_CALLBACK_ACTION        FeatureAction,
   IN     VOID                           *Context,
-  IN OUT FEATURE_RETURNED_INFORMATION   **InformationReturned
+  IN OUT RESOURCE_INFORMATION_EXCHANGE  *ExchangeInformation
 );
 /**
   The registration function for the Redfish Feature driver.

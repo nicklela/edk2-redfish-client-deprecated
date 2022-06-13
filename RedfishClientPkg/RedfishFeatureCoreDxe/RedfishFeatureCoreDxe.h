@@ -20,19 +20,21 @@
 #include <Library/RedfishEventLib.h>
 
 #define MaxNodeNameLength 64
+#define MaxParentUriLength 512
 #define NodeSeperator L'/'
-#define NewNodeSeperator L';'
-#define NodeIsCollectionLeftBracket '{'
-#define NodeIsCollectionRightBracket '}'
+#define UriSeperator L';'
+#define NodeIsCollectionLeftBracket L'{'
+#define NodeIsCollectionRightBracket L'}'
+#define NodeIsCollectionSymbol       L"/{}"
 
 typedef struct _REDFISH_FEATURE_INTERNAL_DATA REDFISH_FEATURE_INTERNAL_DATA;
 struct _REDFISH_FEATURE_INTERNAL_DATA {
   REDFISH_FEATURE_INTERNAL_DATA *SiblingList; ///< Next same level in hierarchy of resource URI.
   REDFISH_FEATURE_INTERNAL_DATA *ChildList;   ///< Next level in hierarchy of resource URI.
-  EFI_STRING               NodeName;    ///< Name of the node in hierarchy of resource URI.
-  REDFISH_FEATURE_CALLBACK Callback;    ///< Callback function of Redfish feature driver.
-  VOID                     *Context;    ///< Context of feature driver.
-  FEATURE_RETURNED_INFORMATION *ReturnedInformation; ///< Information returned from Redfish feature driver.
+  EFI_STRING               NodeName;          ///< Name of the node in hierarchy of resource URI.
+  REDFISH_FEATURE_CALLBACK Callback;          ///< Callback function of Redfish feature driver.
+  VOID                     *Context;          ///< Context of feature driver.
+  RESOURCE_INFORMATION_EXCHANGE *InformationExchange; ///< Information returned from Redfish feature driver.
   UINT32         Flags;
 };
 #define REDFISH_FEATURE_INTERNAL_DATA_IS_COLLECTION 0x00000001
