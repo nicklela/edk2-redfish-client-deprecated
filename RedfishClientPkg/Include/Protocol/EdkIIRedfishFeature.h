@@ -10,6 +10,8 @@
 #ifndef EDKII_REDFISH_FEATURE_H_
 #define EDKII_REDFISH_FEATURE_H_
 
+#include <Protocol/EdkIIRedfishInterchangeData.h>
+
 typedef struct _EDKII_REDFISH_FEATURE_PROTOCOL EDKII_REDFISH_FEATURE_PROTOCOL;
 
 #define EDKII_REDFISH_FEATURE_PROTOCOL_GUID \
@@ -22,28 +24,6 @@ typedef enum {
   CallbackActionStartOperation, ///< Start the operations on Redfish resource
   CallbackActionMax
 } FEATURE_CALLBACK_ACTION;
-
-typedef enum {
-  InformationTypeNone = 0,            ///< Invalid information.
-  InformationTypeCollectionMemberUri, ///< URI to the new created collection member.
-  InformationTypeMax
-} RESOURCE_INFORMATION_EXCHANGE_TYPE;
-
-typedef struct {
-  RESOURCE_INFORMATION_EXCHANGE_TYPE Type;
-  EFI_STRING     ParentUri;          ///< The parent URI (in configure language) of the resource to process.
-  EFI_STRING     PropertyName;       ///< The property name of the resource to process.
-  EFI_STRING     FullUri;            ///< The full URI (in configure language) of the resource to process.
-} RESOURCE_INFORMATION_SEND;
-
-typedef struct {
-  RESOURCE_INFORMATION_EXCHANGE_TYPE Type;
-} RESOURCE_INFORMATION_RETURNED;
-
-typedef struct {
-  RESOURCE_INFORMATION_SEND        SendInformation;
-  RESOURCE_INFORMATION_RETURNED    ReturnedInformation;
-} RESOURCE_INFORMATION_EXCHANGE;
 
 /**
   The callback function provided by Redfish Feature driver.

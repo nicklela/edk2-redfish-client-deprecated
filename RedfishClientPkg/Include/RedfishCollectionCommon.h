@@ -41,6 +41,7 @@ typedef struct _REDFISH_COLLECTION_PRIVATE {
   EFI_REST_JSON_STRUCTURE_PROTOCOL      *JsonStructProtocol;
   EDKII_REDFISH_FEATURE_PROTOCOL        *FeatureProtocol;
   REDFISH_SERVICE                       RedfishService;
+  RESOURCE_INFORMATION_EXCHANGE         *InformationExchange;
   EDKII_REDFISH_CONFIG_HANDLER_PROTOCOL ConfigHandler;
   EFI_STRING                            CollectionUri;
   CHAR8                                 *CollectionJson;
