@@ -11,6 +11,8 @@
 
 extern REDFISH_RESOURCE_COMMON_PRIVATE *mRedfishResourcePrivate;
 
+EFI_HANDLE medfishResourceConfigProtocolHandle;
+
 /**
   Provising redfish resource by given URI.
 
@@ -94,7 +96,6 @@ RedfishResourceConsumeResource (
   EFI_STATUS                    Status;
   REDFISH_RESPONSE              Response;
   CHAR8                         *Etag;
-  UINTN                         Index;
 
   if (This == NULL || IS_EMPTY_STRING (Uri)) {
     return EFI_INVALID_PARAMETER;
@@ -123,19 +124,23 @@ RedfishResourceConsumeResource (
   // Find etag in HTTP response header
   //
   Etag = NULL;
-  if (Response.StatusCode != NULL && *Response.StatusCode == HTTP_STATUS_200_OK) {
-    if (Response.HeaderCount > 0) {
-      for (Index = 0; Index < Response.HeaderCount; Index++) {
-        if (AsciiStrnCmp (Response.Headers[Index].FieldName, "ETag", 4) == 0) {
-          Etag = AllocateCopyPool (AsciiStrSize (Response.Headers[Index].FieldValue), Response.Headers[Index].FieldValue);
-        }
-      }
-    }
+  Status = GetEtagAndLocation (&Response, &Etag, NULL);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, failed to get ETag from HTTP header\n", __FUNCTION__));
   }
 
   Status = RedfishConsumeResourceCommon (Private, Private->Json, Etag);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, failed to consume resource from: %s: %r\n", __FUNCTION__, Uri, Status));
+    if (Status != EFI_ALREADY_STARTED) {
+      DEBUG ((DEBUG_ERROR, "%a, failed to consume resource from: %s: %r\n", __FUNCTION__, Uri, Status));
+    }
+  } else {
+    //
+    // Keep etag after consuming pending settings.
+    //
+    if (Etag != NULL) {
+      SetEtagWithUri (Etag, Private->Uri);
+    }
   }
 
   //
@@ -609,6 +614,8 @@ RedfishResourceEntryPoint (
   if (mRedfishResourcePrivate != NULL) {
     return EFI_ALREADY_STARTED;
   }
+
+  medfishResourceConfigProtocolHandle = ImageHandle;
 
   mRedfishResourcePrivate = AllocateZeroPool (sizeof (REDFISH_RESOURCE_COMMON_PRIVATE));
   CopyMem (&mRedfishResourcePrivate->ConfigHandler, &mRedfishConfigHandler, sizeof (EDKII_REDFISH_CONFIG_HANDLER_PROTOCOL));

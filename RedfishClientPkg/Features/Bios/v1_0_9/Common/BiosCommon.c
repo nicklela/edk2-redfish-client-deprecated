@@ -37,7 +37,6 @@ RedfishConsumeResourceCommon (
   EFI_STRING                   ConfigureLang;
   RedfishCS_Type_EmptyProp_CS_Data   *EmptyPropCs;
 
-  
 
   if (Private == NULL || IS_EMPTY_STRING (Json)) {
     return EFI_INVALID_PARAMETER;
@@ -63,12 +62,12 @@ RedfishConsumeResourceCommon (
   //
   // Check ETAG to see if we need to consume it
   //
-  if (CheckEtag (Private->Uri, HeaderEtag, NULL)) {
+  if (CheckEtag (Private->Uri, HeaderEtag, BiosCs->odata_etag)) {
     //
     // No change
     //
     DEBUG ((DEBUG_INFO, "%a, ETAG: %s has no change, ignore consume action\n", __FUNCTION__, Private->Uri));
-    Status = EFI_ALREADY_STARTED;    
+    Status = EFI_ALREADY_STARTED;
     goto ON_RELEASE;
   }
 
@@ -158,7 +157,7 @@ ProvisioningBiosProperties (
   EFI_REDFISH_BIOS_V1_0_9     *Bios;
   EFI_REDFISH_BIOS_V1_0_9_CS  *BiosCs;
   EFI_STATUS                    Status;
-  BOOLEAN                       PropertyChanged;  
+  BOOLEAN                       PropertyChanged;
   CHAR8                         *AsciiStringValue;
   RedfishCS_EmptyProp_KeyValue  *PropertyVagueValues;
   UINT32                        VagueValueNumber;
@@ -275,7 +274,7 @@ ProvisioningBiosResource (
   if (IS_EMPTY_STRING (ConfigureLang) || Private == NULL) {
     return EFI_INVALID_PARAMETER;
   }
-  
+
   EtagStr = NULL;
   AsciiSPrint (ResourceId, sizeof (ResourceId), "%d", Index);
 
@@ -346,6 +345,11 @@ ProvisioningBiosResources (
     DEBUG ((DEBUG_ERROR, "%a, No HII question found with configure language: %s: %r\n", __FUNCTION__, REDPATH_ARRAY_PATTERN, Status));
     return EFI_NOT_FOUND;
   }
+  //
+  // Set the configuration language in the RESOURCE_INFORMATION_EXCHANGE.
+  // This information is sent back to the parent resource (e.g. the collection driver).
+  //
+  EdkIIRedfishResourceSetConfigureLang (&UnifiedConfigureLangList);
 
   for (Index = 0; Index < UnifiedConfigureLangList.Count; Index++) {
     DEBUG ((DEBUG_INFO, "[%d] create Bios resource from: %s\n", UnifiedConfigureLangList.List[Index].Index, UnifiedConfigureLangList.List[Index].ConfigureLang));
@@ -364,6 +368,7 @@ ProvisioningBiosExistResource (
 {
   EFI_STATUS Status;
   EFI_STRING ConfigureLang;
+  REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST ReturnedConfigLangList;
   CHAR8      *EtagStr;
   CHAR8      *Json;
 
@@ -379,6 +384,17 @@ ProvisioningBiosExistResource (
   if (ConfigureLang == NULL) {
     return EFI_NOT_FOUND;
   }
+  //
+  // Set the configuration language in the RESOURCE_INFORMATION_EXCHANGE.
+  // This information is sent back to the parent resource (e.g. the collection driver).
+  //
+  ReturnedConfigLangList.Count = 1;
+  ReturnedConfigLangList.List = AllocateZeroPool (sizeof (REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG));
+  if (ReturnedConfigLangList.List != NULL) {
+    ReturnedConfigLangList.List->Index = ConfiglanguageGetInstanceIndex (ConfigureLang);
+    ReturnedConfigLangList.List->ConfigureLang = ConfigureLang;
+  }
+  EdkIIRedfishResourceSetConfigureLang (&ReturnedConfigLangList);
 
   Status = ProvisioningBiosProperties (
              Private->JsonStructProtocol,
@@ -606,23 +622,22 @@ RedfishIdentifyResourceCommon (
 {
   BOOLEAN     Supported;
   EFI_STATUS  Status;
-  EFI_STRING  *ConfigureLangList;
-  UINTN       Count;
   EFI_STRING  EndOfChar;
+  REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST ConfigLangList;
 
   Supported = RedfishIdentifyResource (Private->Uri, Private->Json);
   if (Supported) {
-    Status = RedfishPlatformConfigGetConfigureLang (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, REDPATH_ARRAY_PATTERN, &ConfigureLangList, &Count);
+    Status = RedfishFeatureGetUnifiedArrayTypeConfigureLang (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, REDPATH_ARRAY_PATTERN, &ConfigLangList);
     if (EFI_ERROR (Status)) {
       DEBUG ((DEBUG_ERROR, "%a, BiosConfigToRedfishGetConfigureLangRegex failed: %r\n", __FUNCTION__, Status));
       return Status;
     }
 
-    if (Count == 0) {
+    if (ConfigLangList.Count == 0) {
       return EFI_SUCCESS;
     }
 
-    EndOfChar = StrStr (ConfigureLangList[0], L"}");
+    EndOfChar = StrStr (ConfigLangList.List[0].ConfigureLang, L"}");
     if (EndOfChar == NULL) {
       ASSERT (FALSE);
       return EFI_DEVICE_ERROR;
@@ -633,9 +648,13 @@ RedfishIdentifyResourceCommon (
     //
     // Keep URI and ConfigLang mapping
     //
-    RedfisSetRedfishUri (ConfigureLangList[0], Private->Uri);
-    FreePool (ConfigureLangList);
-
+    RedfisSetRedfishUri (ConfigLangList.List[0].ConfigureLang, Private->Uri);
+    //
+    // Set the configuration language in the RESOURCE_INFORMATION_EXCHANGE.
+    // This information is sent back to the parent resource (e.g. the collection driver).
+    //
+    EdkIIRedfishResourceSetConfigureLang (&ConfigLangList);
+    DestroyConfiglanguageList (&ConfigLangList);
     return EFI_SUCCESS;
   }
 

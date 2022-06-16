@@ -10,7 +10,7 @@
 [Defines]
   INF_VERSION               = 0x00010005
   BASE_NAME                 = BiosDxe
-  FILE_GUID                 = 2a2741a3-018b-4755-9f7e-edaa2b87070e
+  FILE_GUID                 = d6c99bb0-ca18-45aa-8be6-a60c3ba5ecd8
   MODULE_TYPE               = DXE_DRIVER
   VERSION_STRING            = 1.0
   ENTRY_POINT               = RedfishResourceEntryPoint
@@ -30,16 +30,18 @@
 [LibraryClasses]
   BaseMemoryLib
   DebugLib
+  EdkIIRedfishResourceConfigLib
   RedfishLib
   RedfishFeatureUtilityLib
+  RedfishResourceIdentifyLib
   UefiLib
   UefiDriverEntryPoint
-  RedfishResourceIdentifyLib
+
 
 [Protocols]
-  gEdkIIRedfishConfigHandlerProtocolGuid    ## PRODUCED
-  gEfiRestJsonStructureProtocolGuid         ## CONSUMED
-  gEdkIIRedfishResourceConfigProtocolGuid   ## PRODUCED
+  gEdkIIRedfishConfigHandlerProtocolGuid          ## PRODUCED
+  gEfiRestJsonStructureProtocolGuid               ## CONSUMED
+  gEdkIIRedfishResourceConfigProtocolGuid         ## PRODUCED
 
 [Pcd]
   gEfiRedfishClientPkgTokenSpaceGuid.PcdMaxRedfishSchemaStringSize
