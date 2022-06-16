@@ -1,5 +1,5 @@
 /** @file
-  Redfish feature driver implementation - Memory
+  Redfish feature driver implementation - ComputerSystem
 
   (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP<BR>
 
@@ -10,6 +10,8 @@
 #include "../Common/ComputerSystemCommon.h"
 
 extern REDFISH_RESOURCE_COMMON_PRIVATE *mRedfishResourcePrivate;
+
+EFI_HANDLE medfishResourceConfigProtocolHandle;
 
 /**
   Provising redfish resource by given URI.
@@ -25,9 +27,9 @@ extern REDFISH_RESOURCE_COMMON_PRIVATE *mRedfishResourcePrivate;
 **/
 EFI_STATUS
 RedfishResourceProvisioningResource (
-  IN     EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL   *This,
-  IN     EFI_STRING                               Uri,
-  IN     BOOLEAN                                  PostMode
+  IN     EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL    *This,
+  IN     EFI_STRING                                Uri,
+  IN     BOOLEAN                                   PostMode
   )
 {
   REDFISH_RESOURCE_COMMON_PRIVATE *Private;
@@ -48,7 +50,7 @@ RedfishResourceProvisioningResource (
 
   Status = GetResourceByUri (Private->RedfishService, Uri, &Response);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, get resource from: %a failed\n", __FUNCTION__, Uri));
+    DEBUG ((DEBUG_ERROR, "%a, get resource from: %s failed\n", __FUNCTION__, Uri));
     return Status;
   }
 
@@ -177,7 +179,7 @@ RedfishResourceConsumeResource (
 **/
 EFI_STATUS
 RedfishResourceGetInfo (
-  IN     EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL  *This,
+  IN     EDKII_REDFISH_RESOURCE_CONFIG_PROTOCOL    *This,
   OUT    REDFISH_SCHEMA_INFO                     *Info
   )
 {
@@ -384,7 +386,6 @@ RedfishResourceIdentify (
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, identify %s failed: %r\n", __FUNCTION__, Uri, Status));
   }
-
   //
   // Release resource
   //
@@ -613,6 +614,8 @@ RedfishResourceEntryPoint (
   if (mRedfishResourcePrivate != NULL) {
     return EFI_ALREADY_STARTED;
   }
+
+  medfishResourceConfigProtocolHandle = ImageHandle;
 
   mRedfishResourcePrivate = AllocateZeroPool (sizeof (REDFISH_RESOURCE_COMMON_PRIVATE));
   CopyMem (&mRedfishResourcePrivate->ConfigHandler, &mRedfishConfigHandler, sizeof (EDKII_REDFISH_CONFIG_HANDLER_PROTOCOL));

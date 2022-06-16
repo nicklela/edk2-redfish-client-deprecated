@@ -10,7 +10,7 @@
 [Defines]
   INF_VERSION               = 0x00010005
   BASE_NAME                 = ComputerSystemDxe
-  FILE_GUID                 = f51380b6-780e-4bbe-9745-19fa4189d582
+  FILE_GUID                 = 584bae05-d78d-4df9-b5e9-3e987a99480a
   MODULE_TYPE               = DXE_DRIVER
   VERSION_STRING            = 1.0
   ENTRY_POINT               = RedfishResourceEntryPoint
@@ -19,7 +19,6 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
-  NetworkPkg/NetworkPkg.dec
   RedfishPkg/RedfishPkg.dec
   RedfishClientPkg/RedfishClientPkg.dec
 
@@ -31,16 +30,18 @@
 [LibraryClasses]
   BaseMemoryLib
   DebugLib
+  EdkIIRedfishResourceConfigLib
   RedfishLib
   RedfishFeatureUtilityLib
+  RedfishResourceIdentifyLib
   UefiLib
   UefiDriverEntryPoint
-  RedfishResourceIdentifyLib
+
 
 [Protocols]
-  gEdkIIRedfishConfigHandlerProtocolGuid    ## PRODUCED
-  gEfiRestJsonStructureProtocolGuid         ## CONSUMED
-  gEdkIIRedfishResourceConfigProtocolGuid   ## PRODUCED
+  gEdkIIRedfishConfigHandlerProtocolGuid          ## PRODUCED
+  gEfiRestJsonStructureProtocolGuid               ## CONSUMED
+  gEdkIIRedfishResourceConfigProtocolGuid         ## PRODUCED
 
 [Pcd]
   gEfiRedfishClientPkgTokenSpaceGuid.PcdMaxRedfishSchemaStringSize

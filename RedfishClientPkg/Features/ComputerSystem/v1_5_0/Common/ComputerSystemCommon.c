@@ -9,7 +9,7 @@
 
 #include "ComputerSystemCommon.h"
 
-CHAR8 EmptyJson[] = "{\"@odata.id\": \"\", \"@odata.type\": \"#ComputerSystem.v1_5_0.ComputerSystem\", \"Id\": \"\", \"Name\": \"\", \"Boot\": {}}";
+CHAR8 ComputerSystemEmptyJson[] = "{\"@odata.id\": \"\", \"@odata.type\": \"#ComputerSystem.v1_5_0.ComputerSystem\", \"Id\": \"\", \"Name\": \"\"}";
 
 REDFISH_RESOURCE_COMMON_PRIVATE *mRedfishResourcePrivate = NULL;
 
@@ -31,10 +31,11 @@ RedfishConsumeResourceCommon (
   IN  CHAR8                           *HeaderEtag OPTIONAL
   )
 {
-  EFI_STATUS                    Status;
+  EFI_STATUS                   Status;
   EFI_REDFISH_COMPUTERSYSTEM_V1_5_0     *ComputerSystem;
   EFI_REDFISH_COMPUTERSYSTEM_V1_5_0_CS  *ComputerSystemCs;
-  EFI_STRING                    ConfigureLang;
+  EFI_STRING                   ConfigureLang;
+
 
   if (Private == NULL || IS_EMPTY_STRING (Json)) {
     return EFI_INVALID_PARAMETER;
@@ -70,26 +71,6 @@ RedfishConsumeResourceCommon (
   }
 
   //
-  // Handle SYSTEMTYPE
-  //
-  if (ComputerSystemCs->SystemType != NULL) {
-    //
-    // Find corresponding configure language for collection resource.
-    //
-    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "SystemType");
-    if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->SystemType);
-      if (EFI_ERROR (Status)) {
-        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
-      }
-
-      FreePool (ConfigureLang);
-    } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
-    }
-  }
-
-  //
   // Handle ASSETTAG
   //
   if (ComputerSystemCs->AssetTag != NULL) {
@@ -110,6 +91,290 @@ RedfishConsumeResourceCommon (
   }
 
   //
+  // BIOS will be handled by feature driver.
+  //
+
+  //
+  // Handle BIOSVERSION
+  //
+  if (ComputerSystemCs->BiosVersion != NULL) {
+    //
+    // Find corresponding configure language for collection resource.
+    //
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "BiosVersion");
+    if (ConfigureLang != NULL) {
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->BiosVersion);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+
+      FreePool (ConfigureLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
+    }
+  }
+
+  //
+  // Handle BOOT
+  //
+  if (ComputerSystemCs->Boot == NULL) {
+    ComputerSystemCs->Boot = AllocateZeroPool (sizeof (RedfishComputerSystem_V1_5_0_Boot_CS));
+    ASSERT (ComputerSystemCs->Boot != NULL);
+  }
+
+  //
+  // Handle BOOT->BOOTNEXT
+  //
+  if (ComputerSystemCs->Boot->BootNext != NULL) {
+    //
+    // Find corresponding configure language for collection resource.
+    //
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Boot/BootNext");
+    if (ConfigureLang != NULL) {
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->BootNext);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+
+      FreePool (ConfigureLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
+    }
+  }
+
+  //
+  // Handle BOOT->BOOTORDER
+  //
+  if (ComputerSystemCs->Boot->BootOrder != NULL) {
+    //
+    // Find corresponding configure language for collection resource.
+    //
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Boot/BootOrder");
+    if (ConfigureLang != NULL) {
+      Status = ApplyFeatureSettingsStringArrayType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->BootOrder);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+
+      FreePool (ConfigureLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
+    }
+  }
+
+  //
+  // Handle BOOT->BOOTSOURCEOVERRIDEENABLED
+  //
+  if (ComputerSystemCs->Boot->BootSourceOverrideEnabled != NULL) {
+    //
+    // Find corresponding configure language for collection resource.
+    //
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Boot/BootSourceOverrideEnabled");
+    if (ConfigureLang != NULL) {
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->BootSourceOverrideEnabled);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+
+      FreePool (ConfigureLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
+    }
+  }
+
+  //
+  // Handle BOOT->BOOTSOURCEOVERRIDEMODE
+  //
+  if (ComputerSystemCs->Boot->BootSourceOverrideMode != NULL) {
+    //
+    // Find corresponding configure language for collection resource.
+    //
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Boot/BootSourceOverrideMode");
+    if (ConfigureLang != NULL) {
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->BootSourceOverrideMode);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+
+      FreePool (ConfigureLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
+    }
+  }
+
+  //
+  // Handle BOOT->BOOTSOURCEOVERRIDETARGET
+  //
+  if (ComputerSystemCs->Boot->BootSourceOverrideTarget != NULL) {
+    //
+    // Find corresponding configure language for collection resource.
+    //
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Boot/BootSourceOverrideTarget");
+    if (ConfigureLang != NULL) {
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->BootSourceOverrideTarget);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+
+      FreePool (ConfigureLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
+    }
+  }
+
+  //
+  // Handle BOOT->UEFITARGETBOOTSOURCEOVERRIDE
+  //
+  if (ComputerSystemCs->Boot->UefiTargetBootSourceOverride != NULL) {
+    //
+    // Find corresponding configure language for collection resource.
+    //
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Boot/UefiTargetBootSourceOverride");
+    if (ConfigureLang != NULL) {
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->UefiTargetBootSourceOverride);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+
+      FreePool (ConfigureLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
+    }
+  }
+
+  //
+  // ETHERNETINTERFACES will be handled by collection driver.
+  //
+
+  //
+  // Handle HOSTNAME
+  //
+  if (ComputerSystemCs->HostName != NULL) {
+    //
+    // Find corresponding configure language for collection resource.
+    //
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "HostName");
+    if (ConfigureLang != NULL) {
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->HostName);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+
+      FreePool (ConfigureLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
+    }
+  }
+
+  //
+  // Handle HOSTWATCHDOGTIMER
+  //
+  if (ComputerSystemCs->HostWatchdogTimer == NULL) {
+    ComputerSystemCs->HostWatchdogTimer = AllocateZeroPool (sizeof (RedfishComputerSystem_V1_5_0_WatchdogTimer_CS));
+    ASSERT (ComputerSystemCs->HostWatchdogTimer != NULL);
+  }
+
+  //
+  // Handle HOSTWATCHDOGTIMER->FUNCTIONENABLED
+  //
+  if (ComputerSystemCs->HostWatchdogTimer->FunctionEnabled != NULL) {
+    //
+    // Find corresponding configure language for collection resource.
+    //
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "HostWatchdogTimer/FunctionEnabled");
+    if (ConfigureLang != NULL) {
+      Status = ApplyFeatureSettingsBooleanType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (BOOLEAN)*ComputerSystemCs->HostWatchdogTimer->FunctionEnabled);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+
+      FreePool (ConfigureLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
+    }
+  }
+
+  //
+  // Handle HOSTWATCHDOGTIMER->TIMEOUTACTION
+  //
+  if (ComputerSystemCs->HostWatchdogTimer->TimeoutAction != NULL) {
+    //
+    // Find corresponding configure language for collection resource.
+    //
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "HostWatchdogTimer/TimeoutAction");
+    if (ConfigureLang != NULL) {
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->HostWatchdogTimer->TimeoutAction);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+
+      FreePool (ConfigureLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
+    }
+  }
+
+  //
+  // Handle HOSTWATCHDOGTIMER->WARNINGACTION
+  //
+  if (ComputerSystemCs->HostWatchdogTimer->WarningAction != NULL) {
+    //
+    // Find corresponding configure language for collection resource.
+    //
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "HostWatchdogTimer/WarningAction");
+    if (ConfigureLang != NULL) {
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->HostWatchdogTimer->WarningAction);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+
+      FreePool (ConfigureLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
+    }
+  }
+
+  //
+  // Handle HOSTEDSERVICES
+  //
+  if (ComputerSystemCs->HostedServices == NULL) {
+    ComputerSystemCs->HostedServices = AllocateZeroPool (sizeof (RedfishComputerSystem_V1_5_0_HostedServices_CS));
+    ASSERT (ComputerSystemCs->HostedServices != NULL);
+  }
+
+  //
+  // Handle HOSTINGROLES
+  //
+//
+// ****** Warning ******
+// Unsupported array type:
+//
+
+  //
+  // Handle INDICATORLED
+  //
+  if (ComputerSystemCs->IndicatorLED != NULL) {
+    //
+    // Find corresponding configure language for collection resource.
+    //
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "IndicatorLED");
+    if (ConfigureLang != NULL) {
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->IndicatorLED);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+
+      FreePool (ConfigureLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
+    }
+  }
+
+  //
+  // LOGSERVICES will be handled by collection driver.
+  //
+
+  //
   // Handle MANUFACTURER
   //
   if (ComputerSystemCs->Manufacturer != NULL) {
@@ -119,6 +384,78 @@ RedfishConsumeResourceCommon (
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Manufacturer");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Manufacturer);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+
+      FreePool (ConfigureLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
+    }
+  }
+
+  //
+  // MEMORY will be handled by collection driver.
+  //
+
+  //
+  // Handle MEMORYSUMMARY
+  //
+  if (ComputerSystemCs->MemorySummary == NULL) {
+    ComputerSystemCs->MemorySummary = AllocateZeroPool (sizeof (RedfishComputerSystem_V1_5_0_MemorySummary_CS));
+    ASSERT (ComputerSystemCs->MemorySummary != NULL);
+  }
+
+  //
+  // Handle MEMORYSUMMARY->MEMORYMIRRORING
+  //
+  if (ComputerSystemCs->MemorySummary->MemoryMirroring != NULL) {
+    //
+    // Find corresponding configure language for collection resource.
+    //
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "MemorySummary/MemoryMirroring");
+    if (ConfigureLang != NULL) {
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->MemorySummary->MemoryMirroring);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+
+      FreePool (ConfigureLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
+    }
+  }
+
+  //
+  // Handle MEMORYSUMMARY->TOTALSYSTEMMEMORYGIB
+  //
+  if (ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB != NULL) {
+    //
+    // Find corresponding configure language for collection resource.
+    //
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "MemorySummary/TotalSystemMemoryGiB");
+    if (ConfigureLang != NULL) {
+      Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+
+      FreePool (ConfigureLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
+    }
+  }
+
+  //
+  // Handle MEMORYSUMMARY->TOTALSYSTEMPERSISTENTMEMORYGIB
+  //
+  if (ComputerSystemCs->MemorySummary->TotalSystemPersistentMemoryGiB != NULL) {
+    //
+    // Find corresponding configure language for collection resource.
+    //
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "MemorySummary/TotalSystemPersistentMemoryGiB");
+    if (ConfigureLang != NULL) {
+      Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*ComputerSystemCs->MemorySummary->TotalSystemPersistentMemoryGiB);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -150,44 +487,24 @@ RedfishConsumeResourceCommon (
   }
 
   //
-  // Handle SKU
+  // NETWORKINTERFACES will be handled by collection driver.
   //
-  if (ComputerSystemCs->SKU != NULL) {
-    //
-    // Find corresponding configure language for collection resource.
-    //
-    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "SKU");
-    if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->SKU);
-      if (EFI_ERROR (Status)) {
-        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
-      }
-
-      FreePool (ConfigureLang);
-    } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
-    }
-  }
 
   //
-  // Handle SERIALNUMBER
+  // Handle PCIEDEVICES
   //
-  if (ComputerSystemCs->SerialNumber != NULL) {
-    //
-    // Find corresponding configure language for collection resource.
-    //
-    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "SerialNumber");
-    if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->SerialNumber);
-      if (EFI_ERROR (Status)) {
-        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
-      }
+//
+// ****** Warning ******
+// Unsupported array type:
+//
 
-      FreePool (ConfigureLang);
-    } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
-    }
-  }
+  //
+  // Handle PCIEFUNCTIONS
+  //
+//
+// ****** Warning ******
+// Unsupported array type:
+//
 
   //
   // Handle PARTNUMBER
@@ -199,46 +516,6 @@ RedfishConsumeResourceCommon (
     ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "PartNumber");
     if (ConfigureLang != NULL) {
       Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->PartNumber);
-      if (EFI_ERROR (Status)) {
-        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
-      }
-
-      FreePool (ConfigureLang);
-    } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
-    }
-  }
-
-  //
-  // Handle HOSTNAME
-  //
-  if (ComputerSystemCs->HostName != NULL) {
-    //
-    // Find corresponding configure language for collection resource.
-    //
-    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "HostName");
-    if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->HostName);
-      if (EFI_ERROR (Status)) {
-        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
-      }
-
-      FreePool (ConfigureLang);
-    } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
-    }
-  }
-
-  //
-  // Handle INDICATORLED
-  //
-  if (ComputerSystemCs->IndicatorLED != NULL) {
-    //
-    // Find corresponding configure language for collection resource.
-    //
-    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "IndicatorLED");
-    if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->IndicatorLED);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -270,129 +547,17 @@ RedfishConsumeResourceCommon (
   }
 
   //
-  // Handle BOOT->BOOTSOURCEOVERRIDETARGET
+  // Handle PROCESSORSUMMARY
   //
-  if (ComputerSystemCs->Boot != NULL && ComputerSystemCs->Boot->BootSourceOverrideTarget != NULL) {
-    //
-    // Find corresponding configure language for collection resource.
-    //
-    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Boot/BootSourceOverrideTarget");
-    if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->BootSourceOverrideTarget);
-      if (EFI_ERROR (Status)) {
-        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
-      }
-
-      FreePool (ConfigureLang);
-    } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
-    }
-  }
-
-  //
-  // Handle BOOT->BOOTSOURCEOVERRIDEENABLED
-  //
-  if (ComputerSystemCs->Boot != NULL && ComputerSystemCs->Boot->BootSourceOverrideEnabled != NULL) {
-    //
-    // Find corresponding configure language for collection resource.
-    //
-    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Boot/BootSourceOverrideEnabled");
-    if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->BootSourceOverrideEnabled);
-      if (EFI_ERROR (Status)) {
-        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
-      }
-
-      FreePool (ConfigureLang);
-    } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
-    }
-  }
-
-  //
-  // Handle BOOT->UEFITARGETBOOTSOURCEOVERRIDE
-  //
-  if (ComputerSystemCs->Boot != NULL && ComputerSystemCs->Boot->UefiTargetBootSourceOverride != NULL) {
-    //
-    // Find corresponding configure language for collection resource.
-    //
-    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Boot/UefiTargetBootSourceOverride");
-    if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->UefiTargetBootSourceOverride);
-      if (EFI_ERROR (Status)) {
-        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
-      }
-
-      FreePool (ConfigureLang);
-    } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
-    }
-  }
-
-  //
-  // Handle BOOT->BOOTSOURCEOVERRIDEMODE
-  //
-  if (ComputerSystemCs->Boot != NULL && ComputerSystemCs->Boot->BootSourceOverrideMode != NULL) {
-    //
-    // Find corresponding configure language for collection resource.
-    //
-    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Boot/BootSourceOverrideMode");
-    if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->BootSourceOverrideMode);
-      if (EFI_ERROR (Status)) {
-        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
-      }
-
-      FreePool (ConfigureLang);
-    } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
-    }
-  }
-
-  //
-  // Handle BOOT->BOOTORDER
-  //
-  if (ComputerSystemCs->Boot != NULL && ComputerSystemCs->Boot->BootOrder != NULL) {
-    //
-    // Find corresponding configure language for collection resource.
-    //
-    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "Boot/BootOrder");
-    if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettingsStringArrayType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->Boot->BootOrder);
-      if (EFI_ERROR (Status)) {
-        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
-      }
-
-      FreePool (ConfigureLang);
-    } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
-    }
-  }
-
-  //
-  // Handle BIOSVERSION
-  //
-  if (ComputerSystemCs->BiosVersion != NULL) {
-    //
-    // Find corresponding configure language for collection resource.
-    //
-    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "BiosVersion");
-    if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->BiosVersion);
-      if (EFI_ERROR (Status)) {
-        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
-      }
-
-      FreePool (ConfigureLang);
-    } else {
-      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
-    }
+  if (ComputerSystemCs->ProcessorSummary == NULL) {
+    ComputerSystemCs->ProcessorSummary = AllocateZeroPool (sizeof (RedfishComputerSystem_V1_5_0_ProcessorSummary_CS));
+    ASSERT (ComputerSystemCs->ProcessorSummary != NULL);
   }
 
   //
   // Handle PROCESSORSUMMARY->COUNT
   //
-  if (ComputerSystemCs->ProcessorSummary != NULL && ComputerSystemCs->ProcessorSummary->Count != NULL) {
+  if (ComputerSystemCs->ProcessorSummary->Count != NULL) {
     //
     // Find corresponding configure language for collection resource.
     //
@@ -410,9 +575,29 @@ RedfishConsumeResourceCommon (
   }
 
   //
+  // Handle PROCESSORSUMMARY->LOGICALPROCESSORCOUNT
+  //
+  if (ComputerSystemCs->ProcessorSummary->LogicalProcessorCount != NULL) {
+    //
+    // Find corresponding configure language for collection resource.
+    //
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "ProcessorSummary/LogicalProcessorCount");
+    if (ConfigureLang != NULL) {
+      Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*ComputerSystemCs->ProcessorSummary->LogicalProcessorCount);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+
+      FreePool (ConfigureLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
+    }
+  }
+
+  //
   // Handle PROCESSORSUMMARY->MODEL
   //
-  if (ComputerSystemCs->ProcessorSummary != NULL && ComputerSystemCs->ProcessorSummary->Model != NULL) {
+  if (ComputerSystemCs->ProcessorSummary->Model != NULL) {
     //
     // Find corresponding configure language for collection resource.
     //
@@ -430,15 +615,27 @@ RedfishConsumeResourceCommon (
   }
 
   //
-  // Handle MEMORYSUMMARY->TOTALSYSTEMMEMORYGIB
+  // PROCESSORS will be handled by collection driver.
   //
-  if (ComputerSystemCs->ProcessorSummary != NULL && ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB != NULL) {
+
+  //
+  // Handle REDUNDANCY
+  //
+//
+// ****** Warning ******
+// Unsupported array type:
+//
+
+  //
+  // Handle SKU
+  //
+  if (ComputerSystemCs->SKU != NULL) {
     //
     // Find corresponding configure language for collection resource.
     //
-    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "MemorySummary/TotalSystemMemoryGiB");
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "SKU");
     if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettingsNumericType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, (UINTN)*ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB);
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->SKU);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -450,15 +647,19 @@ RedfishConsumeResourceCommon (
   }
 
   //
-  // Handle MEMORYSUMMARY->MEMORYMIRRORING
+  // SECUREBOOT will be handled by feature driver.
   //
-  if (ComputerSystemCs->ProcessorSummary != NULL && ComputerSystemCs->MemorySummary->MemoryMirroring != NULL) {
+
+  //
+  // Handle SERIALNUMBER
+  //
+  if (ComputerSystemCs->SerialNumber != NULL) {
     //
     // Find corresponding configure language for collection resource.
     //
-    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "MemorySummary/MemoryMirroring");
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "SerialNumber");
     if (ConfigureLang != NULL) {
-      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->MemorySummary->MemoryMirroring);
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->SerialNumber);
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
       }
@@ -469,9 +670,63 @@ RedfishConsumeResourceCommon (
     }
   }
 
-
+  //
+  // SIMPLESTORAGE will be handled by collection driver.
+  //
 
   //
+  // STORAGE will be handled by collection driver.
+  //
+
+  //
+  // Handle SUBMODEL
+  //
+  if (ComputerSystemCs->SubModel != NULL) {
+    //
+    // Find corresponding configure language for collection resource.
+    //
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "SubModel");
+    if (ConfigureLang != NULL) {
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->SubModel);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+
+      FreePool (ConfigureLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
+    }
+  }
+
+  //
+  // Handle SYSTEMTYPE
+  //
+  if (ComputerSystemCs->SystemType != NULL) {
+    //
+    // Find corresponding configure language for collection resource.
+    //
+    ConfigureLang = GetConfigureLang (ComputerSystemCs->odata_id, "SystemType");
+    if (ConfigureLang != NULL) {
+      Status = ApplyFeatureSettingsStringType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, ComputerSystemCs->SystemType);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+
+      FreePool (ConfigureLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
+    }
+  }
+
+  //
+  // Handle TRUSTEDMODULES
+  //
+//
+// ****** Warning ******
+// Unsupported array type:
+//
+
+
 ON_RELEASE:
 
   //
@@ -486,9 +741,9 @@ ON_RELEASE:
 }
 
 EFI_STATUS
-ProvisioningProperties (
+ProvisioningComputerSystemProperties (
   IN  EFI_REST_JSON_STRUCTURE_PROTOCOL  *JsonStructProtocol,
-  IN  CHAR8                             *IputJson,
+  IN  CHAR8                             *InputJson,
   IN  CHAR8                             *ResourceId,  OPTIONAL
   IN  EFI_STRING                        ConfigureLang,
   IN  BOOLEAN                           ProvisionMode,
@@ -497,15 +752,18 @@ ProvisioningProperties (
 {
   EFI_REDFISH_COMPUTERSYSTEM_V1_5_0     *ComputerSystem;
   EFI_REDFISH_COMPUTERSYSTEM_V1_5_0_CS  *ComputerSystemCs;
-  EFI_STATUS                            Status;
-  INT64                                 *NumericValue;
-  CHAR8                                 *AsciiStringValue;
-  BOOLEAN                               PropertyChanged;
-  UINTN                                 ArraySize;
-  CHAR8                                 **ArrayValue;
+  EFI_STATUS                    Status;
+  BOOLEAN                       PropertyChanged;
+  CHAR8                         *AsciiStringValue;
+  CHAR8                         **AsciiStringArrayValue;
+  UINTN                         ArraySize;
+  BOOLEAN                       *BooleanValue;
+  INT32                         *IntegerValue;
+  INT64                         *NumericValue;
 
 
-  if (JsonStructProtocol == NULL || ResultJson == NULL || IS_EMPTY_STRING (IputJson) || IS_EMPTY_STRING (ConfigureLang)) {
+
+  if (JsonStructProtocol == NULL || ResultJson == NULL || IS_EMPTY_STRING (InputJson) || IS_EMPTY_STRING (ConfigureLang)) {
     return EFI_INVALID_PARAMETER;
   }
 
@@ -513,14 +771,12 @@ ProvisioningProperties (
 
   *ResultJson = NULL;
   PropertyChanged = FALSE;
-  ArraySize = 0;
-  ArrayValue = NULL;
 
   ComputerSystem = NULL;
   Status = JsonStructProtocol->ToStructure (
                                  JsonStructProtocol,
                                  NULL,
-                                 IputJson,
+                                 InputJson,
                                  (EFI_REST_JSON_STRUCTURE_HEADER **)&ComputerSystem
                                  );
   if (EFI_ERROR (Status)) {
@@ -538,19 +794,6 @@ ProvisioningProperties (
   }
 
   //
-  // Handle SYSTEMTYPE
-  //
-  if (PropertyChecker (ComputerSystemCs->SystemType, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"SystemType", ConfigureLang);
-    if (AsciiStringValue != NULL) {
-      if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->SystemType, AsciiStringValue) != 0) {
-        ComputerSystemCs->SystemType = AsciiStringValue;
-        PropertyChanged = TRUE;
-      }
-    }
-  }
-
-  //
   // Handle ASSETTAG
   //
   if (PropertyChecker (ComputerSystemCs->AssetTag, ProvisionMode)) {
@@ -562,68 +805,92 @@ ProvisioningProperties (
       }
     }
   }
-
   //
-  // Handle MANUFACTURER
+  // Handle BIOSVERSION
   //
-  if (PropertyChecker (ComputerSystemCs->Manufacturer, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Manufacturer", ConfigureLang);
+  if (PropertyChecker (ComputerSystemCs->BiosVersion, ProvisionMode)) {
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"BiosVersion", ConfigureLang);
     if (AsciiStringValue != NULL) {
-      if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Manufacturer, AsciiStringValue) != 0) {
-        ComputerSystemCs->Manufacturer = AsciiStringValue;
+      if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->BiosVersion, AsciiStringValue) != 0) {
+        ComputerSystemCs->BiosVersion = AsciiStringValue;
         PropertyChanged = TRUE;
       }
     }
   }
-
   //
-  // Handle MODEL
+  // Handle BOOT
   //
-  if (PropertyChecker (ComputerSystemCs->Model, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Model", ConfigureLang);
-    if (AsciiStringValue != NULL) {
-      if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Model, AsciiStringValue) != 0) {
-        ComputerSystemCs->Model = AsciiStringValue;
-        PropertyChanged = TRUE;
+  if (ComputerSystemCs->Boot != NULL) {
+    //
+    // Handle BOOT->BOOTNEXT
+    //
+    if (PropertyChecker (ComputerSystemCs->Boot->BootNext, ProvisionMode)) {
+      AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootNext", ConfigureLang);
+      if (AsciiStringValue != NULL) {
+        if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->BootNext, AsciiStringValue) != 0) {
+          ComputerSystemCs->Boot->BootNext = AsciiStringValue;
+          PropertyChanged = TRUE;
+        }
       }
     }
-  }
-
-  //
-  // Handle SKU
-  //
-  if (PropertyChecker (ComputerSystemCs->SKU, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"SKU", ConfigureLang);
-    if (AsciiStringValue != NULL) {
-      if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->SKU, AsciiStringValue) != 0) {
-        ComputerSystemCs->SKU = AsciiStringValue;
-        PropertyChanged = TRUE;
+    //
+    // Handle BOOT->BOOTORDER
+    //
+    if (PropertyChecker (ComputerSystemCs->Boot->BootOrder, ProvisionMode)) {
+      AsciiStringArrayValue = GetPropertyStringArrayValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootOrder", ConfigureLang, &ArraySize);
+      if (AsciiStringArrayValue != NULL) {
+        if (ProvisionMode || !CompareRedfishStringArrayValues (ComputerSystemCs->Boot->BootOrder, AsciiStringArrayValue, ArraySize)) {
+          AddRedfishCharArray (&ComputerSystemCs->Boot->BootOrder, AsciiStringArrayValue, ArraySize);
+          PropertyChanged = TRUE;
+        }
       }
     }
-  }
-
-  //
-  // Handle SERIALNUMBER
-  //
-  if (PropertyChecker (ComputerSystemCs->SerialNumber, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"SerialNumber", ConfigureLang);
-    if (AsciiStringValue != NULL) {
-      if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->SerialNumber, AsciiStringValue) != 0) {
-        ComputerSystemCs->SerialNumber = AsciiStringValue;
-        PropertyChanged = TRUE;
+    //
+    // Handle BOOT->BOOTSOURCEOVERRIDEENABLED
+    //
+    if (PropertyChecker (ComputerSystemCs->Boot->BootSourceOverrideEnabled, ProvisionMode)) {
+      AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootSourceOverrideEnabled", ConfigureLang);
+      if (AsciiStringValue != NULL) {
+        if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->BootSourceOverrideEnabled, AsciiStringValue) != 0) {
+          ComputerSystemCs->Boot->BootSourceOverrideEnabled = AsciiStringValue;
+          PropertyChanged = TRUE;
+        }
       }
     }
-  }
-
-  //
-  // Handle PARTNUMBER
-  //
-  if (PropertyChecker (ComputerSystemCs->PartNumber, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"PartNumber", ConfigureLang);
-    if (AsciiStringValue != NULL) {
-      if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->PartNumber, AsciiStringValue) != 0) {
-        ComputerSystemCs->PartNumber = AsciiStringValue;
-        PropertyChanged = TRUE;
+    //
+    // Handle BOOT->BOOTSOURCEOVERRIDEMODE
+    //
+    if (PropertyChecker (ComputerSystemCs->Boot->BootSourceOverrideMode, ProvisionMode)) {
+      AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootSourceOverrideMode", ConfigureLang);
+      if (AsciiStringValue != NULL) {
+        if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->BootSourceOverrideMode, AsciiStringValue) != 0) {
+          ComputerSystemCs->Boot->BootSourceOverrideMode = AsciiStringValue;
+          PropertyChanged = TRUE;
+        }
+      }
+    }
+    //
+    // Handle BOOT->BOOTSOURCEOVERRIDETARGET
+    //
+    if (PropertyChecker (ComputerSystemCs->Boot->BootSourceOverrideTarget, ProvisionMode)) {
+      AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootSourceOverrideTarget", ConfigureLang);
+      if (AsciiStringValue != NULL) {
+        if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->BootSourceOverrideTarget, AsciiStringValue) != 0) {
+          ComputerSystemCs->Boot->BootSourceOverrideTarget = AsciiStringValue;
+          PropertyChanged = TRUE;
+        }
+      }
+    }
+    //
+    // Handle BOOT->UEFITARGETBOOTSOURCEOVERRIDE
+    //
+    if (PropertyChecker (ComputerSystemCs->Boot->UefiTargetBootSourceOverride, ProvisionMode)) {
+      AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/UefiTargetBootSourceOverride", ConfigureLang);
+      if (AsciiStringValue != NULL) {
+        if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->UefiTargetBootSourceOverride, AsciiStringValue) != 0) {
+          ComputerSystemCs->Boot->UefiTargetBootSourceOverride = AsciiStringValue;
+          PropertyChanged = TRUE;
+        }
       }
     }
   }
@@ -640,6 +907,64 @@ ProvisioningProperties (
       }
     }
   }
+  //
+  // Handle HOSTWATCHDOGTIMER
+  //
+  if (ComputerSystemCs->HostWatchdogTimer != NULL) {
+    //
+    // Handle HOSTWATCHDOGTIMER->FUNCTIONENABLED
+    //
+    if (PropertyChecker (ComputerSystemCs->HostWatchdogTimer->FunctionEnabled, ProvisionMode)) {
+      BooleanValue = GetPropertyBooleanValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"HostWatchdogTimer/FunctionEnabled", ConfigureLang);
+      if (BooleanValue != NULL) {
+        if (ProvisionMode || *ComputerSystemCs->HostWatchdogTimer->FunctionEnabled != *BooleanValue) {
+          IntegerValue = AllocatePool (sizeof (*IntegerValue));
+          if (IntegerValue != NULL) {
+            *IntegerValue = (BooleanValue ? 0x01 : 0x00);
+            ComputerSystemCs->HostWatchdogTimer->FunctionEnabled = IntegerValue;
+            PropertyChanged = TRUE;
+          }
+        }
+      }
+    }
+    //
+    // Handle HOSTWATCHDOGTIMER->TIMEOUTACTION
+    //
+    if (PropertyChecker (ComputerSystemCs->HostWatchdogTimer->TimeoutAction, ProvisionMode)) {
+      AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"HostWatchdogTimer/TimeoutAction", ConfigureLang);
+      if (AsciiStringValue != NULL) {
+        if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->HostWatchdogTimer->TimeoutAction, AsciiStringValue) != 0) {
+          ComputerSystemCs->HostWatchdogTimer->TimeoutAction = AsciiStringValue;
+          PropertyChanged = TRUE;
+        }
+      }
+    }
+    //
+    // Handle HOSTWATCHDOGTIMER->WARNINGACTION
+    //
+    if (PropertyChecker (ComputerSystemCs->HostWatchdogTimer->WarningAction, ProvisionMode)) {
+      AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"HostWatchdogTimer/WarningAction", ConfigureLang);
+      if (AsciiStringValue != NULL) {
+        if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->HostWatchdogTimer->WarningAction, AsciiStringValue) != 0) {
+          ComputerSystemCs->HostWatchdogTimer->WarningAction = AsciiStringValue;
+          PropertyChanged = TRUE;
+        }
+      }
+    }
+  }
+
+  //
+  // Handle HOSTEDSERVICES
+  //
+  if (ComputerSystemCs->HostedServices != NULL) {
+  }
+
+  //
+  // Handle HOSTINGROLES
+  //
+//// ****** Warning ******
+// Unsupported array type:
+//
 
   //
   // Handle INDICATORLED
@@ -653,7 +978,98 @@ ProvisioningProperties (
       }
     }
   }
+  //
+  // Handle MANUFACTURER
+  //
+  if (PropertyChecker (ComputerSystemCs->Manufacturer, ProvisionMode)) {
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Manufacturer", ConfigureLang);
+    if (AsciiStringValue != NULL) {
+      if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Manufacturer, AsciiStringValue) != 0) {
+        ComputerSystemCs->Manufacturer = AsciiStringValue;
+        PropertyChanged = TRUE;
+      }
+    }
+  }
+  //
+  // Handle MEMORYSUMMARY
+  //
+  if (ComputerSystemCs->MemorySummary != NULL) {
+    //
+    // Handle MEMORYSUMMARY->MEMORYMIRRORING
+    //
+    if (PropertyChecker (ComputerSystemCs->MemorySummary->MemoryMirroring, ProvisionMode)) {
+      AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"MemorySummary/MemoryMirroring", ConfigureLang);
+      if (AsciiStringValue != NULL) {
+        if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->MemorySummary->MemoryMirroring, AsciiStringValue) != 0) {
+          ComputerSystemCs->MemorySummary->MemoryMirroring = AsciiStringValue;
+          PropertyChanged = TRUE;
+        }
+      }
+    }
+    //
+    // Handle MEMORYSUMMARY->TOTALSYSTEMMEMORYGIB
+    //
+    if (PropertyChecker (ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB, ProvisionMode)) {
+      NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"MemorySummary/TotalSystemMemoryGiB", ConfigureLang);
+      if (NumericValue != NULL) {
+        if (ProvisionMode || *ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB != *NumericValue) {
+          ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB = NumericValue;
+          PropertyChanged = TRUE;
+        }
+      }
+    }
+    //
+    // Handle MEMORYSUMMARY->TOTALSYSTEMPERSISTENTMEMORYGIB
+    //
+    if (PropertyChecker (ComputerSystemCs->MemorySummary->TotalSystemPersistentMemoryGiB, ProvisionMode)) {
+      NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"MemorySummary/TotalSystemPersistentMemoryGiB", ConfigureLang);
+      if (NumericValue != NULL) {
+        if (ProvisionMode || *ComputerSystemCs->MemorySummary->TotalSystemPersistentMemoryGiB != *NumericValue) {
+          ComputerSystemCs->MemorySummary->TotalSystemPersistentMemoryGiB = NumericValue;
+          PropertyChanged = TRUE;
+        }
+      }
+    }
+  }
 
+  //
+  // Handle MODEL
+  //
+  if (PropertyChecker (ComputerSystemCs->Model, ProvisionMode)) {
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Model", ConfigureLang);
+    if (AsciiStringValue != NULL) {
+      if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Model, AsciiStringValue) != 0) {
+        ComputerSystemCs->Model = AsciiStringValue;
+        PropertyChanged = TRUE;
+      }
+    }
+  }
+  //
+  // Handle PCIEDEVICES
+  //
+//// ****** Warning ******
+// Unsupported array type:
+//
+
+  //
+  // Handle PCIEFUNCTIONS
+  //
+//// ****** Warning ******
+// Unsupported array type:
+//
+
+  //
+  // Handle PARTNUMBER
+  //
+  if (PropertyChecker (ComputerSystemCs->PartNumber, ProvisionMode)) {
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"PartNumber", ConfigureLang);
+    if (AsciiStringValue != NULL) {
+      if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->PartNumber, AsciiStringValue) != 0) {
+        ComputerSystemCs->PartNumber = AsciiStringValue;
+        PropertyChanged = TRUE;
+      }
+    }
+  }
   //
   // Handle POWERSTATE
   //
@@ -666,91 +1082,10 @@ ProvisioningProperties (
       }
     }
   }
-
-  if (ComputerSystemCs->Boot != NULL) {
-    //
-    // Handle BOOT->BOOTSOURCEOVERRIDETARGET
-    //
-    if (PropertyChecker (ComputerSystemCs->Boot->BootSourceOverrideTarget, ProvisionMode)) {
-      AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootSourceOverrideTarget", ConfigureLang);
-      if (AsciiStringValue != NULL) {
-        if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->BootSourceOverrideTarget, AsciiStringValue) != 0) {
-          ComputerSystemCs->Boot->BootSourceOverrideTarget = AsciiStringValue;
-          PropertyChanged = TRUE;
-        }
-      }
-    }
-
-    //
-    // Handle BOOT->BOOTSOURCEOVERRIDEENABLED
-    //
-    if (PropertyChecker (ComputerSystemCs->Boot->BootSourceOverrideEnabled, ProvisionMode)) {
-      AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootSourceOverrideEnabled", ConfigureLang);
-      if (AsciiStringValue != NULL) {
-        if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->BootSourceOverrideEnabled, AsciiStringValue) != 0) {
-          ComputerSystemCs->Boot->BootSourceOverrideEnabled = AsciiStringValue;
-          PropertyChanged = TRUE;
-        }
-      }
-    }
-
-    //
-    // Handle BOOT->UEFITARGETBOOTSOURCEOVERRIDE
-    //
-    if (PropertyChecker (ComputerSystemCs->Boot->UefiTargetBootSourceOverride, ProvisionMode)) {
-      AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/UefiTargetBootSourceOverride", ConfigureLang);
-      if (AsciiStringValue != NULL) {
-        if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->UefiTargetBootSourceOverride, AsciiStringValue) != 0) {
-          ComputerSystemCs->Boot->UefiTargetBootSourceOverride = AsciiStringValue;
-          PropertyChanged = TRUE;
-        }
-      }
-    }
-
-    //
-    // Handle BOOT->BOOTSOURCEOVERRIDEMODE
-    //
-    if (PropertyChecker (ComputerSystemCs->Boot->BootSourceOverrideMode, ProvisionMode)) {
-      AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootSourceOverrideMode", ConfigureLang);
-      if (AsciiStringValue != NULL) {
-        if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->Boot->BootSourceOverrideMode, AsciiStringValue) != 0) {
-          ComputerSystemCs->Boot->BootSourceOverrideMode = AsciiStringValue;
-          PropertyChanged = TRUE;
-        }
-      }
-    }
-
-    //
-    // Handle BOOT->BOOTORDER
-    //
-    if (PropertyChecker (ComputerSystemCs->Boot->BootOrder, ProvisionMode)) {
-      ArrayValue = GetPropertyStringArrayValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"Boot/BootOrder", ConfigureLang, &ArraySize);
-      if (ArrayValue != NULL && ArraySize > 0) {
-        if (ProvisionMode || !CompareRedfishStringArrayValues (ComputerSystemCs->Boot->BootOrder, ArrayValue, ArraySize)) {
-          Status = AddRedfishCharArray (&ComputerSystemCs->Boot->BootOrder, ArrayValue, ArraySize);
-          PropertyChanged = TRUE;
-        }
-      }
-    }
-  }
-
-  //
-  // Handle BIOSVERSION
-  //
-  if (PropertyChecker (ComputerSystemCs->BiosVersion, ProvisionMode)) {
-    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"BiosVersion", ConfigureLang);
-    if (AsciiStringValue != NULL) {
-      if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->BiosVersion, AsciiStringValue) != 0) {
-        ComputerSystemCs->BiosVersion = AsciiStringValue;
-        PropertyChanged = TRUE;
-      }
-    }
-  }
-
   //
   // Handle PROCESSORSUMMARY
   //
-  if(ComputerSystemCs->ProcessorSummary != NULL) {
+  if (ComputerSystemCs->ProcessorSummary != NULL) {
     //
     // Handle PROCESSORSUMMARY->COUNT
     //
@@ -763,7 +1098,18 @@ ProvisioningProperties (
         }
       }
     }
-
+    //
+    // Handle PROCESSORSUMMARY->LOGICALPROCESSORCOUNT
+    //
+    if (PropertyChecker (ComputerSystemCs->ProcessorSummary->LogicalProcessorCount, ProvisionMode)) {
+      NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"ProcessorSummary/LogicalProcessorCount", ConfigureLang);
+      if (NumericValue != NULL) {
+        if (ProvisionMode || *ComputerSystemCs->ProcessorSummary->LogicalProcessorCount != *NumericValue) {
+          ComputerSystemCs->ProcessorSummary->LogicalProcessorCount = NumericValue;
+          PropertyChanged = TRUE;
+        }
+      }
+    }
     //
     // Handle PROCESSORSUMMARY->MODEL
     //
@@ -779,35 +1125,67 @@ ProvisioningProperties (
   }
 
   //
-  // Handle MEMORYSUMMARY
+  // Handle REDUNDANCY
   //
-  if(ComputerSystemCs->MemorySummary != NULL) {
-    //
-    // Handle MEMORYSUMMARY->TOTALSYSTEMMEMORYGIB
-    //
-    if (PropertyChecker (ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB, ProvisionMode)) {
-      NumericValue = GetPropertyNumericValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"MemorySummary/TotalSystemMemoryGiB", ConfigureLang);
-      if (NumericValue != NULL) {
-        if (ProvisionMode || *ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB != *NumericValue) {
-          ComputerSystemCs->MemorySummary->TotalSystemMemoryGiB = NumericValue;
-          PropertyChanged = TRUE;
-        }
-      }
-    }
+//// ****** Warning ******
+// Unsupported array type:
+//
 
-    //
-    // Handle MEMORYSUMMARY->MEMORYMIRRORING
-    //
-    if (PropertyChecker (ComputerSystemCs->MemorySummary->MemoryMirroring, ProvisionMode)) {
-      AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"MemorySummary/MemoryMirroring", ConfigureLang);
-      if (AsciiStringValue != NULL) {
-        if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->MemorySummary->MemoryMirroring, AsciiStringValue) != 0) {
-          ComputerSystemCs->MemorySummary->MemoryMirroring = AsciiStringValue;
-          PropertyChanged = TRUE;
-        }
+  //
+  // Handle SKU
+  //
+  if (PropertyChecker (ComputerSystemCs->SKU, ProvisionMode)) {
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"SKU", ConfigureLang);
+    if (AsciiStringValue != NULL) {
+      if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->SKU, AsciiStringValue) != 0) {
+        ComputerSystemCs->SKU = AsciiStringValue;
+        PropertyChanged = TRUE;
       }
     }
   }
+  //
+  // Handle SERIALNUMBER
+  //
+  if (PropertyChecker (ComputerSystemCs->SerialNumber, ProvisionMode)) {
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"SerialNumber", ConfigureLang);
+    if (AsciiStringValue != NULL) {
+      if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->SerialNumber, AsciiStringValue) != 0) {
+        ComputerSystemCs->SerialNumber = AsciiStringValue;
+        PropertyChanged = TRUE;
+      }
+    }
+  }
+  //
+  // Handle SUBMODEL
+  //
+  if (PropertyChecker (ComputerSystemCs->SubModel, ProvisionMode)) {
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"SubModel", ConfigureLang);
+    if (AsciiStringValue != NULL) {
+      if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->SubModel, AsciiStringValue) != 0) {
+        ComputerSystemCs->SubModel = AsciiStringValue;
+        PropertyChanged = TRUE;
+      }
+    }
+  }
+  //
+  // Handle SYSTEMTYPE
+  //
+  if (PropertyChecker (ComputerSystemCs->SystemType, ProvisionMode)) {
+    AsciiStringValue = GetPropertyStringValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"SystemType", ConfigureLang);
+    if (AsciiStringValue != NULL) {
+      if (ProvisionMode || AsciiStrCmp (ComputerSystemCs->SystemType, AsciiStringValue) != 0) {
+        ComputerSystemCs->SystemType = AsciiStringValue;
+        PropertyChanged = TRUE;
+      }
+    }
+  }
+  //
+  // Handle TRUSTEDMODULES
+  //
+//// ****** Warning ******
+// Unsupported array type:
+//
+
 
   //
   // Convert C structure back to JSON text.
@@ -834,7 +1212,7 @@ ProvisioningProperties (
 }
 
 EFI_STATUS
-ProvisioningResource (
+ProvisioningComputerSystemResource (
   IN  REDFISH_RESOURCE_COMMON_PRIVATE   *Private,
   IN  UINTN                             Index,
   IN  EFI_STRING                        ConfigureLang
@@ -853,9 +1231,9 @@ ProvisioningResource (
   EtagStr = NULL;
   AsciiSPrint (ResourceId, sizeof (ResourceId), "%d", Index);
 
-  Status = ProvisioningProperties (
+  Status = ProvisioningComputerSystemProperties (
              Private->JsonStructProtocol,
-             EmptyJson,
+             ComputerSystemEmptyJson,
              ResourceId,
              ConfigureLang,
              TRUE,
@@ -868,7 +1246,7 @@ ProvisioningResource (
 
   Status = CreatePayloadToPostResource (Private->RedfishService, Private->Payload, Json, &NewResourceLocation, &EtagStr);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a, post memory resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+    DEBUG ((DEBUG_ERROR, "%a, post ComputerSystem resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
     goto RELEASE_RESOURCE;
   }
 
@@ -903,7 +1281,7 @@ RELEASE_RESOURCE:
 }
 
 EFI_STATUS
-ProvisioningResources (
+ProvisioningComputerSystemResources (
   IN  REDFISH_RESOURCE_COMMON_PRIVATE  *Private
   )
 {
@@ -920,10 +1298,15 @@ ProvisioningResources (
     DEBUG ((DEBUG_ERROR, "%a, No HII question found with configure language: %s: %r\n", __FUNCTION__, REDPATH_ARRAY_PATTERN, Status));
     return EFI_NOT_FOUND;
   }
+  //
+  // Set the configuration language in the RESOURCE_INFORMATION_EXCHANGE.
+  // This information is sent back to the parent resource (e.g. the collection driver).
+  //
+  EdkIIRedfishResourceSetConfigureLang (&UnifiedConfigureLangList);
 
   for (Index = 0; Index < UnifiedConfigureLangList.Count; Index++) {
-    DEBUG ((DEBUG_INFO, "[%d] create memory resource from: %s\n", UnifiedConfigureLangList.List[Index].Index, UnifiedConfigureLangList.List[Index].ConfigureLang));
-    ProvisioningResource (Private, UnifiedConfigureLangList.List[Index].Index, UnifiedConfigureLangList.List[Index].ConfigureLang);
+    DEBUG ((DEBUG_INFO, "[%d] create ComputerSystem resource from: %s\n", UnifiedConfigureLangList.List[Index].Index, UnifiedConfigureLangList.List[Index].ConfigureLang));
+    ProvisioningComputerSystemResource (Private, UnifiedConfigureLangList.List[Index].Index, UnifiedConfigureLangList.List[Index].ConfigureLang);
     FreePool (UnifiedConfigureLangList.List[Index].ConfigureLang);
   }
 
@@ -932,12 +1315,13 @@ ProvisioningResources (
 
 
 EFI_STATUS
-ProvisioningExistResource (
+ProvisioningComputerSystemExistResource (
   IN  REDFISH_RESOURCE_COMMON_PRIVATE  *Private
   )
 {
   EFI_STATUS Status;
   EFI_STRING ConfigureLang;
+  REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST ReturnedConfigLangList;
   CHAR8      *EtagStr;
   CHAR8      *Json;
 
@@ -953,10 +1337,21 @@ ProvisioningExistResource (
   if (ConfigureLang == NULL) {
     return EFI_NOT_FOUND;
   }
+  //
+  // Set the configuration language in the RESOURCE_INFORMATION_EXCHANGE.
+  // This information is sent back to the parent resource (e.g. the collection driver).
+  //
+  ReturnedConfigLangList.Count = 1;
+  ReturnedConfigLangList.List = AllocateZeroPool (sizeof (REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG));
+  if (ReturnedConfigLangList.List != NULL) {
+    ReturnedConfigLangList.List->Index = ConfiglanguageGetInstanceIndex (ConfigureLang);
+    ReturnedConfigLangList.List->ConfigureLang = ConfigureLang;
+  }
+  EdkIIRedfishResourceSetConfigureLang (&ReturnedConfigLangList);
 
-  Status = ProvisioningProperties (
+  Status = ProvisioningComputerSystemProperties (
              Private->JsonStructProtocol,
-             EmptyJson,
+             ComputerSystemEmptyJson,
              NULL,
              ConfigureLang,
              TRUE,
@@ -1022,7 +1417,7 @@ RedfishProvisioningResourceCommon (
     return EFI_INVALID_PARAMETER;
   }
 
-  return (ResourceExist ? ProvisioningExistResource (Private) : ProvisioningResources (Private));
+  return (ResourceExist ? ProvisioningComputerSystemExistResource (Private) : ProvisioningComputerSystemResources (Private));
 }
 
 /**
@@ -1115,7 +1510,7 @@ RedfishUpdateResourceCommon (
     return EFI_NOT_FOUND;
   }
 
-  Status = ProvisioningProperties (
+  Status = ProvisioningComputerSystemProperties (
              Private->JsonStructProtocol,
              InputJson,
              NULL,
@@ -1180,23 +1575,22 @@ RedfishIdentifyResourceCommon (
 {
   BOOLEAN     Supported;
   EFI_STATUS  Status;
-  EFI_STRING  *ConfigureLangList;
-  UINTN       Count;
   EFI_STRING  EndOfChar;
+  REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST ConfigLangList;
 
   Supported = RedfishIdentifyResource (Private->Uri, Private->Json);
   if (Supported) {
-    Status = RedfishPlatformConfigGetConfigureLang (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, REDPATH_ARRAY_PATTERN, &ConfigureLangList, &Count);
+    Status = RedfishFeatureGetUnifiedArrayTypeConfigureLang (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, REDPATH_ARRAY_PATTERN, &ConfigLangList);
     if (EFI_ERROR (Status)) {
       DEBUG ((DEBUG_ERROR, "%a, BiosConfigToRedfishGetConfigureLangRegex failed: %r\n", __FUNCTION__, Status));
       return Status;
     }
 
-    if (Count == 0) {
+    if (ConfigLangList.Count == 0) {
       return EFI_SUCCESS;
     }
 
-    EndOfChar = StrStr (ConfigureLangList[0], L"}");
+    EndOfChar = StrStr (ConfigLangList.List[0].ConfigureLang, L"}");
     if (EndOfChar == NULL) {
       ASSERT (FALSE);
       return EFI_DEVICE_ERROR;
@@ -1207,9 +1601,13 @@ RedfishIdentifyResourceCommon (
     //
     // Keep URI and ConfigLang mapping
     //
-    RedfisSetRedfishUri (ConfigureLangList[0], Private->Uri);
-    FreePool (ConfigureLangList);
-
+    RedfisSetRedfishUri (ConfigLangList.List[0].ConfigureLang, Private->Uri);
+    //
+    // Set the configuration language in the RESOURCE_INFORMATION_EXCHANGE.
+    // This information is sent back to the parent resource (e.g. the collection driver).
+    //
+    EdkIIRedfishResourceSetConfigureLang (&ConfigLangList);
+    DestroyConfiglanguageList (&ConfigLangList);
     return EFI_SUCCESS;
   }
 
