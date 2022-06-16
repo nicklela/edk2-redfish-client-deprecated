@@ -18,6 +18,7 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/RedfishEventLib.h>
+#include <Library/RedfishFeatureUtilityLib.h>
 
 #define MaxNodeNameLength 64
 #define MaxParentUriLength 512

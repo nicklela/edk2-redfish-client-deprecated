@@ -27,6 +27,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  RedfishPkg/RedfishPkg.dec
   RedfishClientPkg/RedfishClientPkg.dec
 
 [LibraryClasses]
@@ -35,10 +36,11 @@
   DebugLib
   MemoryAllocationLib
   PrintLib
+  RedfishEventLib
+  RedfishFeatureUtilityLib
   UefiBootServicesTableLib
   UefiDriverEntryPoint
   UefiLib
-  RedfishEventLib
 
 [Protocols]
   gEdkIIRedfishFeatureProtocolGuid    ## BY_START

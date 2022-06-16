@@ -78,15 +78,28 @@ DestroryExchangeInformation (
 {
 
   if (ThisList->InformationExchange != NULL) {
-    if (ThisList->InformationExchange->SendInformation.ParentUri != NULL) {
-      FreePool (ThisList->InformationExchange->SendInformation.ParentUri);
+    if (ThisList->InformationExchange->SendInformation.Type == InformationTypeCollectionMemberUri) {
+      if (ThisList->InformationExchange->SendInformation.ParentUri != NULL) {
+        FreePool (ThisList->InformationExchange->SendInformation.ParentUri);
+        ThisList->InformationExchange->SendInformation.ParentUri = NULL;
+      }
+      if (ThisList->InformationExchange->SendInformation.PropertyName != NULL) {
+        FreePool (ThisList->InformationExchange->SendInformation.PropertyName);
+        ThisList->InformationExchange->SendInformation.PropertyName = NULL;
+      }
+      if (ThisList->InformationExchange->SendInformation.FullUri != NULL) {
+        FreePool (ThisList->InformationExchange->SendInformation.FullUri);
+        ThisList->InformationExchange->SendInformation.FullUri = NULL;
+      }
     }
-    if (ThisList->InformationExchange->SendInformation.PropertyName != NULL) {
-      FreePool (ThisList->InformationExchange->SendInformation.PropertyName);
+
+    if (ThisList->InformationExchange->ReturnedInformation.Type == InformationTypeCollectionMemberConfigLanguage) {
+      DestroyConfiglanguageList (&ThisList->InformationExchange->ReturnedInformation.ConfigureLanguageList);
     }
-    if (ThisList->InformationExchange->SendInformation.FullUri != NULL) {
-      FreePool (ThisList->InformationExchange->SendInformation.FullUri);
-    }
+
+    ThisList->InformationExchange->SendInformation.Type = InformationTypeNone;
+    ThisList->InformationExchange->ReturnedInformation.Type = InformationTypeNone;
+
   }
   return EFI_SUCCESS;
 }
@@ -107,7 +120,9 @@ StartUpFeatureDriver (
 )
 {
   EFI_STATUS Status;
+  UINTN Index;
   REDFISH_FEATURE_INTERNAL_DATA *ThisList;
+  REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST ConfigLangList;
   EFI_STRING NextParentUri;
 
   NextParentUri = (EFI_STRING)AllocateZeroPool (MaxParentUriLength * sizeof (CHAR16));
@@ -132,7 +147,6 @@ StartUpFeatureDriver (
                                ThisList->InformationExchange
                                );
       }
-      DestroryExchangeInformation (ThisList);
       if (EFI_ERROR (Status)) {
         DEBUG((DEBUG_ERROR, "%a: Callback to EDK2 Redfish feature driver fail.\n", __FUNCTION__));
       }
@@ -141,11 +155,35 @@ StartUpFeatureDriver (
       //
       // Go through child list only when the parent node is managed by feature driver.
       //
-      StrCatS (NextParentUri, MaxParentUriLength, ThisList->NodeName);
-      if ((ThisList->Flags & REDFISH_FEATURE_INTERNAL_DATA_IS_COLLECTION) != 0) {
-        StrCatS (NextParentUri, MaxParentUriLength, NodeIsCollectionSymbol);
+      if (ThisList->Flags & REDFISH_FEATURE_INTERNAL_DATA_IS_COLLECTION) {
+        //
+        // The collection driver's callback is invoked. InformationTypeCollectionMemberConfigLanguage
+        // should be returned in RESOURCE_INFORMATION_RETURNED.
+        //
+        if (ThisList->InformationExchange->ReturnedInformation.Type == InformationTypeCollectionMemberConfigLanguage) {
+          //
+          // Copy RESOURCE_INFORMATION_RETURNED then destroy the exchange information.
+          //
+          CopyConfiglanguageList (&ThisList->InformationExchange->ReturnedInformation.ConfigureLanguageList, &ConfigLangList);
+          DestroryExchangeInformation(ThisList);
+          //
+          // Modify the collection instance according to the returned InformationTypeCollectionMemberConfigLanguage.
+          //
+          for (Index = 0; Index < ConfigLangList.Count; Index ++) {
+            StrCatS (NextParentUri, MaxParentUriLength, ThisList->NodeName);
+            StrCatS (NextParentUri, MaxParentUriLength, NodeIsCollectionSymbol);
+            SetResourceConfigLangMemberInstance (&NextParentUri, MaxParentUriLength, (REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG *)&ConfigLangList.List[Index]);
+            StartUpFeatureDriver(ThisList->ChildList, NextParentUri, StartupContext);
+          }
+          DestroyConfiglanguageList (&ConfigLangList);
+        } else {
+          DEBUG((DEBUG_ERROR, "%a: No InformationTypeCollectionMemberConfigLanguage returned.\n", __FUNCTION__));
+          ASSERT (FALSE);
+        }
+      } else {
+        StrCatS (NextParentUri, MaxParentUriLength, ThisList->NodeName);
+        StartUpFeatureDriver(ThisList->ChildList, NextParentUri, StartupContext);
       }
-      StartUpFeatureDriver(ThisList->ChildList, NextParentUri, StartupContext);
       //
       // Restore the parent configure language URI for this level.
       //
@@ -154,6 +192,8 @@ StartUpFeatureDriver (
       } else{
         NextParentUri [0] = 0;
       }
+    } else {
+      DestroryExchangeInformation (ThisList);
     }
     //
     // Check sibling Redfish feature driver.
@@ -169,6 +209,7 @@ StartUpFeatureDriver (
   if (NextParentUri != NULL) {
     FreePool (NextParentUri);
   }
+
 }
 
 /**
