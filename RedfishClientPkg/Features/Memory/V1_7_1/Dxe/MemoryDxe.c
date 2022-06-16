@@ -11,6 +11,8 @@
 
 extern REDFISH_RESOURCE_COMMON_PRIVATE *mRedfishResourcePrivate;
 
+EFI_HANDLE medfishResourceConfigProtocolHandle;
+
 /**
   Provising redfish resource by given URI.
 
@@ -612,6 +614,8 @@ RedfishResourceEntryPoint (
   if (mRedfishResourcePrivate != NULL) {
     return EFI_ALREADY_STARTED;
   }
+
+  medfishResourceConfigProtocolHandle = ImageHandle;
 
   mRedfishResourcePrivate = AllocateZeroPool (sizeof (REDFISH_RESOURCE_COMMON_PRIVATE));
   CopyMem (&mRedfishResourcePrivate->ConfigHandler, &mRedfishConfigHandler, sizeof (EDKII_REDFISH_CONFIG_HANDLER_PROTOCOL));

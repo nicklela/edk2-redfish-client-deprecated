@@ -31,10 +31,11 @@ RedfishConsumeResourceCommon (
   IN  CHAR8                           *HeaderEtag OPTIONAL
   )
 {
-  EFI_STATUS                    Status;
+  EFI_STATUS                   Status;
   EFI_REDFISH_MEMORY_V1_7_1     *Memory;
   EFI_REDFISH_MEMORY_V1_7_1_CS  *MemoryCs;
-  EFI_STRING                    ConfigureLang;
+  EFI_STRING                   ConfigureLang;
+
 
   if (Private == NULL || IS_EMPTY_STRING (Json)) {
     return EFI_INVALID_PARAMETER;
@@ -74,7 +75,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->AllocationAlignmentMiB != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "AllocationAlignmentMiB");
     if (ConfigureLang != NULL) {
@@ -94,7 +95,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->AllocationIncrementMiB != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "AllocationIncrementMiB");
     if (ConfigureLang != NULL) {
@@ -110,11 +111,35 @@ RedfishConsumeResourceCommon (
   }
 
   //
+  // Handle ALLOWEDSPEEDSMHZ
+  //
+  if (MemoryCs->AllowedSpeedsMHz != NULL) {
+    //
+    // Find corresponding configure language for collection resource.
+    //
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "AllowedSpeedsMHz");
+    if (ConfigureLang != NULL) {
+      Status = ApplyFeatureSettingsNumericArrayType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, MemoryCs->AllowedSpeedsMHz);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+
+      FreePool (ConfigureLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
+    }
+  }
+
+  //
+  // ASSEMBLY will be handled by feature driver.
+  //
+
+  //
   // Handle BASEMODULETYPE
   //
   if (MemoryCs->BaseModuleType != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "BaseModuleType");
     if (ConfigureLang != NULL) {
@@ -134,7 +159,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->BusWidthBits != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "BusWidthBits");
     if (ConfigureLang != NULL) {
@@ -154,7 +179,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->CacheSizeMiB != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "CacheSizeMiB");
     if (ConfigureLang != NULL) {
@@ -174,7 +199,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->CapacityMiB != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "CapacityMiB");
     if (ConfigureLang != NULL) {
@@ -194,7 +219,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->ConfigurationLocked != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "ConfigurationLocked");
     if (ConfigureLang != NULL) {
@@ -214,7 +239,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->DataWidthBits != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "DataWidthBits");
     if (ConfigureLang != NULL) {
@@ -234,7 +259,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->DeviceID != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "DeviceID");
     if (ConfigureLang != NULL) {
@@ -254,7 +279,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->DeviceLocator != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "DeviceLocator");
     if (ConfigureLang != NULL) {
@@ -274,7 +299,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->ErrorCorrection != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "ErrorCorrection");
     if (ConfigureLang != NULL) {
@@ -294,7 +319,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->FirmwareApiVersion != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "FirmwareApiVersion");
     if (ConfigureLang != NULL) {
@@ -314,7 +339,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->FirmwareRevision != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "FirmwareRevision");
     if (ConfigureLang != NULL) {
@@ -330,11 +355,31 @@ RedfishConsumeResourceCommon (
   }
 
   //
+  // Handle FUNCTIONCLASSES
+  //
+  if (MemoryCs->FunctionClasses != NULL) {
+    //
+    // Find corresponding configure language for collection resource.
+    //
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "FunctionClasses");
+    if (ConfigureLang != NULL) {
+      Status = ApplyFeatureSettingsStringArrayType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, MemoryCs->FunctionClasses);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+
+      FreePool (ConfigureLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
+    }
+  }
+
+  //
   // Handle ISRANKSPAREENABLED
   //
   if (MemoryCs->IsRankSpareEnabled != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "IsRankSpareEnabled");
     if (ConfigureLang != NULL) {
@@ -354,7 +399,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->IsSpareDeviceEnabled != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "IsSpareDeviceEnabled");
     if (ConfigureLang != NULL) {
@@ -370,11 +415,15 @@ RedfishConsumeResourceCommon (
   }
 
   //
+  // LOCATION is not handled. Defined in http://redfish.dmtf.org/schemas/v1/Resource.json
+  //
+
+  //
   // Handle LOGICALSIZEMIB
   //
   if (MemoryCs->LogicalSizeMiB != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "LogicalSizeMiB");
     if (ConfigureLang != NULL) {
@@ -394,7 +443,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->Manufacturer != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "Manufacturer");
     if (ConfigureLang != NULL) {
@@ -410,11 +459,31 @@ RedfishConsumeResourceCommon (
   }
 
   //
+  // Handle MAXTDPMILLIWATTS
+  //
+  if (MemoryCs->MaxTDPMilliWatts != NULL) {
+    //
+    // Find corresponding configure language for collection resource.
+    //
+    ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "MaxTDPMilliWatts");
+    if (ConfigureLang != NULL) {
+      Status = ApplyFeatureSettingsNumericArrayType (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, ConfigureLang, MemoryCs->MaxTDPMilliWatts);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a, apply setting for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+      }
+
+      FreePool (ConfigureLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, can not get configure language for URI: %s\n", __FUNCTION__, Private->Uri));
+    }
+  }
+
+  //
   // Handle MEMORYDEVICETYPE
   //
   if (MemoryCs->MemoryDeviceType != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "MemoryDeviceType");
     if (ConfigureLang != NULL) {
@@ -442,7 +511,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->MemoryLocation->Channel != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "MemoryLocation/Channel");
     if (ConfigureLang != NULL) {
@@ -462,7 +531,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->MemoryLocation->MemoryController != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "MemoryLocation/MemoryController");
     if (ConfigureLang != NULL) {
@@ -482,7 +551,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->MemoryLocation->Slot != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "MemoryLocation/Slot");
     if (ConfigureLang != NULL) {
@@ -502,7 +571,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->MemoryLocation->Socket != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "MemoryLocation/Socket");
     if (ConfigureLang != NULL) {
@@ -518,11 +587,19 @@ RedfishConsumeResourceCommon (
   }
 
   //
+  // Handle MEMORYMEDIA
+  //
+//
+// ****** Warning ******
+// Unsupported array type:
+//
+
+  //
   // Handle MEMORYSUBSYSTEMCONTROLLERMANUFACTURERID
   //
   if (MemoryCs->MemorySubsystemControllerManufacturerID != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "MemorySubsystemControllerManufacturerID");
     if (ConfigureLang != NULL) {
@@ -542,7 +619,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->MemorySubsystemControllerProductID != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "MemorySubsystemControllerProductID");
     if (ConfigureLang != NULL) {
@@ -562,7 +639,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->MemoryType != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "MemoryType");
     if (ConfigureLang != NULL) {
@@ -578,11 +655,15 @@ RedfishConsumeResourceCommon (
   }
 
   //
+  // METRICS will be handled by feature driver.
+  //
+
+  //
   // Handle MODULEMANUFACTURERID
   //
   if (MemoryCs->ModuleManufacturerID != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "ModuleManufacturerID");
     if (ConfigureLang != NULL) {
@@ -602,7 +683,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->ModuleProductID != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "ModuleProductID");
     if (ConfigureLang != NULL) {
@@ -622,7 +703,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->NonVolatileSizeMiB != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "NonVolatileSizeMiB");
     if (ConfigureLang != NULL) {
@@ -638,11 +719,19 @@ RedfishConsumeResourceCommon (
   }
 
   //
+  // Handle OPERATINGMEMORYMODES
+  //
+//
+// ****** Warning ******
+// Unsupported array type:
+//
+
+  //
   // Handle OPERATINGSPEEDMHZ
   //
   if (MemoryCs->OperatingSpeedMhz != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "OperatingSpeedMhz");
     if (ConfigureLang != NULL) {
@@ -662,7 +751,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->PartNumber != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "PartNumber");
     if (ConfigureLang != NULL) {
@@ -682,7 +771,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->PersistentRegionNumberLimit != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "PersistentRegionNumberLimit");
     if (ConfigureLang != NULL) {
@@ -702,7 +791,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->PersistentRegionSizeLimitMiB != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "PersistentRegionSizeLimitMiB");
     if (ConfigureLang != NULL) {
@@ -722,7 +811,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->PersistentRegionSizeMaxMiB != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "PersistentRegionSizeMaxMiB");
     if (ConfigureLang != NULL) {
@@ -750,7 +839,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->PowerManagementPolicy->AveragePowerBudgetMilliWatts != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "PowerManagementPolicy/AveragePowerBudgetMilliWatts");
     if (ConfigureLang != NULL) {
@@ -770,7 +859,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->PowerManagementPolicy->MaxTDPMilliWatts != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "PowerManagementPolicy/MaxTDPMilliWatts");
     if (ConfigureLang != NULL) {
@@ -790,7 +879,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->PowerManagementPolicy->PeakPowerBudgetMilliWatts != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "PowerManagementPolicy/PeakPowerBudgetMilliWatts");
     if (ConfigureLang != NULL) {
@@ -810,7 +899,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->PowerManagementPolicy->PolicyEnabled != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "PowerManagementPolicy/PolicyEnabled");
     if (ConfigureLang != NULL) {
@@ -830,7 +919,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->RankCount != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "RankCount");
     if (ConfigureLang != NULL) {
@@ -846,6 +935,14 @@ RedfishConsumeResourceCommon (
   }
 
   //
+  // Handle REGIONS
+  //
+//
+// ****** Warning ******
+// Unsupported array type:
+//
+
+  //
   // Handle SECURITYCAPABILITIES
   //
   if (MemoryCs->SecurityCapabilities == NULL) {
@@ -858,7 +955,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->SecurityCapabilities->ConfigurationLockCapable != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "SecurityCapabilities/ConfigurationLockCapable");
     if (ConfigureLang != NULL) {
@@ -878,7 +975,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->SecurityCapabilities->DataLockCapable != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "SecurityCapabilities/DataLockCapable");
     if (ConfigureLang != NULL) {
@@ -898,7 +995,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->SecurityCapabilities->MaxPassphraseCount != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "SecurityCapabilities/MaxPassphraseCount");
     if (ConfigureLang != NULL) {
@@ -918,7 +1015,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->SecurityCapabilities->PassphraseCapable != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "SecurityCapabilities/PassphraseCapable");
     if (ConfigureLang != NULL) {
@@ -938,7 +1035,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->SecurityCapabilities->PassphraseLockLimit != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "SecurityCapabilities/PassphraseLockLimit");
     if (ConfigureLang != NULL) {
@@ -954,11 +1051,19 @@ RedfishConsumeResourceCommon (
   }
 
   //
+  // Handle SECURITYCAPABILITIES->SECURITYSTATES
+  //
+//
+// ****** Warning ******
+// Unsupported array type:
+//
+
+  //
   // Handle SECURITYSTATE
   //
   if (MemoryCs->SecurityState != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "SecurityState");
     if (ConfigureLang != NULL) {
@@ -978,7 +1083,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->SerialNumber != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "SerialNumber");
     if (ConfigureLang != NULL) {
@@ -998,7 +1103,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->SpareDeviceCount != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "SpareDeviceCount");
     if (ConfigureLang != NULL) {
@@ -1018,7 +1123,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->SubsystemDeviceID != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "SubsystemDeviceID");
     if (ConfigureLang != NULL) {
@@ -1038,7 +1143,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->SubsystemVendorID != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "SubsystemVendorID");
     if (ConfigureLang != NULL) {
@@ -1058,7 +1163,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->VendorID != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "VendorID");
     if (ConfigureLang != NULL) {
@@ -1078,7 +1183,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->VolatileRegionNumberLimit != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "VolatileRegionNumberLimit");
     if (ConfigureLang != NULL) {
@@ -1098,7 +1203,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->VolatileRegionSizeLimitMiB != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "VolatileRegionSizeLimitMiB");
     if (ConfigureLang != NULL) {
@@ -1118,7 +1223,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->VolatileRegionSizeMaxMiB != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "VolatileRegionSizeMaxMiB");
     if (ConfigureLang != NULL) {
@@ -1138,7 +1243,7 @@ RedfishConsumeResourceCommon (
   //
   if (MemoryCs->VolatileSizeMiB != NULL) {
     //
-    // Find corresponding redpath for collection resource.
+    // Find corresponding configure language for collection resource.
     //
     ConfigureLang = GetConfigureLang (MemoryCs->odata_id, "VolatileSizeMiB");
     if (ConfigureLang != NULL) {
@@ -1154,8 +1259,6 @@ RedfishConsumeResourceCommon (
   }
 
 
-
-  //
 ON_RELEASE:
 
   //
@@ -1172,7 +1275,7 @@ ON_RELEASE:
 EFI_STATUS
 ProvisioningMemoryProperties (
   IN  EFI_REST_JSON_STRUCTURE_PROTOCOL  *JsonStructProtocol,
-  IN  CHAR8                             *IputJson,
+  IN  CHAR8                             *InputJson,
   IN  CHAR8                             *ResourceId,  OPTIONAL
   IN  EFI_STRING                        ConfigureLang,
   IN  BOOLEAN                           ProvisionMode,
@@ -1182,13 +1285,18 @@ ProvisioningMemoryProperties (
   EFI_REDFISH_MEMORY_V1_7_1     *Memory;
   EFI_REDFISH_MEMORY_V1_7_1_CS  *MemoryCs;
   EFI_STATUS                    Status;
-  INT64                         *NumericValue;
-  INT32                         *IntegerValue;
-  BOOLEAN                       *BooleanValue;
-  CHAR8                         *AsciiStringValue;
   BOOLEAN                       PropertyChanged;
+  INT64                         *NumericValue;
+  INT64                         *NumericArrayValue;
+  UINTN                         ArraySize;
+  CHAR8                         *AsciiStringValue;
+  BOOLEAN                       *BooleanValue;
+  INT32                         *IntegerValue;
+  CHAR8                         **AsciiStringArrayValue;
 
-  if (JsonStructProtocol == NULL || ResultJson == NULL || IS_EMPTY_STRING (IputJson) || IS_EMPTY_STRING (ConfigureLang)) {
+
+
+  if (JsonStructProtocol == NULL || ResultJson == NULL || IS_EMPTY_STRING (InputJson) || IS_EMPTY_STRING (ConfigureLang)) {
     return EFI_INVALID_PARAMETER;
   }
 
@@ -1201,7 +1309,7 @@ ProvisioningMemoryProperties (
   Status = JsonStructProtocol->ToStructure (
                                  JsonStructProtocol,
                                  NULL,
-                                 IputJson,
+                                 InputJson,
                                  (EFI_REST_JSON_STRUCTURE_HEADER **)&Memory
                                  );
   if (EFI_ERROR (Status)) {
@@ -1230,7 +1338,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle ALLOCATIONINCREMENTMIB
   //
@@ -1243,7 +1350,18 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
+  //
+  // Handle ALLOWEDSPEEDSMHZ
+  //
+  if (PropertyChecker (MemoryCs->AllowedSpeedsMHz, ProvisionMode)) {
+    NumericArrayValue = GetPropertyNumericArrayValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"AllowedSpeedsMHz", ConfigureLang, &ArraySize);
+    if (NumericArrayValue != NULL) {
+      if (ProvisionMode || !CompareRedfishNumericArrayValues (MemoryCs->AllowedSpeedsMHz, NumericArrayValue, ArraySize)) {
+        AddRedfishNumericArray (&MemoryCs->AllowedSpeedsMHz, NumericArrayValue, ArraySize);
+        PropertyChanged = TRUE;
+      }
+    }
+  }
   //
   // Handle BASEMODULETYPE
   //
@@ -1256,7 +1374,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle BUSWIDTHBITS
   //
@@ -1269,7 +1386,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle CACHESIZEMIB
   //
@@ -1282,7 +1398,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle CAPACITYMIB
   //
@@ -1295,7 +1410,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle CONFIGURATIONLOCKED
   //
@@ -1312,7 +1426,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle DATAWIDTHBITS
   //
@@ -1325,7 +1438,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle DEVICEID
   //
@@ -1338,7 +1450,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle DEVICELOCATOR
   //
@@ -1351,7 +1462,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle ERRORCORRECTION
   //
@@ -1364,7 +1474,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle FIRMWAREAPIVERSION
   //
@@ -1377,7 +1486,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle FIRMWAREREVISION
   //
@@ -1390,7 +1498,18 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
+  //
+  // Handle FUNCTIONCLASSES
+  //
+  if (PropertyChecker (MemoryCs->FunctionClasses, ProvisionMode)) {
+    AsciiStringArrayValue = GetPropertyStringArrayValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"FunctionClasses", ConfigureLang, &ArraySize);
+    if (AsciiStringArrayValue != NULL) {
+      if (ProvisionMode || !CompareRedfishStringArrayValues (MemoryCs->FunctionClasses, AsciiStringArrayValue, ArraySize)) {
+        AddRedfishCharArray (&MemoryCs->FunctionClasses, AsciiStringArrayValue, ArraySize);
+        PropertyChanged = TRUE;
+      }
+    }
+  }
   //
   // Handle ISRANKSPAREENABLED
   //
@@ -1407,7 +1526,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle ISSPAREDEVICEENABLED
   //
@@ -1424,7 +1542,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle LOGICALSIZEMIB
   //
@@ -1437,7 +1554,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle MANUFACTURER
   //
@@ -1450,7 +1566,18 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
+  //
+  // Handle MAXTDPMILLIWATTS
+  //
+  if (PropertyChecker (MemoryCs->MaxTDPMilliWatts, ProvisionMode)) {
+    NumericArrayValue = GetPropertyNumericArrayValue (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, L"MaxTDPMilliWatts", ConfigureLang, &ArraySize);
+    if (NumericArrayValue != NULL) {
+      if (ProvisionMode || !CompareRedfishNumericArrayValues (MemoryCs->MaxTDPMilliWatts, NumericArrayValue, ArraySize)) {
+        AddRedfishNumericArray (&MemoryCs->MaxTDPMilliWatts, NumericArrayValue, ArraySize);
+        PropertyChanged = TRUE;
+      }
+    }
+  }
   //
   // Handle MEMORYDEVICETYPE
   //
@@ -1463,7 +1590,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle MEMORYLOCATION
   //
@@ -1480,7 +1606,6 @@ ProvisioningMemoryProperties (
         }
       }
     }
-
     //
     // Handle MEMORYLOCATION->MEMORYCONTROLLER
     //
@@ -1493,7 +1618,6 @@ ProvisioningMemoryProperties (
         }
       }
     }
-
     //
     // Handle MEMORYLOCATION->SLOT
     //
@@ -1506,7 +1630,6 @@ ProvisioningMemoryProperties (
         }
       }
     }
-
     //
     // Handle MEMORYLOCATION->SOCKET
     //
@@ -1519,8 +1642,14 @@ ProvisioningMemoryProperties (
         }
       }
     }
-
   }
+
+  //
+  // Handle MEMORYMEDIA
+  //
+//// ****** Warning ******
+// Unsupported array type:
+//
 
   //
   // Handle MEMORYSUBSYSTEMCONTROLLERMANUFACTURERID
@@ -1534,7 +1663,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle MEMORYSUBSYSTEMCONTROLLERPRODUCTID
   //
@@ -1547,7 +1675,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle MEMORYTYPE
   //
@@ -1560,7 +1687,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle MODULEMANUFACTURERID
   //
@@ -1573,7 +1699,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle MODULEPRODUCTID
   //
@@ -1586,7 +1711,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle NONVOLATILESIZEMIB
   //
@@ -1599,6 +1723,12 @@ ProvisioningMemoryProperties (
       }
     }
   }
+  //
+  // Handle OPERATINGMEMORYMODES
+  //
+//// ****** Warning ******
+// Unsupported array type:
+//
 
   //
   // Handle OPERATINGSPEEDMHZ
@@ -1612,7 +1742,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle PARTNUMBER
   //
@@ -1625,7 +1754,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle PERSISTENTREGIONNUMBERLIMIT
   //
@@ -1638,7 +1766,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle PERSISTENTREGIONSIZELIMITMIB
   //
@@ -1651,7 +1778,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle PERSISTENTREGIONSIZEMAXMIB
   //
@@ -1664,7 +1790,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle POWERMANAGEMENTPOLICY
   //
@@ -1681,7 +1806,6 @@ ProvisioningMemoryProperties (
         }
       }
     }
-
     //
     // Handle POWERMANAGEMENTPOLICY->MAXTDPMILLIWATTS
     //
@@ -1694,7 +1818,6 @@ ProvisioningMemoryProperties (
         }
       }
     }
-
     //
     // Handle POWERMANAGEMENTPOLICY->PEAKPOWERBUDGETMILLIWATTS
     //
@@ -1707,7 +1830,6 @@ ProvisioningMemoryProperties (
         }
       }
     }
-
     //
     // Handle POWERMANAGEMENTPOLICY->POLICYENABLED
     //
@@ -1724,7 +1846,6 @@ ProvisioningMemoryProperties (
         }
       }
     }
-
   }
 
   //
@@ -1739,6 +1860,12 @@ ProvisioningMemoryProperties (
       }
     }
   }
+  //
+  // Handle REGIONS
+  //
+//// ****** Warning ******
+// Unsupported array type:
+//
 
   //
   // Handle SECURITYCAPABILITIES
@@ -1760,7 +1887,6 @@ ProvisioningMemoryProperties (
         }
       }
     }
-
     //
     // Handle SECURITYCAPABILITIES->DATALOCKCAPABLE
     //
@@ -1777,7 +1903,6 @@ ProvisioningMemoryProperties (
         }
       }
     }
-
     //
     // Handle SECURITYCAPABILITIES->MAXPASSPHRASECOUNT
     //
@@ -1790,7 +1915,6 @@ ProvisioningMemoryProperties (
         }
       }
     }
-
     //
     // Handle SECURITYCAPABILITIES->PASSPHRASECAPABLE
     //
@@ -1807,7 +1931,6 @@ ProvisioningMemoryProperties (
         }
       }
     }
-
     //
     // Handle SECURITYCAPABILITIES->PASSPHRASELOCKLIMIT
     //
@@ -1820,6 +1943,12 @@ ProvisioningMemoryProperties (
         }
       }
     }
+    //
+    // Handle SECURITYCAPABILITIES->SECURITYSTATES
+    //
+  //// ****** Warning ******
+  // Unsupported array type:
+  //
 
   }
 
@@ -1835,7 +1964,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle SERIALNUMBER
   //
@@ -1848,7 +1976,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle SPAREDEVICECOUNT
   //
@@ -1861,7 +1988,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle SUBSYSTEMDEVICEID
   //
@@ -1874,7 +2000,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle SUBSYSTEMVENDORID
   //
@@ -1887,7 +2012,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle VENDORID
   //
@@ -1900,7 +2024,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle VOLATILEREGIONNUMBERLIMIT
   //
@@ -1913,7 +2036,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle VOLATILEREGIONSIZELIMITMIB
   //
@@ -1926,7 +2048,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle VOLATILEREGIONSIZEMAXMIB
   //
@@ -1939,7 +2060,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
   //
   // Handle VOLATILESIZEMIB
   //
@@ -1952,8 +2072,6 @@ ProvisioningMemoryProperties (
       }
     }
   }
-
-
 
   //
   // Convert C structure back to JSON text.
@@ -1995,7 +2113,7 @@ ProvisioningMemoryResource (
   if (IS_EMPTY_STRING (ConfigureLang) || Private == NULL) {
     return EFI_INVALID_PARAMETER;
   }
-  
+
   EtagStr = NULL;
   AsciiSPrint (ResourceId, sizeof (ResourceId), "%d", Index);
 
@@ -2063,9 +2181,14 @@ ProvisioningMemoryResources (
 
   Status = RedfishFeatureGetUnifiedArrayTypeConfigureLang (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, REDPATH_ARRAY_PATTERN, &UnifiedConfigureLangList);
   if (EFI_ERROR (Status) || UnifiedConfigureLangList.Count == 0) {
-    DEBUG ((DEBUG_ERROR, "%a, No HII question found with redpath: %s: %r\n", __FUNCTION__, REDPATH_ARRAY_PATTERN, Status));
+    DEBUG ((DEBUG_ERROR, "%a, No HII question found with configure language: %s: %r\n", __FUNCTION__, REDPATH_ARRAY_PATTERN, Status));
     return EFI_NOT_FOUND;
   }
+  //
+  // Set the configuration language in the RESOURCE_INFORMATION_EXCHANGE.
+  // This information is sent back to the parent resource (e.g. the collection driver).
+  //
+  EdkIIRedfishResourceSetConfigureLang (&UnifiedConfigureLangList);
 
   for (Index = 0; Index < UnifiedConfigureLangList.Count; Index++) {
     DEBUG ((DEBUG_INFO, "[%d] create Memory resource from: %s\n", UnifiedConfigureLangList.List[Index].Index, UnifiedConfigureLangList.List[Index].ConfigureLang));
@@ -2084,6 +2207,7 @@ ProvisioningMemoryExistResource (
 {
   EFI_STATUS Status;
   EFI_STRING ConfigureLang;
+  REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST ReturnedConfigLangList;
   CHAR8      *EtagStr;
   CHAR8      *Json;
 
@@ -2099,6 +2223,17 @@ ProvisioningMemoryExistResource (
   if (ConfigureLang == NULL) {
     return EFI_NOT_FOUND;
   }
+  //
+  // Set the configuration language in the RESOURCE_INFORMATION_EXCHANGE.
+  // This information is sent back to the parent resource (e.g. the collection driver).
+  //
+  ReturnedConfigLangList.Count = 1;
+  ReturnedConfigLangList.List = AllocateZeroPool (sizeof (REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG));
+  if (ReturnedConfigLangList.List != NULL) {
+    ReturnedConfigLangList.List->Index = ConfiglanguageGetInstanceIndex (ConfigureLang);
+    ReturnedConfigLangList.List->ConfigureLang = ConfigureLang;
+  }
+  EdkIIRedfishResourceSetConfigureLang (&ReturnedConfigLangList);
 
   Status = ProvisioningMemoryProperties (
              Private->JsonStructProtocol,
@@ -2326,23 +2461,22 @@ RedfishIdentifyResourceCommon (
 {
   BOOLEAN     Supported;
   EFI_STATUS  Status;
-  EFI_STRING  *ConfigureLangList;
-  UINTN       Count;
   EFI_STRING  EndOfChar;
+  REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST ConfigLangList;
 
   Supported = RedfishIdentifyResource (Private->Uri, Private->Json);
   if (Supported) {
-    Status = RedfishPlatformConfigGetConfigureLang (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, REDPATH_ARRAY_PATTERN, &ConfigureLangList, &Count);
+    Status = RedfishFeatureGetUnifiedArrayTypeConfigureLang (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, REDPATH_ARRAY_PATTERN, &ConfigLangList);
     if (EFI_ERROR (Status)) {
       DEBUG ((DEBUG_ERROR, "%a, BiosConfigToRedfishGetConfigureLangRegex failed: %r\n", __FUNCTION__, Status));
       return Status;
     }
 
-    if (Count == 0) {
+    if (ConfigLangList.Count == 0) {
       return EFI_SUCCESS;
     }
 
-    EndOfChar = StrStr (ConfigureLangList[0], L"}");
+    EndOfChar = StrStr (ConfigLangList.List[0].ConfigureLang, L"}");
     if (EndOfChar == NULL) {
       ASSERT (FALSE);
       return EFI_DEVICE_ERROR;
@@ -2353,9 +2487,13 @@ RedfishIdentifyResourceCommon (
     //
     // Keep URI and ConfigLang mapping
     //
-    RedfisSetRedfishUri (ConfigureLangList[0], Private->Uri);
-    FreePool (ConfigureLangList);
-
+    RedfisSetRedfishUri (ConfigLangList.List[0].ConfigureLang, Private->Uri);
+    //
+    // Set the configuration language in the RESOURCE_INFORMATION_EXCHANGE.
+    // This information is sent back to the parent resource (e.g. the collection driver).
+    //
+    EdkIIRedfishResourceSetConfigureLang (&ConfigLangList);
+    DestroyConfiglanguageList (&ConfigLangList);
     return EFI_SUCCESS;
   }
 
