@@ -10,6 +10,7 @@
 #ifndef REDFISH_FEATURE_UTILITY_LIB_H_
 #define REDFISH_FEATURE_UTILITY_LIB_H_
 
+#include <Library/RedfishLib.h>
 #include <Protocol/EdkIIRedfishPlatformConfig.h>
 #include <RedfishJsonStructure/RedfishCsCommon.h>
 
@@ -68,6 +69,75 @@ RedfishFeatureGetUnifiedArrayTypeConfigureLang (
   IN     CHAR8                                        *Version,
   IN     EFI_STRING                                   Pattern,
   OUT    REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST  *UnifiedConfigureLangList
+  );
+
+/**
+
+  Clone the configure language list.
+
+  @param[in]  ConfigureLangList      The source REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST.
+  @param[out] DestConfigureLangList  The destination REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST.
+
+  @retval     EFI_SUCCESS     REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST is copied.
+  @retval     Others          Errors occur.
+
+**/
+EFI_STATUS
+CopyConfiglanguageList (
+  IN   REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST *SourceConfigureLangList,
+  OUT  REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST *DestConfigureLangList
+  );
+
+/**
+
+  Clone the configure language list.
+
+  @param[in]  ConfigureLang      The pointer to configuration language.
+
+  @retval     UINTN       The index of collection member instance.
+                          Value of 0 means no instance is found.
+**/
+UINTN
+ConfiglanguageGetInstanceIndex (
+  IN EFI_STRING ConfigureLang
+  );
+
+/**
+
+  Destroy the configure language list.
+
+  @param[in]  ConfigureLangList      The REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST
+                                     instance to destroy.
+
+  @retval     EFI_SUCCESS     REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST is copied.
+  @retval     Others          Errors occur.
+
+**/
+EFI_STATUS
+DestroyConfiglanguageList (
+  IN   REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST *ConfigureLangList
+  );
+
+/**
+
+  Set the node instance.
+
+  @param[in]  DestConfigLang        Pointer to the node's configure language string.
+                                    The memory pointed by ConfigLang must be allocated
+                                    through memory allocation interface. Becasue we will replace
+                                    the pointer in this function.
+  @param[in]  MaxtLengthConfigLang  The maximum length of ConfigLang.
+  @param[in]  ConfigLangInstance    Pointer to Collection member instance.
+
+  @retval     EFI_SUCCESS     The instance is inserted to the configure language.
+  @retval     Others          Errors occur.
+
+**/
+EFI_STATUS
+SetResourceConfigLangMemberInstance (
+  IN EFI_STRING                               *DestConfigLang,
+  IN UINTN                                    MaxtLengthConfigLang,
+  IN REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG   *ConfigLangInstance
   );
 
 /**

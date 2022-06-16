@@ -1077,6 +1077,216 @@ GetArrayIndexFromArrayTypeConfigureLang (
 
 /**
 
+  Clone the configure language list.
+
+  @param[in]  ConfigureLangList      The source REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST.
+  @param[out] DestConfigureLangList  The destination REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST.
+
+  @retval     EFI_SUCCESS     REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST is copied.
+  @retval     Others          Errors occur.
+
+**/
+EFI_STATUS
+CopyConfiglanguageList (
+  IN   REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST *SourceConfigureLangList,
+  OUT  REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST *DestConfigureLangList
+  )
+{
+  UINTN Index;
+
+  if (SourceConfigureLangList == NULL || DestConfigureLangList == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+  DestConfigureLangList->Count = SourceConfigureLangList->Count;
+  DestConfigureLangList->List =
+      (REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG *)AllocateZeroPool (sizeof (REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG) * DestConfigureLangList->Count);
+  if (DestConfigureLangList->List == NULL) {
+    DEBUG ((DEBUG_ERROR, "%a, Fail to allocate memory for REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG.\n", __FUNCTION__));
+    return EFI_OUT_OF_RESOURCES;
+  }
+  for (Index = 0; Index < SourceConfigureLangList->Count; Index++) {
+    DestConfigureLangList->List [Index].Index = SourceConfigureLangList->List[Index].Index;
+    DestConfigureLangList->List [Index].ConfigureLang =
+      (EFI_STRING)AllocateCopyPool(StrSize(SourceConfigureLangList->List[Index].ConfigureLang), (VOID *)SourceConfigureLangList->List[Index].ConfigureLang);
+  }
+  return EFI_SUCCESS;
+}
+
+/**
+
+  Clone the configure language list.
+
+  @param[in]  ConfigureLang      The pointer to configuration language.
+
+  @retval     UINTN       The index of collection member instance.
+                          Value of 0 means no instance is found.
+**/
+UINTN
+ConfiglanguageGetInstanceIndex (
+  IN EFI_STRING ConfigureLang
+  )
+{
+  INTN LeftBracketIndex;
+  INTN RightBracketIndex;
+  INTN Index;
+  UINT64 Instance;
+  EFI_STATUS Status;
+
+  if (ConfigureLang == NULL) {
+    return 0;
+  }
+  LeftBracketIndex = 0;
+  RightBracketIndex = 0;
+  Index = StrLen (ConfigureLang) - 1;
+  while (Index >= 0) {
+    if (*(ConfigureLang + Index) == L'{') {
+      LeftBracketIndex = Index;
+      break;
+    }
+    if (*(ConfigureLang + Index) == L'}') {
+      RightBracketIndex = Index;
+    }
+    Index --;
+  };
+  if ((RightBracketIndex - LeftBracketIndex) <= 1) {
+    return 0;
+  }
+  *(ConfigureLang + RightBracketIndex) = 0;
+  Status = StrDecimalToUint64S (ConfigureLang + LeftBracketIndex + 1, NULL, &Instance);
+  if (EFI_ERROR(Status)) {
+    Instance = 0;
+  }
+  //
+  // Restore right curly bracket.
+  //
+  *(ConfigureLang + RightBracketIndex) = L'}';
+  return (UINTN)Instance;
+}
+
+/**
+
+  Destroy the configure language list.
+
+  @param[in]  ConfigureLangList      The REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST
+                                     instance to destroy.
+
+  @retval     EFI_SUCCESS     REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST is copied.
+  @retval     Others          Errors occur.
+
+**/
+EFI_STATUS
+DestroyConfiglanguageList (
+  IN   REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST *ConfigureLangList
+  )
+{
+  UINTN Index;
+
+  if (ConfigureLangList == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+  if (ConfigureLangList->List != NULL) {
+    for (Index = 0; Index < ConfigureLangList->Count; Index++) {
+      if (ConfigureLangList->List [Index].ConfigureLang != NULL) {
+        FreePool (ConfigureLangList->List [Index].ConfigureLang);
+      }
+    }
+    FreePool (ConfigureLangList->List);
+    ConfigureLangList->List = NULL;
+  }
+
+  return EFI_SUCCESS;
+}
+
+/**
+
+  Set the node instance.
+
+  @param[in]  DestConfigLang        Pointer to the node's configure language string.
+                                    The memory pointed by ConfigLang must be allocated
+                                    through memory allocation interface. Becasue we will replace
+                                    the pointer in this function.
+  @param[in]  MaxtLengthConfigLang  The maximum length of ConfigLang.
+  @param[in]  ConfigLangInstance    Pointer to Collection member instance.
+
+  @retval     EFI_SUCCESS     The instance is inserted to the configure language.
+  @retval     Others          Errors occur.
+
+**/
+EFI_STATUS
+SetResourceConfigLangMemberInstance (
+  IN EFI_STRING                               *DestConfigLang,
+  IN UINTN                                    MaxtLengthConfigLang,
+  IN REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG   *ConfigLangInstance
+  )
+{
+  EFI_STRING ThisConfigLang;
+  EFI_STRING NewConfigLang;
+  CHAR16 InstanceStr [10];
+  INTN Index;
+  UINTN Length;
+  UINTN MaxStrLength;
+
+  if (DestConfigLang == NULL || ConfigLangInstance == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+  UnicodeSPrint ((CHAR16 *)&InstanceStr, 10, L"%d", ConfigLangInstance->Index);
+
+  ThisConfigLang = *DestConfigLang;
+  if (ThisConfigLang [0] == 0) {
+    //
+    // Return ConfigLangInstance->ConfigureLang
+    //
+    if (ConfigLangInstance->ConfigureLang == NULL) {
+      return EFI_INVALID_PARAMETER;
+    } else {
+      StrCatS(*DestConfigLang, MaxtLengthConfigLang, ConfigLangInstance->ConfigureLang);
+      return EFI_SUCCESS;
+    }
+  }
+
+  MaxStrLength = StrSize (ThisConfigLang) + StrSize ((EFI_STRING)&InstanceStr);
+  NewConfigLang = ThisConfigLang;
+  if (MaxtLengthConfigLang < MaxStrLength) {
+    NewConfigLang = (EFI_STRING)AllocateZeroPool(MaxStrLength);
+    if (NewConfigLang == NULL) {
+      DEBUG ((DEBUG_ERROR, "%a, Fail to allocate memory for NewConfigLang.\n", __FUNCTION__));
+      return EFI_OUT_OF_RESOURCES;
+    }
+  }
+  //
+  // Search the last "{"
+  //
+  Index = StrLen (ThisConfigLang) - 1;
+  while ((ThisConfigLang[Index] != '{') && (Index >= 0)) {
+    Index --;
+  };
+  if (Index == -1) {
+    if (NewConfigLang != ThisConfigLang) {
+      FreePool(NewConfigLang);
+    }
+    return EFI_NOT_FOUND;
+  }
+
+  //
+  // Copy the string to a new string.
+  //
+  Length = 0;
+  while (Index >= 0) {
+    NewConfigLang [Index] = ThisConfigLang[Index];
+    Index --;
+    Length ++;
+  };
+  UnicodeSPrint ((CHAR16 *)(NewConfigLang + Length), MaxStrLength, L"%d", ConfigLangInstance->Index);
+  StrCatS (NewConfigLang, MaxStrLength, L"}");
+  if (NewConfigLang != ThisConfigLang) {
+    FreePool (ThisConfigLang);
+  }
+  *DestConfigLang = NewConfigLang;
+  return EFI_SUCCESS;
+}
+
+/**
+
   Search HII database with given Configure Language pattern. Data is handled and
   returned in array.
 
