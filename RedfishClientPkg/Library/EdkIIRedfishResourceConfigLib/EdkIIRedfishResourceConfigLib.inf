@@ -41,6 +41,7 @@
 
 [Protocols]
   gEdkIIRedfishResourceConfigProtocolGuid   ## CONSUMES ##
+  gEdkIIRedfishFeatureInterchangeDataProtocolGuid ## CONSUMES ##
 
 [Pcd]
   gEfiRedfishClientPkgTokenSpaceGuid.PcdMaxRedfishSchemaStringSize
