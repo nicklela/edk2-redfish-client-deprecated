@@ -1,15 +1,18 @@
 ## @file
 #
-#  (C) Copyright 2022 Hewlett Packard Enterprise Development LP<BR>
+#  Redfish ComputerSystemCollection collection driver.
+#
+#  (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP<BR>
 #
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
 #
 ##
 
+
 [Defines]
   INF_VERSION               = 0x00010005
   BASE_NAME                 = ComputerSystemCollectionDxe
-  FILE_GUID                 = 4E52A862-1F4D-4D5D-9ECC-7FCA629C6B71
+  FILE_GUID                 = df883f2e-9f58-4514-9cc9-06cbe6f63073
   MODULE_TYPE               = DXE_DRIVER
   VERSION_STRING            = 1.0
   ENTRY_POINT               = RedfishCollectionEntryPoint
