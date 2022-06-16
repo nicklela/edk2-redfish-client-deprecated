@@ -1,5 +1,6 @@
 /** @file
-  Redfish feature driver implementation - memory collection
+
+  Redfish feature driver implementation - MemoryCollection
 
   (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP<BR>
 
@@ -36,7 +37,6 @@ HandleResource (
     DEBUG ((DEBUG_ERROR, "%a, failed to get schema information from: %s %r\n", __FUNCTION__, Uri, Status));
     return Status;
   }
-
   //
   // Check and see if this is target resource that we want to handle.
   // Some resource is handled by other provider so we have to make sure this first.
@@ -44,7 +44,7 @@ HandleResource (
   DEBUG ((REDFISH_DEBUG_TRACE, "%s Identify for %s\n", __FUNCTION__, Uri));
   ConfigLang = RedfishGetConfigLanguage (Uri);
   if (ConfigLang == NULL) {
-    Status = EdkIIRedfishResourceConfigIdentify (&SchemaInfo, Uri);
+    Status = EdkIIRedfishResourceConfigIdentify (&SchemaInfo, Uri, Private->InformationExchange);
     if (EFI_ERROR (Status)) {
       if (Status == EFI_UNSUPPORTED) {
         DEBUG ((DEBUG_INFO, "%a, \"%s\" is not handled by us\n", __FUNCTION__, Uri));
@@ -59,7 +59,6 @@ HandleResource (
     FreePool (ConfigLang);
   }
 
-
   //
   // Check and see if target property exist or not even when collection memeber exists.
   // If not, we sill do provision.
@@ -71,7 +70,7 @@ HandleResource (
     // The target property does not exist, do the provision to create property.
     //
     DEBUG ((REDFISH_DEBUG_TRACE, "%a provision for %s\n", __FUNCTION__, Uri));
-    Status = EdkIIRedfishResourceConfigProvisionging (&SchemaInfo, Uri, FALSE);
+    Status = EdkIIRedfishResourceConfigProvisionging (&SchemaInfo, Uri, Private->InformationExchange, FALSE);
     if (EFI_ERROR (Status)) {
       DEBUG ((DEBUG_ERROR, "%a, failed to provision with GET mode: %r\n", __FUNCTION__, Status));
     }
@@ -106,7 +105,7 @@ HandleCollectionResource (
   )
 {
   EFI_STATUS                              Status;
-  EFI_REDFISH_MEMORYCOLLECTION            *Memory;
+  EFI_REDFISH_MEMORYCOLLECTION            *Collection;
   EFI_REDFISH_MEMORYCOLLECTION_CS         *CollectionCs;
   RedfishCS_Link                          *List;
   RedfishCS_Header                        *Header;
@@ -130,14 +129,14 @@ HandleCollectionResource (
                                           Private->JsonStructProtocol,
                                           NULL,
                                           Private->CollectionJson,
-                                          (EFI_REST_JSON_STRUCTURE_HEADER **)&Memory
+                                          (EFI_REST_JSON_STRUCTURE_HEADER **)&Collection
                                           );
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, ToStructure() failed: %r\n", __FUNCTION__, Status));
     return Status;
   }
 
-  CollectionCs = Memory->MemoryCollection;
+  CollectionCs = Collection->MemoryCollection;
 
   if (*CollectionCs->Membersodata_count == 0) {
     return EFI_NOT_FOUND;
@@ -159,7 +158,7 @@ HandleCollectionResource (
       if (MemberUri != NULL) {
         Status = HandleResource (Private, MemberUri);
         if (EFI_ERROR (Status)) {
-          DEBUG ((DEBUG_ERROR, "%a, process memory resource: %a failed: %r\n", __FUNCTION__, UriData->Uri, Status));
+          DEBUG ((DEBUG_ERROR, "%a, process MemoryCollection resource: %a failed: %r\n", __FUNCTION__, UriData->Uri, Status));
         }
 
         FreePool (MemberUri);
@@ -176,7 +175,7 @@ HandleCollectionResource (
   //
   // Release resource.
   //
-  Private->JsonStructProtocol->DestoryStructure (Private->JsonStructProtocol, (EFI_REST_JSON_STRUCTURE_HEADER *)Memory);
+  Private->JsonStructProtocol->DestoryStructure (Private->JsonStructProtocol, (EFI_REST_JSON_STRUCTURE_HEADER *)Collection);
 
   return EFI_SUCCESS;
 }
@@ -203,7 +202,7 @@ CreateCollectionResource (
 
   DEBUG ((REDFISH_DEBUG_TRACE, "%a, supported schema: %a %a.%a.%a\n", __FUNCTION__, SchemaInfo.Schema, SchemaInfo.Major, SchemaInfo.Minor, SchemaInfo.Errata));
 
-  Status = EdkIIRedfishResourceConfigProvisionging (&SchemaInfo, Private->CollectionUri, TRUE);
+  Status = EdkIIRedfishResourceConfigProvisionging (&SchemaInfo, Private->CollectionUri, Private->InformationExchange, TRUE);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, failed to create resoruce for: %s: %r\n", __FUNCTION__, Private->CollectionUri, Status));
   }
@@ -297,9 +296,7 @@ ON_RELEASE:
   @param[in]     FeatureAction       The action Redfish feature driver should take.
   @param[in]     Uri                 The collection URI.
   @param[in]     Context             The context of Redfish feature driver.
-  @param[in,out] InformationReturned The pointer to retrive the pointer to
-                                     FEATURE_RETURNED_INFOMATION. The memory block of this
-                                     information should be freed by caller.
+  @param[in,out] InformationExchange The pointer to RESOURCE_INFORMATION_EXCHANGE
 
   @retval EFI_SUCCESS              Redfish feature driver callback is executed successfully.
   @retval Others                   Some errors happened.
@@ -314,12 +311,13 @@ RedfishCollectionFeatureCallback (
   IN     EDKII_REDFISH_FEATURE_PROTOCOL *This,
   IN     FEATURE_CALLBACK_ACTION        FeatureAction,
   IN     VOID                           *Context,
-  IN OUT FEATURE_RETURNED_INFORMATION   **InformationReturned
+  IN OUT RESOURCE_INFORMATION_EXCHANGE  *InformationExchange
   )
 {
   EFI_STATUS                   Status;
   REDFISH_SERVICE              RedfishService;
   REDFISH_COLLECTION_PRIVATE   *Private;
+  EFI_STRING                   ResourceUri;
 
   if (FeatureAction != CallbackActionStartOperation) {
     return EFI_UNSUPPORTED;
@@ -333,14 +331,30 @@ RedfishCollectionFeatureCallback (
   }
 
   //
+  // Save in private structure.
+  //
+  Private->InformationExchange = InformationExchange;
+
+  //
   // Find Redfish version on BMC
   //
   Private->RedfishVersion = RedfishGetBmcVersion (RedfishService);
 
   //
+  // Create the full URI from Redfish service root.
+  //
+  ResourceUri = (EFI_STRING)AllocateZeroPool (MAX_URI_LENGTH * sizeof(CHAR16));
+  if (ResourceUri == NULL) {
+    DEBUG ((DEBUG_ERROR, "%a, Fail to allocate memory for full URI.\n", __FUNCTION__));
+    return EFI_OUT_OF_RESOURCES;
+  }
+  StrCatS (ResourceUri, MAX_URI_LENGTH, Private->RedfishVersion);
+  StrCatS (ResourceUri, MAX_URI_LENGTH, InformationExchange->SendInformation.FullUri);
+
+  //
   // Initialize collection path
   //
-  Private->CollectionUri = RedfishGetUri (REDFISH_MANAGED_URI);
+  Private->CollectionUri = RedfishGetUri (ResourceUri);
   if (Private->CollectionUri == NULL) {
     ASSERT (FALSE);
     return EFI_OUT_OF_RESOURCES;
@@ -528,7 +542,7 @@ RedfishCollectionUnload (
   )
 {
   EFI_STATUS                             Status;
-  EDKII_REDFISH_CONFIG_HANDLER_PROTOCOL    *ConfigHandler;
+  EDKII_REDFISH_CONFIG_HANDLER_PROTOCOL  *ConfigHandler;
 
   if (mRedfishCollectionPrivate == NULL) {
     return EFI_NOT_READY;
