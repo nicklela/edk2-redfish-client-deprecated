@@ -284,7 +284,7 @@
   # Below is the MAC address of network adapter on EDK2 Emulator platform.
   # You can use ifconfig under EFI shell to get the MAC address of network adapter on EDK2 Emulator platform.
   #
-  gEfiRedfishPkgTokenSpaceGuid.PcdRedfishRestExServiceDevicePath.DevicePath|{DEVICE_PATH("MAC(34298F749107,0x1)")}
+  gEfiRedfishPkgTokenSpaceGuid.PcdRedfishRestExServiceDevicePath.DevicePath|{DEVICE_PATH("MAC(005056C00009,0x1)")}
   gEfiRedfishPkgTokenSpaceGuid.PcdRedfishRestExServiceAccessModeInBand|False
   gEfiRedfishPkgTokenSpaceGuid.PcdRedfishDiscoverAccessModeInBand|False
   gEmulatorPkgTokenSpaceGuid.PcdRedfishServieStopIfSecureBootDisabled|False
@@ -492,6 +492,7 @@
 !if $(REDFISH_ENABLE) == TRUE
   EmulatorPkg/Hii2RedfishMemoryDxe/Hii2RedfishMemoryDxe.inf
   EmulatorPkg/Hii2RedfishBootDxe/Hii2RedfishBootDxe.inf
+  EmulatorPkg/Hii2RedfishBiosDxe/Hii2RedfishBiosDxe.inf
   EmulatorPkg/Application/RedfishPlatformConfig/RedfishPlatformConfig.inf
 !endif
 !include RedfishPkg/Redfish.dsc.inc
