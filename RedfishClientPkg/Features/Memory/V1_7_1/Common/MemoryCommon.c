@@ -2207,7 +2207,6 @@ ProvisioningMemoryExistResource (
 {
   EFI_STATUS Status;
   EFI_STRING ConfigureLang;
-  REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST ReturnedConfigLangList;
   CHAR8      *EtagStr;
   CHAR8      *Json;
 
@@ -2223,17 +2222,6 @@ ProvisioningMemoryExistResource (
   if (ConfigureLang == NULL) {
     return EFI_NOT_FOUND;
   }
-  //
-  // Set the configuration language in the RESOURCE_INFORMATION_EXCHANGE.
-  // This information is sent back to the parent resource (e.g. the collection driver).
-  //
-  ReturnedConfigLangList.Count = 1;
-  ReturnedConfigLangList.List = AllocateZeroPool (sizeof (REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG));
-  if (ReturnedConfigLangList.List != NULL) {
-    ReturnedConfigLangList.List->Index = ConfiglanguageGetInstanceIndex (ConfigureLang);
-    ReturnedConfigLangList.List->ConfigureLang = ConfigureLang;
-  }
-  EdkIIRedfishResourceSetConfigureLang (&ReturnedConfigLangList);
 
   Status = ProvisioningMemoryProperties (
              Private->JsonStructProtocol,
