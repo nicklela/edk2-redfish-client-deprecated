@@ -23,6 +23,7 @@
 #include <Library/PrintLib.h>
 #include <Library/PcdLib.h>
 #include <Library/RedfishLib.h>
+#include <Library/RedfishBmcVersionLib.h>
 #include <Library/RedfishFeatureUtilityLib.h>
 #include <Library/RedfishPlatformConfigLib.h>
 #include <Library/UefiLib.h>
@@ -33,6 +34,7 @@
 //
 // Protocols
 //
+#include <Protocol/EdkIIRedfishFeature.h>
 #include <Protocol/EdkIIRedfishConfigHandler.h>
 #include <Protocol/EdkIIRedfishResourceConfigProtocol.h>
 #include <Protocol/RestJsonStructure.h>
@@ -48,6 +50,12 @@ typedef struct _REDFISH_RESOURCE_COMMON_PRIVATE {
   EFI_STRING                              Uri;
   CHAR8                                   *Json;
   REDFISH_PAYLOAD                         Payload;
+  //
+  //  Below are used for the external resource.
+  //
+  EDKII_REDFISH_FEATURE_PROTOCOL          *FeatureProtocol;
+  RESOURCE_INFORMATION_EXCHANGE           *InformationExchange;
+  EFI_STRING                              RedfishVersion;
 } REDFISH_RESOURCE_COMMON_PRIVATE;
 
 #define REDFISH_RESOURCE_COMMON_PRIVATE_DATA_FROM_CONFIG_PROTOCOL(This) \
