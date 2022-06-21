@@ -146,7 +146,7 @@ StartUpFeatureDriver (
                                ThisList->Context,
                                ThisList->InformationExchange
                                );
-      }
+      } 
       if (EFI_ERROR (Status)) {
         DEBUG((DEBUG_ERROR, "%a: Callback to EDK2 Redfish feature driver fail.\n", __FUNCTION__));
       }
@@ -177,7 +177,7 @@ StartUpFeatureDriver (
           }
           DestroyConfiglanguageList (&ConfigLangList);
         } else {
-          DEBUG((DEBUG_ERROR, "%a: No InformationTypeCollectionMemberConfigLanguage returned.\n", __FUNCTION__));
+          DEBUG((DEBUG_ERROR, "%a: No InformationTypeCollectionMemberConfigLanguage of %s/%s returned.\n", __FUNCTION__, NextParentUri, ThisList->ChildList->NodeName));
           ASSERT (FALSE);
         }
       } else {
@@ -313,6 +313,7 @@ NewInternalInstance (
   Insert the URI node into internal data structure
 
   @param[in]        HeadEntryToInsert  The head entry to start the searching.
+  @param[in]        PrevisouEntry      Previsou entry.
   @param[in]        NodeName           Name of URI node.
   @param[in]        NodeIsCollection   TRUE means the node to add is the collection node.
                                        Otherwise it is a resource node.
@@ -329,6 +330,7 @@ NewInternalInstance (
 EFI_STATUS
 InsertRedfishFeatureUriNode (
   IN REDFISH_FEATURE_INTERNAL_DATA      *HeadEntryToInsert,
+  IN REDFISH_FEATURE_INTERNAL_DATA      **PrevisouEntry,
   IN EFI_STRING                         NodeName,
   IN BOOLEAN                            NodeIsCollection,
   IN OUT REDFISH_FEATURE_INTERNAL_DATA  **NextNodeEntry,
@@ -350,7 +352,7 @@ InsertRedfishFeatureUriNode (
     return EFI_INVALID_PARAMETER;
   }
 
-  if (HeadEntryToInsert == NULL || HeadEntryToInsert->ChildList == NULL) {
+  if (HeadEntryToInsert == NULL) {
     Status = NewInternalInstance (&NewInternalData, NodeName, NodeIsCollection);
     if (EFI_ERROR (Status)) {
       return Status;
@@ -358,21 +360,22 @@ InsertRedfishFeatureUriNode (
     if (HeadEntryToInsert == NULL && ResourceUriNodeList == NULL) {
       ResourceUriNodeList = NewInternalData;
     } else {
-      HeadEntryToInsert->ChildList = NewInternalData;
+      (*PrevisouEntry)->ChildList = NewInternalData;
     }
-    *NextNodeEntry = NewInternalData;
+    *PrevisouEntry = NewInternalData;
+    *NextNodeEntry = NewInternalData->ChildList;
     return EFI_SUCCESS;
   }
   //
   // Go through sibling list to find the entry.
   //
   ThisInternalData = HeadEntryToInsert;
-  //*SiblingParent = NULL;
   SiblingList = ThisInternalData->SiblingList;
   while (TRUE) {
     if (StrCmp((CONST CHAR16 *)ThisInternalData->NodeName, (CONST CHAR16 *)NodeName) == 0) {
       *MatchNodeEntry = ThisInternalData;
       *NextNodeEntry = ThisInternalData->ChildList;
+      *PrevisouEntry = ThisInternalData;
       return EFI_SUCCESS;
     }
     //
@@ -384,7 +387,8 @@ InsertRedfishFeatureUriNode (
         return Status;
       }
       ThisInternalData->SiblingList = NewInternalData;
-      *NextNodeEntry = NewInternalData;
+      *PrevisouEntry = NewInternalData;
+      *NextNodeEntry = NewInternalData->ChildList;
       return EFI_SUCCESS;
     }
     ThisInternalData = SiblingList;
@@ -436,6 +440,8 @@ RedfishFeatureRegister (
   UINTN UriLength;
   BOOLEAN NewUri;
   REDFISH_FEATURE_INTERNAL_DATA *ThisUriNode;
+  REDFISH_FEATURE_INTERNAL_DATA *PreUriNode;
+  REDFISH_FEATURE_INTERNAL_DATA *NewUriNode;
   REDFISH_FEATURE_INTERNAL_DATA *MatchNodeEntry;
   BOOLEAN ItsCollection;
 
@@ -450,6 +456,7 @@ RedfishFeatureRegister (
   Index = 0;
   AnchorIndex = 0;
   ThisUriNode = ResourceUriNodeList;
+  PreUriNode = ResourceUriNodeList;
   NewUri = FALSE;
   while ((Index < UriLength)) {
     if ((Index - AnchorIndex + 1) >= MaxNodeNameLength) { // Increase one for the NULL terminator
@@ -478,10 +485,11 @@ RedfishFeatureRegister (
             NewUri = TRUE;;
           }
         }
-        Status = InsertRedfishFeatureUriNode(ThisUriNode, NodeName, ItsCollection, &ThisUriNode, &MatchNodeEntry);
+        Status = InsertRedfishFeatureUriNode(ThisUriNode, &PreUriNode, NodeName, ItsCollection, &NewUriNode, &MatchNodeEntry);
         if (EFI_ERROR (Status)) {
           return Status;
         }
+        ThisUriNode = NewUriNode;
       }
       if (NewUri || ((Index + 1) >= UriLength)) {
         //
@@ -493,8 +501,8 @@ RedfishFeatureRegister (
           MatchNodeEntry->Context = Context;
           MatchNodeEntry = NULL;
         } else {
-          ThisUriNode->Callback = Callback;
-          ThisUriNode->Context = Context;
+          PreUriNode->Callback = Callback;
+          PreUriNode->Context = Context;
         }
         NewUri = FALSE;
         ThisUriNode = ResourceUriNodeList;
