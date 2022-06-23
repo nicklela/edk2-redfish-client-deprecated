@@ -21,6 +21,8 @@ HandleResource (
   EFI_STATUS                              Status;
   REDFISH_SCHEMA_INFO                     SchemaInfo;
   EFI_STRING                              ConfigLang;
+  EFI_STRING                              ReturnedConfigLang;
+  UINTN                                   Index;
 
   if (Private == NULL || IS_EMPTY_STRING (Uri)) {
     return EFI_INVALID_PARAMETER;
@@ -56,6 +58,26 @@ HandleResource (
     }
   } else {
     DEBUG ((REDFISH_DEBUG_TRACE, "%a, history record found: %s\n", __FUNCTION__, ConfigLang));
+    //
+    // Set exchange information
+    //
+    Status = GetArrayIndexFromArrayTypeConfigureLang (ConfigLang, &ReturnedConfigLang, &Index);
+    if (!EFI_ERROR (Status) || Status == EFI_NOT_FOUND) {
+      Private->InformationExchange->ReturnedInformation.Type = InformationTypeCollectionMemberConfigLanguage;
+      Private->InformationExchange->ReturnedInformation.ConfigureLanguageList.Count = 1;
+      Private->InformationExchange->ReturnedInformation.ConfigureLanguageList.List =
+        AllocateZeroPool(sizeof (REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG));
+
+      if (Private->InformationExchange->ReturnedInformation.ConfigureLanguageList.List == NULL) {
+        DEBUG ((DEBUG_ERROR, "%a, Fail to allocate memory for REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG.\n", __FUNCTION__));
+        return EFI_OUT_OF_RESOURCES;
+      }
+      Private->InformationExchange->ReturnedInformation.ConfigureLanguageList.List [Index].Index = Index;
+      Private->InformationExchange->ReturnedInformation.ConfigureLanguageList.List [Index].ConfigureLang =
+          (EFI_STRING)AllocateCopyPool(StrSize(ReturnedConfigLang), (VOID *)ReturnedConfigLang);
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, GetArrayIndexFromArrayTypeConfigureLang fail: %r\n", __FUNCTION__, Status));
+    }
     FreePool (ConfigLang);
   }
 

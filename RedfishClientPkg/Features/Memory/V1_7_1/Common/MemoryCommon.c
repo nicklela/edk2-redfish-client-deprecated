@@ -2333,7 +2333,7 @@ RedfishCheckResourceCommon (
   Status = EFI_SUCCESS;
   for (Index = 0; Index < Count; Index++) {
 
-    Property = GetPropertyFromConfigureLang (ConfigureLangList[Index]);
+    Property = GetPropertyFromConfigureLang (Private->Uri, ConfigureLangList[Index]);
     if (Property == NULL) {
       continue;
     }
@@ -2470,8 +2470,19 @@ RedfishIdentifyResourceCommon (
       return EFI_DEVICE_ERROR;
     }
 
+    //EndOfChar = StrStr (ConfigLangList.List[0].ConfigureLang, L"}");
+    Status = IsRedpathArray (ConfigLangList.List[0].ConfigureLang, NULL, &EndOfChar);
+    if (EFI_ERROR (Status) && Status != EFI_NOT_FOUND) {
+      ASSERT (FALSE);
+      return EFI_DEVICE_ERROR;
+    }
+    if (Status != EFI_SUCCESS) {
+      //
+      // This is not the collection redpath.
+      //
+      GetRedpathNodeByIndex (ConfigLangList.List[0].ConfigureLang, 0, &EndOfChar);
+    }
     *(++EndOfChar) = '\0';
-
     //
     // Keep URI and ConfigLang mapping
     //
