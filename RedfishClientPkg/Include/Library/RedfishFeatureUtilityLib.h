@@ -51,6 +51,28 @@ GetResourceByUri (
 
 /**
 
+  Check if this is the Redpath array. Usually the Redpath array represents
+  the collection member. Return
+
+  @param[in]  ConfigureLang             The Redpath to check
+  @param[out] ArraySignatureOpen        String to the open of array signature.
+  @param[out] ArraySignatureClose       String to the close of array signature.
+
+  @retval     EFI_SUCCESS            Index is found.
+  @retval     EFI_NOT_FOUND          The non-array configure language string is retured.
+  @retval     EFI_INVALID_PARAMETER  The format of input ConfigureLang is wrong.
+  @retval     Others                 Errors occur.
+
+**/
+EFI_STATUS
+IsRedpathArray (
+  IN EFI_STRING ConfigureLang,
+  OUT EFI_STRING *ArraySignatureOpen,
+  OUT EFI_STRING *ArraySignatureClose
+  );
+
+/**
+
   Search HII database with given Configure Language pattern. Data is handled and
   returned in array.
 
@@ -86,6 +108,60 @@ EFI_STATUS
 CopyConfiglanguageList (
   IN   REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST *SourceConfigureLangList,
   OUT  REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST *DestConfigureLangList
+  );
+
+/**
+
+  Get number of node from the string. Node is seperated by '/'.
+
+  @param[in]  NodeString             The node string to parse.
+
+  @retval     UINTN                  Number of nodes in the string.
+
+**/
+UINTN
+GetNumberOfRedpathNodes (
+  IN EFI_STRING NodeString
+  );
+
+/**
+
+  Get the node string by index
+
+  @param[in]  NodeString             The node string to parse.
+  @param[in]  Index                  Index of the node.
+  @param[out] EndOfNodePtr           Pointer to receive the poitner to
+                                     the last character of node string.
+
+  @retval     EFI_STRING             the begining of the node string.
+
+**/
+EFI_STRING
+GetRedpathNodeByIndex (
+  IN  EFI_STRING   NodeString,
+  IN  UINTN        Index,
+  OUT EFI_STRING   *EndOfNodePtr OPTIONAL
+  );
+
+/**
+
+  Find array index from given configure language string.
+
+  @param[in]  ConfigureLang         Configure language string to parse.
+  @param[out] UnifiedConfigureLang  The configure language in array.
+  @param[out] Index                 The array index number.
+
+  @retval     EFI_SUCCESS            Index is found.
+  @retval     EFI_NOT_FOUND          The non-array configure language string is retured.
+  @retval     EFI_INVALID_PARAMETER  The format of input ConfigureLang is wrong.
+  @retval     Others                 Errors occur.
+
+**/
+EFI_STATUS
+GetArrayIndexFromArrayTypeConfigureLang (
+  IN  CHAR16 *ConfigureLang,
+  OUT CHAR16 **UnifiedConfigureLang,
+  OUT UINTN  *Index
   );
 
 /**
@@ -371,7 +447,8 @@ RedfisSetRedfishUri (
 
   Get the property name by given Configure Langauge.
 
-  @param[in]  ConfigureLang   Configure Language string.
+  @param[in]  ResourceUri              URI of root of resource.
+  @param[in]  ConfigureLang            Configure Language string.
 
   @retval     EFI_STRING      Pointer to property name.
   @retval     NULL            There is error.
@@ -379,6 +456,7 @@ RedfisSetRedfishUri (
 **/
 EFI_STRING
 GetPropertyFromConfigureLang (
+  IN EFI_STRING ResourceUri,
   IN EFI_STRING ConfigureLang
   );
 

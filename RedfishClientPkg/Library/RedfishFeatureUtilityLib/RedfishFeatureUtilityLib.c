@@ -1003,14 +1003,158 @@ GetResourceByUri (
 
 /**
 
+  Check if this is the Redpath array. Usually the Redpath array represents
+  the collection member. Return
+
+  @param[in]  ConfigureLang             The Redpath to check
+  @param[out] ArraySignatureOpen        String to the open of array signature.
+  @param[out] ArraySignatureClose       String to the close of array signature.
+
+  @retval     EFI_SUCCESS            Index is found.
+  @retval     EFI_NOT_FOUND          The non-array configure language string is retured.
+  @retval     EFI_INVALID_PARAMETER  The format of input ConfigureLang is wrong.
+  @retval     Others                 Errors occur.
+
+**/
+EFI_STATUS
+IsRedpathArray (
+  IN EFI_STRING ConfigureLang,
+  OUT EFI_STRING *ArraySignatureOpen OPTIONAL,
+  OUT EFI_STRING *ArraySignatureClose OPTIONAL
+  )
+{
+  CHAR16  *IndexString;
+
+  if (ConfigureLang == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+  if (ArraySignatureOpen != NULL) {
+    *ArraySignatureOpen = NULL;
+  }
+  if (ArraySignatureClose != NULL) {
+    *ArraySignatureClose = NULL;
+  }
+
+  //
+  // looking for index signature "{""
+  //
+  IndexString = StrStr (ConfigureLang, BIOS_CONFIG_TO_REDFISH_REDPATH_ARRAY_START_SIGNATURE);
+  if (IndexString != NULL) {
+    if (ArraySignatureOpen != NULL) {
+      *ArraySignatureOpen = IndexString;
+    }
+    //
+    // Skip "{"
+    //
+    IndexString = IndexString + StrLen (BIOS_CONFIG_TO_REDFISH_REDPATH_ARRAY_START_SIGNATURE);
+    //
+    // Looking for "}"
+    //
+    IndexString = StrStr (IndexString, BIOS_CONFIG_TO_REDFISH_REDPATH_ARRAY_END_SIGNATURE);
+    if (IndexString == NULL) {
+      return EFI_INVALID_PARAMETER;
+    }
+    if (ArraySignatureClose != NULL) {
+      *ArraySignatureClose = IndexString;
+    }
+    return EFI_SUCCESS;
+  }
+  return EFI_NOT_FOUND;
+}
+
+/**
+
+  Get number of node from the string. Node is seperated by '/'.
+
+  @param[in]  NodeString             The node string to parse.
+
+  @retval     UINTN                  Number of nodes in the string.
+
+**/
+UINTN
+GetNumberOfRedpathNodes (
+  IN EFI_STRING NodeString
+  )
+{
+  UINTN Index;
+  UINTN NumberNodes;
+  UINTN StringLen;
+
+  NumberNodes = 0;
+  StringLen = StrLen (NodeString);
+  Index = 1; // ConfigLang always starts with '/'.
+  while (Index < StringLen) {
+    if (*(NodeString + Index) == L'/') {
+      NumberNodes ++;
+    }
+    Index ++;
+  };
+  NumberNodes ++;
+
+  return (NumberNodes);
+}
+
+/**
+
+  Get the node string by index
+
+  @param[in]  NodeString             The node string to parse.
+  @param[in]  Index                  Zero-based index of the node.
+  @param[out] EndOfNodePtr           Pointer to receive the poitner to
+                                     the last character of node string.
+
+  @retval     EFI_STRING             the begining of the node string.
+
+**/
+EFI_STRING
+GetRedpathNodeByIndex (
+  IN  EFI_STRING   NodeString,
+  IN  UINTN        Index,
+  OUT EFI_STRING   *EndOfNodePtr OPTIONAL
+  )
+{
+  UINTN NumberNodes;
+  UINTN StringLen;
+  UINTN StringIndex;
+  EFI_STRING NodeStart;
+  EFI_STRING NodeEnd;
+
+  NumberNodes = 0;
+  StringLen = StrLen (NodeString);
+  StringIndex = 1; // ConfigLang always starts with '/'.
+  NodeStart = NodeString;
+  if (EndOfNodePtr != NULL) {
+    *EndOfNodePtr = NULL;
+  }
+  while (StringIndex < StringLen) {
+    if (*(NodeString + StringIndex) == L'/') {
+      NodeEnd = NodeString + StringIndex - 1;
+      if (NumberNodes == Index) {
+        if (EndOfNodePtr != NULL) {
+          *EndOfNodePtr = NodeEnd;
+        }
+        return NodeStart;
+      } else {
+        NodeStart = NodeString + StringIndex + 1;
+      }
+    }
+    StringIndex ++;
+  };
+ return (NULL);
+}
+
+/**
+
   Find array index from given configure language string.
 
   @param[in]  ConfigureLang         Configure language string to parse.
   @param[out] UnifiedConfigureLang  The configure language in array.
   @param[out] Index                 The array index number.
 
-  @retval     EFI_SUCCESS     Index is found.
-  @retval     Others          Errors occur.
+  @retval     EFI_SUCCESS            Index is found.
+  @retval     EFI_NOT_FOUND          The non-array configure language string is retured.
+  @retval     EFI_INVALID_PARAMETER  The format of input ConfigureLang is wrong.
+  @retval     Others                 Errors occur.
 
 **/
 EFI_STATUS
@@ -1020,9 +1164,11 @@ GetArrayIndexFromArrayTypeConfigureLang (
   OUT UINTN  *Index
   )
 {
+  EFI_STATUS Status;
   CHAR16  *TmpConfigureLang;
-  CHAR16  *IndexString;
-  CHAR16  *TmpString;
+  CHAR16  *ArrayOpenStr;
+  CHAR16  *ArrayCloseStr;
+  INTN    StringIndex;
 
   if (ConfigureLang == NULL || UnifiedConfigureLang == NULL || Index == NULL) {
     return EFI_INVALID_PARAMETER;
@@ -1033,46 +1179,44 @@ GetArrayIndexFromArrayTypeConfigureLang (
     return EFI_OUT_OF_RESOURCES;
   }
 
-  //
-  // looking for index signature "{""
-  //
-  IndexString = StrStr (TmpConfigureLang, BIOS_CONFIG_TO_REDFISH_REDPATH_ARRAY_START_SIGNATURE);
-  if (IndexString == NULL) {
-    return EFI_NOT_FOUND;
+  Status = IsRedpathArray (TmpConfigureLang, &ArrayOpenStr, &ArrayCloseStr);
+  if (!EFI_ERROR (Status)) {
+    //
+    // Append '\0' for converting decimal string to integer.
+    //
+    ArrayCloseStr[0] = '\0';
+
+    //
+    // Convert decimal string to integer
+    //
+    *Index = StrDecimalToUintn (ArrayOpenStr + StrLen (BIOS_CONFIG_TO_REDFISH_REDPATH_ARRAY_START_SIGNATURE));
+
+    //
+    // Resotre the '}' character and remove rest of string.
+    //
+    ArrayCloseStr[0] = L'}';
+    ArrayCloseStr[1] = '\0';
+    *UnifiedConfigureLang = TmpConfigureLang;
+  } else {
+    if (Status == EFI_NOT_FOUND) {
+      //
+      // This is not the redpath array. Search "/" for the parent root.
+      //
+      *Index = 0;
+      StringIndex = StrLen (TmpConfigureLang) - 1;
+      while (StringIndex >= 0 && *(TmpConfigureLang + StringIndex) != '/') {
+        StringIndex --;
+      };
+      if (StringIndex >= 0 ) {
+        *(TmpConfigureLang + StringIndex) = '\0';
+        *UnifiedConfigureLang = TmpConfigureLang;
+        Status = EFI_SUCCESS;
+      } else {
+        Status = EFI_INVALID_PARAMETER;
+      }
+    }
   }
-
-  //
-  // Skip "{"
-  //
-  TmpString = IndexString + StrLen (BIOS_CONFIG_TO_REDFISH_REDPATH_ARRAY_START_SIGNATURE);
-
-  //
-  // Looking for "}"
-  //
-  TmpString = StrStr (TmpString, BIOS_CONFIG_TO_REDFISH_REDPATH_ARRAY_END_SIGNATURE);
-  if (TmpString == NULL) {
-    return EFI_NOT_FOUND;
-  }
-
-  //
-  // Append '\0' for converting decimal string to integer.
-  //
-  TmpString[0] = '\0';
-
-  //
-  // Convert decimal string to integer
-  //
-  *Index = StrDecimalToUintn (IndexString + StrLen (BIOS_CONFIG_TO_REDFISH_REDPATH_ARRAY_START_SIGNATURE));
-
-  //
-  // Resotre the '}' character and remove rest of string.
-  //
-  TmpString[0] = L'}';
-  TmpString[1] = '\0';
-
-  *UnifiedConfigureLang = TmpConfigureLang;
-
-  return EFI_SUCCESS;
+  return Status;
 }
 
 /**
@@ -1337,7 +1481,7 @@ RedfishFeatureGetUnifiedArrayTypeConfigureLang (
 
   for (Index = 0; Index < Count; Index++) {
     Status = GetArrayIndexFromArrayTypeConfigureLang (ConfigureLangList[Index], &UnifiedConfigureLang, &ArrayIndex);
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR (Status) && Status == EFI_INVALID_PARAMETER) {
       ASSERT (FALSE);
       continue;
     }
@@ -1945,7 +2089,8 @@ GetOdataId (
 
   Get the property name by given Configure Langauge.
 
-  @param[in]  ConfigureLang   Configure Language string.
+  @param[in]  ResourceUri              URI of root of resource.
+  @param[in]  ConfigureLang            Configure Language string.
 
   @retval     EFI_STRING      Pointer to property name.
   @retval     NULL            There is error.
@@ -1953,38 +2098,40 @@ GetOdataId (
 **/
 EFI_STRING
 GetPropertyFromConfigureLang (
+  IN EFI_STRING ResourceUri,
   IN EFI_STRING ConfigureLang
   )
 {
-  EFI_STRING Property;
-  UINTN      Index;
-  BOOLEAN    CollectionCharFound;
+  EFI_STATUS  Status;
+  EFI_STRING  TempString;
 
-  if (ConfigureLang == NULL) {
+  if (ConfigureLang == NULL || ResourceUri == NULL) {
     return NULL;
   }
 
-  Index = 0;
-  CollectionCharFound = FALSE;
-  Property = ConfigureLang;
-
-  while (ConfigureLang[Index] != '\0') {
-    if (ConfigureLang[Index] == L'}') {
-      CollectionCharFound = TRUE;
-    }
-    if (ConfigureLang[Index] == L'/') {
-      Property = &ConfigureLang[Index];
-      if (CollectionCharFound) {
-        break;
-      }
-    }
-
-    ++Index;
+  Status = IsRedpathArray (ConfigureLang, NULL, &TempString);
+  if (!EFI_ERROR(Status)) {
+    TempString += 2; // Advance two characters for '}' and '/'
+    return TempString;
+  }
+  if (Status != EFI_NOT_FOUND) {
+    return NULL;
+  }
+  //
+  // The ConigLang has no '{}'
+  //
+  if (GetNumberOfRedpathNodes (ConfigureLang) == 1) {
+    return NULL;
   }
 
-  ++Property;
-
-  return Property;
+  if (GetRedpathNodeByIndex (ConfigureLang, 0, &TempString) == NULL) {
+    return NULL;
+  }
+  //
+  // Advance two characters to the starting
+  // pointer of next node.
+  //
+  return TempString + 2;
 }
 
 /**
@@ -2564,7 +2711,7 @@ GetPropertyVagueValue (
   //
   // Initial search pattern
   //
-  BufferSize = (StrLen (ConfigureLang) + StrLen (L"/{.*}") + 1) * sizeof (CHAR16); // Increase one for the NULL terminator.
+  BufferSize = (StrLen (ConfigureLang) + StrLen (L"/.*") + 1) * sizeof (CHAR16); // Increase one for the NULL terminator.
   SearchPattern = AllocatePool (BufferSize);
   if (SearchPattern == NULL) {
     DEBUG ((DEBUG_ERROR, "%a, Failed to allocate memory for SearchPattern\n", __FUNCTION__));
