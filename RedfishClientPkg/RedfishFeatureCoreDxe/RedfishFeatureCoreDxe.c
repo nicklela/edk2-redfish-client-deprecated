@@ -146,9 +146,9 @@ StartUpFeatureDriver (
                                ThisList->Context,
                                ThisList->InformationExchange
                                );
-      } 
+      }
       if (EFI_ERROR (Status)) {
-        DEBUG((DEBUG_ERROR, "%a: Callback to EDK2 Redfish feature driver fail.\n", __FUNCTION__));
+        DEBUG((DEBUG_ERROR, "%a: Callback to EDK2 Redfish feature driver fail: %s.\n", __FUNCTION__, ThisList->InformationExchange->SendInformation.FullUri));
       }
     }
     if (!EFI_ERROR (Status) && ThisList->Callback != NULL && ThisList->ChildList != NULL) {
@@ -177,7 +177,7 @@ StartUpFeatureDriver (
           }
           DestroyConfiglanguageList (&ConfigLangList);
         } else {
-          DEBUG((DEBUG_ERROR, "%a: No InformationTypeCollectionMemberConfigLanguage of %s/%s returned.\n", __FUNCTION__, NextParentUri, ThisList->ChildList->NodeName));
+          DEBUG((DEBUG_ERROR, "%a: No InformationTypeCollectionMemberConfigLanguage of %s returned.\n", __FUNCTION__, ThisList->InformationExchange->SendInformation.FullUri));
           ASSERT (FALSE);
         }
       } else {
