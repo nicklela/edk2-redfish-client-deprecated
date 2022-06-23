@@ -33,15 +33,16 @@
   EdkIIRedfishResourceConfigLib
   RedfishLib
   RedfishFeatureUtilityLib
+  RedfishBmcVersionLib
   RedfishResourceIdentifyLib
   UefiLib
   UefiDriverEntryPoint
-
 
 [Protocols]
   gEdkIIRedfishConfigHandlerProtocolGuid          ## PRODUCED
   gEfiRestJsonStructureProtocolGuid               ## CONSUMED
   gEdkIIRedfishResourceConfigProtocolGuid         ## PRODUCED
+  gEdkIIRedfishFeatureProtocolGuid                ## CONSUMED
 
 [Pcd]
   gEfiRedfishClientPkgTokenSpaceGuid.PcdMaxRedfishSchemaStringSize

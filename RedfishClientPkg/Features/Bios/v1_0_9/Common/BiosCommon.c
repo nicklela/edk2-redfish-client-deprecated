@@ -9,7 +9,7 @@
 
 #include "BiosCommon.h"
 
-CHAR8 BiosEmptyJson[] = "{\"@odata.id\": \"\", \"@odata.type\": \"#Bios.v1_0_9.Bios\", \"Id\": \"\", \"Name\": \"\"}";
+CHAR8 BiosEmptyJson[] = "{\"@odata.id\": \"\", \"@odata.type\": \"#Bios.v1_0_9.Bios\", \"Id\": \"\", \"Name\": \"\", \"Attributes\":{}}";
 
 REDFISH_RESOURCE_COMMON_PRIVATE *mRedfishResourcePrivate = NULL;
 
@@ -368,7 +368,6 @@ ProvisioningBiosExistResource (
 {
   EFI_STATUS Status;
   EFI_STRING ConfigureLang;
-  REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST ReturnedConfigLangList;
   CHAR8      *EtagStr;
   CHAR8      *Json;
 
@@ -384,17 +383,6 @@ ProvisioningBiosExistResource (
   if (ConfigureLang == NULL) {
     return EFI_NOT_FOUND;
   }
-  //
-  // Set the configuration language in the RESOURCE_INFORMATION_EXCHANGE.
-  // This information is sent back to the parent resource (e.g. the collection driver).
-  //
-  ReturnedConfigLangList.Count = 1;
-  ReturnedConfigLangList.List = AllocateZeroPool (sizeof (REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG));
-  if (ReturnedConfigLangList.List != NULL) {
-    ReturnedConfigLangList.List->Index = ConfiglanguageGetInstanceIndex (ConfigureLang);
-    ReturnedConfigLangList.List->ConfigureLang = ConfigureLang;
-  }
-  EdkIIRedfishResourceSetConfigureLang (&ReturnedConfigLangList);
 
   Status = ProvisioningBiosProperties (
              Private->JsonStructProtocol,
@@ -506,7 +494,7 @@ RedfishCheckResourceCommon (
   Status = EFI_SUCCESS;
   for (Index = 0; Index < Count; Index++) {
 
-    Property = GetPropertyFromConfigureLang (ConfigureLangList[Index]);
+    Property = GetPropertyFromConfigureLang (Private->Uri, ConfigureLangList[Index]);
     if (Property == NULL) {
       continue;
     }
@@ -637,14 +625,19 @@ RedfishIdentifyResourceCommon (
       return EFI_SUCCESS;
     }
 
-    EndOfChar = StrStr (ConfigLangList.List[0].ConfigureLang, L"}");
-    if (EndOfChar == NULL) {
+    //EndOfChar = StrStr (ConfigLangList.List[0].ConfigureLang, L"}");
+    Status = IsRedpathArray (ConfigLangList.List[0].ConfigureLang, NULL, &EndOfChar);
+    if (EFI_ERROR (Status) && Status != EFI_NOT_FOUND) {
       ASSERT (FALSE);
       return EFI_DEVICE_ERROR;
     }
-
+    if (Status != EFI_SUCCESS) {
+      //
+      // This is not the collection redpath.
+      //
+      GetRedpathNodeByIndex (ConfigLangList.List[0].ConfigureLang, 0, &EndOfChar);
+    }
     *(++EndOfChar) = '\0';
-
     //
     // Keep URI and ConfigLang mapping
     //
@@ -659,4 +652,91 @@ RedfishIdentifyResourceCommon (
   }
 
   return EFI_UNSUPPORTED;
+}
+
+EFI_STATUS
+HandleResource (
+  IN  REDFISH_RESOURCE_COMMON_PRIVATE *Private,
+  IN  EFI_STRING                      Uri
+  )
+{
+  EFI_STATUS                              Status;
+  REDFISH_SCHEMA_INFO                     SchemaInfo;
+  EFI_STRING                              ConfigLang;
+
+  if (Private == NULL || IS_EMPTY_STRING (Uri)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  //
+  // Resource match
+  //
+
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a, process resource for: %s\n", __FUNCTION__, Uri));
+
+  Status = GetRedfishSchemaInfo (Private->RedfishService, Private->JsonStructProtocol, Uri, &SchemaInfo);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, failed to get schema information from: %s %r\n", __FUNCTION__, Uri, Status));
+    return Status;
+  }
+  //
+  // Check and see if this is target resource that we want to handle.
+  // Some resource is handled by other provider so we have to make sure this first.
+  //
+  DEBUG ((REDFISH_DEBUG_TRACE, "%s Identify for %s\n", __FUNCTION__, Uri));
+  ConfigLang = RedfishGetConfigLanguage (Uri);
+  if (ConfigLang == NULL) {
+    Status = EdkIIRedfishResourceConfigIdentify (&SchemaInfo, Uri, Private->InformationExchange);
+    if (EFI_ERROR (Status)) {
+      if (Status == EFI_UNSUPPORTED) {
+        DEBUG ((DEBUG_INFO, "%a, \"%s\" is not handled by us\n", __FUNCTION__, Uri));
+        return EFI_SUCCESS;
+      }
+
+      DEBUG ((DEBUG_ERROR, "%a, fail to identify resource: \"%s\": %r\n", __FUNCTION__, Uri, Status));
+      return Status;
+    }
+  } else {
+    DEBUG ((REDFISH_DEBUG_TRACE, "%a, history record found: %s\n", __FUNCTION__, ConfigLang));
+    FreePool (ConfigLang);
+  }
+
+  //
+  // Check and see if target property exist or not even when collection memeber exists.
+  // If not, we sill do provision.
+  //
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a Check for %s\n", __FUNCTION__, Uri));
+  Status = EdkIIRedfishResourceConfigCheck (&SchemaInfo, Uri);
+  if (EFI_ERROR (Status)) {
+    //
+    // The target property does not exist, do the provision to create property.
+    //
+    DEBUG ((REDFISH_DEBUG_TRACE, "%a provision for %s\n", __FUNCTION__, Uri));
+    Status = EdkIIRedfishResourceConfigProvisionging (&SchemaInfo, Uri, Private->InformationExchange, FALSE);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "%a, failed to provision with GET mode: %r\n", __FUNCTION__, Status));
+    }
+
+    return Status;
+  }
+
+  //
+  // Consume first.
+  //
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a consume for %s\n", __FUNCTION__, Uri));
+  Status = EdkIIRedfishResourceConfigConsume (&SchemaInfo, Uri);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, failed to consume resoruce for: %s: %r\n", __FUNCTION__, Uri, Status));
+  }
+
+  //
+  // Patch.
+  //
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a update for %s\n", __FUNCTION__, Uri));
+  Status = EdkIIRedfishResourceConfigUpdate (&SchemaInfo, Uri);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, failed to update resoruce for: %s: %r\n", __FUNCTION__, Uri, Status));
+  }
+
+  return Status;
 }

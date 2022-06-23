@@ -11,6 +11,12 @@
 
 extern REDFISH_RESOURCE_COMMON_PRIVATE *mRedfishResourcePrivate;
 
+EFI_STATUS
+HandleResource (
+  IN  REDFISH_RESOURCE_COMMON_PRIVATE *Private,
+  IN  EFI_STRING                      Uri
+  );
+
 EFI_HANDLE medfishResourceConfigProtocolHandle;
 
 /**
@@ -587,6 +593,136 @@ RedfishResourceUnload (
   return Status;
 }
 
+/**
+  The callback function provided by Redfish Feature driver.
+
+  @param[in]     This                Pointer to EDKII_REDFISH_FEATURE_PROTOCOL instance.
+  @param[in]     FeatureAction       The action Redfish feature driver should take.
+  @param[in]     Uri                 The collection URI.
+  @param[in]     Context             The context of Redfish feature driver.
+  @param[in,out] InformationExchange The pointer to RESOURCE_INFORMATION_EXCHANGE
+
+  @retval EFI_SUCCESS              Redfish feature driver callback is executed successfully.
+  @retval Others                   Some errors happened.
+
+  @retval EFI_SUCCESS              Redfish feature driver callback is executed successfully.
+  @retval Others                   Some errors happened.
+
+**/
+EFI_STATUS
+EFIAPI
+RedfishExternalResourceResourceFeatureCallback (
+  IN     EDKII_REDFISH_FEATURE_PROTOCOL *This,
+  IN     FEATURE_CALLBACK_ACTION        FeatureAction,
+  IN     VOID                           *Context,
+  IN OUT RESOURCE_INFORMATION_EXCHANGE  *InformationExchange
+  )
+{
+  EFI_STATUS                       Status;
+  REDFISH_SERVICE                  RedfishService;
+  REDFISH_RESOURCE_COMMON_PRIVATE  *Private;
+  EFI_STRING                       ResourceUri;
+
+  if (FeatureAction != CallbackActionStartOperation) {
+    return EFI_UNSUPPORTED;
+  }
+
+  Private = (REDFISH_RESOURCE_COMMON_PRIVATE *)Context;
+
+  RedfishService = Private->RedfishService;
+  if (RedfishService == NULL) {
+    return EFI_NOT_READY;
+  }
+
+  //
+  // Save in private structure.
+  //
+  Private->InformationExchange = InformationExchange;
+
+  //
+  // Find Redfish version on BMC
+  //
+  Private->RedfishVersion = RedfishGetBmcVersion (RedfishService);
+
+  //
+  // Create the full URI from Redfish service root.
+  //
+  ResourceUri = (EFI_STRING)AllocateZeroPool (MAX_URI_LENGTH * sizeof(CHAR16));
+  if (ResourceUri == NULL) {
+    DEBUG ((DEBUG_ERROR, "%a, Fail to allocate memory for full URI.\n", __FUNCTION__));
+    return EFI_OUT_OF_RESOURCES;
+  }
+  StrCatS (ResourceUri, MAX_URI_LENGTH, Private->RedfishVersion);
+  StrCatS (ResourceUri, MAX_URI_LENGTH, InformationExchange->SendInformation.FullUri);
+
+  //
+  // Initialize collection path
+  //
+  Private->Uri = RedfishGetUri (ResourceUri);
+  if (Private->Uri == NULL) {
+    ASSERT (FALSE);
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Status = HandleResource (Private, Private->Uri);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, process external resource: %a failed: %r\n", __FUNCTION__, Private->Uri, Status));
+  }
+
+  FreePool (Private->Uri);
+  return Status;
+}
+
+/**
+  Callback function when gEdkIIRedfishFeatureProtocolGuid is installed.
+
+  @param[in] Event    Event whose notification function is being invoked.
+  @param[in] Context  Pointer to the notification function's context.
+**/
+VOID
+EFIAPI
+EdkIIRedfishFeatureProtocolIsReady
+ (
+  IN  EFI_EVENT                             Event,
+  IN  VOID                                  *Context
+  )
+{
+  EFI_STATUS                      Status;
+  EDKII_REDFISH_FEATURE_PROTOCOL  *FeatureProtocol;
+
+  if (mRedfishResourcePrivate == NULL) {
+    return;
+  }
+
+  if (mRedfishResourcePrivate->FeatureProtocol != NULL) {
+    return;
+  }
+
+  Status = gBS->LocateProtocol (
+                 &gEdkIIRedfishFeatureProtocolGuid,
+                 NULL,
+                 (VOID **)&FeatureProtocol
+                 );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, failed to locate gEdkIIRedfishFeatureProtocolGuid: %r\n", __FUNCTION__, Status));
+    gBS->CloseEvent (Event);
+    return;
+  }
+
+  Status = FeatureProtocol->Register (
+                              FeatureProtocol,
+                              REDFISH_MANAGED_URI,
+                              RedfishExternalResourceResourceFeatureCallback,
+                              (VOID *)mRedfishResourcePrivate
+                              );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, failed to register %s: %r\n", __FUNCTION__, REDFISH_MANAGED_URI, Status));
+  }
+
+  mRedfishResourcePrivate->FeatureProtocol = FeatureProtocol;
+
+  gBS->CloseEvent (Event);
+}
 
 /**
   This is the declaration of an EFI image entry point. This entry point is
@@ -638,6 +774,14 @@ RedfishResourceEntryPoint (
     TPL_CALLBACK,
     EfiRestJasonStructureProtocolIsReady,
     NULL,
+    &Registration
+    );
+
+  EfiCreateProtocolNotifyEvent (
+    &gEdkIIRedfishFeatureProtocolGuid,
+    TPL_CALLBACK,
+    EdkIIRedfishFeatureProtocolIsReady,
+    (VOID *)mRedfishResourcePrivate,
     &Registration
     );
 
