@@ -879,11 +879,8 @@ RedfishPlatformConfigProtocolGetValue (
       }
 
       Value->Type = REDFISH_VALUE_TYPE_STRING;
-      Value->Value.Buffer = AllocateCopyPool (StrSize ((CHAR16 *)TargetStatement->HiiStatement->Value.Buffer), TargetStatement->HiiStatement->Value.Buffer);
-      if (Value->Value.Buffer == NULL) {
-        Status = EFI_OUT_OF_RESOURCES;
-        goto RELEASE_RESOURCE;
-      }
+      Value->Value.Buffer = AllocatePool (StrLen ((CHAR16 *)TargetStatement->HiiStatement->Value.Buffer) + 1);
+      UnicodeStrToAsciiStrS ((CHAR16 *)TargetStatement->HiiStatement->Value.Buffer, Value->Value.Buffer, StrLen ((CHAR16 *)TargetStatement->HiiStatement->Value.Buffer) + 1);
       break;
     case EFI_IFR_CHECKBOX_OP:
     case EFI_IFR_NUMERIC_OP:
