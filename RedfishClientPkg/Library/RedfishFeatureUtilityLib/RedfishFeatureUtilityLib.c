@@ -470,7 +470,9 @@ ApplyFeatureSettingsVagueType (
   )
 {
   EFI_STATUS                Status;
+  UINTN                     StrSize;
   CHAR8                     *ConfigureLangAscii;
+  CHAR8                     *ConfigureLangKeyAscii;
   EFI_STRING                ConfigureKeyLang;
   EDKII_REDFISH_VALUE       RedfishValue;
   EDKII_REDFISH_VALUE_TYPES PropertyDatatype;
@@ -497,11 +499,20 @@ ApplyFeatureSettingsVagueType (
     //
     // Generate ConfigureLang with the key name
     //
-    ConfigureKeyLang = GetConfigureLang (ConfigureLangAscii, CurrentVagueValuePtr->KeyNamePtr);
-    if (ConfigureKeyLang == NULL) {
+    //ConfigureKeyLang = GetConfigureLang (ConfigureLangAscii, CurrentVagueValuePtr->KeyNamePtr);
+    StrSize = AsciiStrLen (ConfigureLangAscii) + AsciiStrLen (CurrentVagueValuePtr->KeyNamePtr) + 2;
+    ConfigureLangKeyAscii = AllocateZeroPool (StrSize);
+    ConfigureKeyLang = AllocateZeroPool (StrSize * sizeof (CHAR16));
+    if (ConfigureLangKeyAscii == NULL || ConfigureKeyLang == NULL) {
         DEBUG ((DEBUG_ERROR, "%a, Generate ConfigureLang of vague key of %a.%a %s %a failed!\n", __FUNCTION__, Schema, Version, ConfigureLang, CurrentVagueValuePtr->KeyNamePtr));
         goto ErrorContinue;
     }
+    AsciiStrCatS(ConfigureLangKeyAscii, StrSize, ConfigureLangAscii);
+    AsciiStrCatS(ConfigureLangKeyAscii, StrSize, "/");
+    AsciiStrCatS(ConfigureLangKeyAscii, StrSize, CurrentVagueValuePtr->KeyNamePtr);
+    AsciiStrToUnicodeStrS(ConfigureLangKeyAscii, ConfigureKeyLang, StrSize);
+    FreePool (ConfigureLangKeyAscii);
+    ConfigureLangKeyAscii = NULL;
     //
     // Initial property data type and value.
     //
@@ -543,7 +554,7 @@ ApplyFeatureSettingsVagueType (
             DEBUG ((DEBUG_ERROR, "%a, apply %a to %a failed: %r\n", __FUNCTION__, ConfigureKeyLang, CurrentVagueValuePtr->Value->DataValue.CharPtr, Status));
           }
         } else {
-          DEBUG ((DEBUG_ERROR, "%a, %a.%a %s value is: %a\n", __FUNCTION__, Schema, Version, ConfigureKeyLang, RedfishValue.Value.Buffer, Status));
+          DEBUG ((DEBUG_INFO, "%a, %a.%a %s value is: %a\n", __FUNCTION__, Schema, Version, ConfigureKeyLang, RedfishValue.Value.Buffer, Status));
         }
       } else if (PropertyDatatype == REDFISH_VALUE_TYPE_BOOLEAN) {
         //
@@ -567,7 +578,7 @@ ApplyFeatureSettingsVagueType (
             DEBUG ((DEBUG_ERROR, "%a, apply %s to %a failed: %r\n", __FUNCTION__, ConfigureKeyLang, (*CurrentVagueValuePtr->Value->DataValue.BoolPtr ? "True" : "False"), Status));
           }
         } else {
-          DEBUG ((DEBUG_ERROR, "%a, %a.%a %s value is: %a\n", __FUNCTION__, Schema, Version, ConfigureKeyLang, (RedfishValue.Value.Boolean ? "True" : "False"), Status));
+          DEBUG ((DEBUG_INFO, "%a, %a.%a %s value is: %a\n", __FUNCTION__, Schema, Version, ConfigureKeyLang, (RedfishValue.Value.Boolean ? "True" : "False"), Status));
         }
       } else if (PropertyDatatype == REDFISH_VALUE_TYPE_INTEGER) {
         //
@@ -585,7 +596,7 @@ ApplyFeatureSettingsVagueType (
             DEBUG ((DEBUG_ERROR, "%a, apply %s to 0x%x failed: %r\n", __FUNCTION__, ConfigureKeyLang, *CurrentVagueValuePtr->Value->DataValue.Int64Ptr, Status));
           }
         } else {
-          DEBUG ((DEBUG_ERROR, "%a, %a.%a %s value is: 0x%x\n", __FUNCTION__, Schema, Version, ConfigureKeyLang, RedfishValue.Value.Integer, Status));
+          DEBUG ((DEBUG_INFO, "%a, %a.%a %s value is: 0x%x\n", __FUNCTION__, Schema, Version, ConfigureKeyLang, RedfishValue.Value.Integer, Status));
         }
       } else {
         DEBUG((DEBUG_ERROR, "%a, %a.%a %s Unsupported Redfish property data type\n", __FUNCTION__, Schema, Version, ConfigureLang));
@@ -594,14 +605,25 @@ ApplyFeatureSettingsVagueType (
     }
 
 ErrorContinue:;
+    if (ConfigureLangKeyAscii != NULL) {
+      FreePool (ConfigureLangKeyAscii);
+      ConfigureLangKeyAscii = NULL;
+    }
     if (ConfigureKeyLang != NULL) {
       FreePool (ConfigureKeyLang);
+      ConfigureKeyLang = NULL;
     }
     CurrentVagueValuePtr = CurrentVagueValuePtr->NextKeyValuePtr;
   };
 
   if (ConfigureLangAscii != NULL) {
     FreePool (ConfigureLangAscii);
+  }
+  if (ConfigureLangKeyAscii != NULL) {
+    FreePool (ConfigureLangKeyAscii);
+  }
+  if (ConfigureKeyLang != NULL) {
+    FreePool (ConfigureKeyLang);
   }
   return EFI_SUCCESS;
 }
@@ -2615,6 +2637,7 @@ NewEmptyPropKeyValueFromRedfishValue (
   RedfishCS_char               *KeyNameChar;
   VOID                         *Data;
   UINTN                        DataSize;
+  INT32                        Bool32;
 
   KeyNameChar = StrUnicodeToAscii(KeyName);
   if (KeyNameChar == NULL) {
@@ -2635,11 +2658,16 @@ NewEmptyPropKeyValueFromRedfishValue (
 
   if (RedfishValue->Type == REDFISH_VALUE_TYPE_BOOLEAN) {
     VagueValue->DataType = RedfishCS_Vague_DataType_Bool;
-    DataSize = sizeof (RedfishCS_Vague_DataType_Bool);
-    Data = (VOID *)&RedfishValue->Value.Boolean;
+    DataSize = sizeof (BOOLEAN);
+    //
+    // Redfish JSON to C strcuture converter uses
+    // "int" for the BOOLEAN.
+    //
+    Bool32 = (INT32)RedfishValue->Value.Boolean;
+    Data = (VOID *)&Bool32;
   } else if (RedfishValue->Type == REDFISH_VALUE_TYPE_INTEGER) {
     VagueValue->DataType = RedfishCS_Vague_DataType_Int64;
-    DataSize = sizeof (RedfishCS_Vague_DataType_Int64);
+    DataSize = sizeof (INT64);
     Data = (VOID *)&RedfishValue->Value.Integer;
   } else if (RedfishValue->Type == REDFISH_VALUE_TYPE_STRING) {
     VagueValue->DataType = RedfishCS_Vague_DataType_String;
@@ -2711,7 +2739,7 @@ GetPropertyVagueValue (
   //
   // Initial search pattern
   //
-  BufferSize = (StrLen (ConfigureLang) + StrLen (L"/.*") + 1) * sizeof (CHAR16); // Increase one for the NULL terminator.
+  BufferSize = (StrLen (ConfigureLangBuffer) + StrLen (L"/.*") + 1) * sizeof (CHAR16); // Increase one for the NULL terminator.
   SearchPattern = AllocatePool (BufferSize);
   if (SearchPattern == NULL) {
     DEBUG ((DEBUG_ERROR, "%a, Failed to allocate memory for SearchPattern\n", __FUNCTION__));
@@ -2719,8 +2747,8 @@ GetPropertyVagueValue (
     return NULL;
   }
   BufferSize = BufferSize / sizeof (CHAR16);
-  StrCpyS (SearchPattern, BufferSize, ConfigureLang);
-  StrCatS (SearchPattern, BufferSize, L"/{.*}");
+  StrCpyS (SearchPattern, BufferSize, ConfigureLangBuffer);
+  StrCatS (SearchPattern, BufferSize, L"/.*");
   Status = RedfishPlatformConfigGetConfigureLang (Schema, Version, SearchPattern, &ConfigureLangList, &ConfigListCount);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a, %a.%a Get configure language of vague type values of %s failed: %r\n", __FUNCTION__, Schema, Version, ConfigureLangBuffer, Status));
@@ -2801,7 +2829,7 @@ PropertyChecker (
   IN BOOLEAN      ProvisionMode
   )
 {
-  if (ProvisionMode && PropertyBuffer == NULL) {
+  if (ProvisionMode) {
     return TRUE;
   }
 
@@ -3327,7 +3355,7 @@ CompareRedfishPropertyVagueValues (
   IN RedfishCS_EmptyProp_KeyValue *ConfigVagueKeyValuePtr,
   IN UINT32                       ConfigVagueKeyValueNumber
   )
-{
+  {
   RedfishCS_EmptyProp_KeyValue  *ThisConfigVagueKeyValuePtr;
   RedfishCS_EmptyProp_KeyValue  *ThisRedfishVagueKeyValuePtr;
 
@@ -3373,7 +3401,7 @@ CompareRedfishPropertyVagueValues (
             return FALSE;
           }
         } else if (ThisConfigVagueKeyValuePtr->Value->DataType == RedfishCS_Vague_DataType_Bool) {
-          if (*ThisConfigVagueKeyValuePtr->Value->DataValue.BoolPtr == *ThisRedfishVagueKeyValuePtr->Value->DataValue.BoolPtr) {
+          if ((UINT8)*ThisConfigVagueKeyValuePtr->Value->DataValue.BoolPtr == (UINT8)*ThisRedfishVagueKeyValuePtr->Value->DataValue.BoolPtr) {
             break;
           } else {
             return FALSE;
