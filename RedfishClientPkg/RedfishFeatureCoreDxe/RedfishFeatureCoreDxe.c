@@ -178,7 +178,8 @@ StartUpFeatureDriver (
           DestroyConfiglanguageList (&ConfigLangList);
         } else {
           DEBUG((DEBUG_ERROR, "%a: No InformationTypeCollectionMemberConfigLanguage of %s returned.\n", __FUNCTION__, ThisList->InformationExchange->SendInformation.FullUri));
-          ASSERT (FALSE);
+          DEBUG((DEBUG_ERROR, "%a: Redfish service maybe not connected or the network has problems.\n", __FUNCTION__));
+          return;
         }
       } else {
         StrCatS (NextParentUri, MaxParentUriLength, ThisList->NodeName);
