@@ -72,8 +72,8 @@ HandleResource (
         DEBUG ((DEBUG_ERROR, "%a, Fail to allocate memory for REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG.\n", __FUNCTION__));
         return EFI_OUT_OF_RESOURCES;
       }
-      Private->InformationExchange->ReturnedInformation.ConfigureLanguageList.List [Index].Index = Index;
-      Private->InformationExchange->ReturnedInformation.ConfigureLanguageList.List [Index].ConfigureLang =
+      Private->InformationExchange->ReturnedInformation.ConfigureLanguageList.List [0].Index = Index;
+      Private->InformationExchange->ReturnedInformation.ConfigureLanguageList.List [0].ConfigureLang =
           (EFI_STRING)AllocateCopyPool(StrSize(ReturnedConfigLang), (VOID *)ReturnedConfigLang);
     } else {
       DEBUG ((DEBUG_ERROR, "%a, GetArrayIndexFromArrayTypeConfigureLang fail: %r\n", __FUNCTION__, Status));

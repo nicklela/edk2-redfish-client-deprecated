@@ -9,7 +9,7 @@
 
 #include "ComputerSystemCommon.h"
 
-CHAR8 ComputerSystemEmptyJson[] = "{\"@odata.id\": \"\", \"@odata.type\": \"#ComputerSystem.v1_5_0.ComputerSystem\", \"Id\": \"\", \"Name\": \"\"}";
+CHAR8 ComputerSystemEmptyJson[] = "{\"@odata.id\": \"\", \"@odata.type\": \"#ComputerSystem.v1_5_0.ComputerSystem\", \"Id\": \"\", \"Name\": \"\", \"Boot\":{}}";
 
 REDFISH_RESOURCE_COMMON_PRIVATE *mRedfishResourcePrivate = NULL;
 

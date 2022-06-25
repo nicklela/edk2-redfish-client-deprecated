@@ -106,7 +106,7 @@ RedfishConsumeResourceCommon (
     //
     // Validate empty property.
     //
-    if (BiosCs->Attributes->Prop.BackLink == BiosCs->Attributes->Prop.ForwardLink) {
+    if (BiosCs->Attributes->Prop.ForwardLink == &BiosCs->Attributes->Prop) {
       goto ON_RELEASE;
     }
     EmptyPropCs = (RedfishCS_Type_EmptyProp_CS_Data *)BiosCs->Attributes->Prop.ForwardLink;
@@ -224,7 +224,6 @@ ProvisioningBiosProperties (
           //
           // Use the properties on system to replace the one on Redfish service.
           //
-          FreeEmptyPropKeyValueList (((RedfishCS_Type_EmptyProp_CS_Data *)BiosCs->Attributes->Prop.ForwardLink)->KeyValuePtr);
           ((RedfishCS_Type_EmptyProp_CS_Data *)BiosCs->Attributes->Prop.ForwardLink)->KeyValuePtr = PropertyVagueValues;
           ((RedfishCS_Type_EmptyProp_CS_Data *)BiosCs->Attributes->Prop.ForwardLink)->NunmOfProperties = VagueValueNumber;
           PropertyChanged = TRUE;
