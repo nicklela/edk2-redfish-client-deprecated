@@ -1,0 +1,545 @@
+/** @file
+  Redfish feature driver implementation - common functions
+
+  (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP<BR>
+
+  SPDX-License-Identifier: BSD-2-Clause-Patent
+
+**/
+
+!**EDK2_COMMON_DRIVER_HEADER_CONTENT**!
+
+CHAR8 !**EDK2_RESOURCE_TYPE**!EmptyJson[] = "{\"@odata.id\": \"\", \"@odata.type\": \"!**EDK2_RESOURCE_TITLE**!\", \"Id\": \"\", \"Name\": \"\"}";
+
+REDFISH_RESOURCE_COMMON_PRIVATE *mRedfishResourcePrivate = NULL;
+
+/**
+  Consume resource from given URI.
+
+  @param[in]   This                Pointer to REDFISH_RESOURCE_COMMON_PRIVATE instance.
+  @param[in]   Json                The JSON to consume.
+  @param[in]   HeaderEtag          The Etag string returned in HTTP header.
+
+  @retval EFI_SUCCESS              Value is returned successfully.
+  @retval Others                   Some error happened.
+
+**/
+EFI_STATUS
+RedfishConsumeResourceCommon (
+  IN  REDFISH_RESOURCE_COMMON_PRIVATE *Private,
+  IN  CHAR8                           *Json,
+  IN  CHAR8                           *HeaderEtag OPTIONAL
+  )
+{
+  EFI_STATUS                   Status;
+!**EDK2_RESOURCE_NAMESPACE**!
+  EFI_STRING                   ConfigureLang;
+!**EDK2_CONSUME_VARIABLE_DECLARATION**!
+
+  if (Private == NULL || IS_EMPTY_STRING (Json)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  !**EDK2_RESOURCE_TYPE**! = NULL;
+  !**EDK2_RESOURCE_TYPE**!Cs = NULL;
+  ConfigureLang = NULL;
+
+  Status = Private->JsonStructProtocol->ToStructure (
+                                          Private->JsonStructProtocol,
+                                          NULL,
+                                          Json,
+                                          (EFI_REST_JSON_STRUCTURE_HEADER **)&!**EDK2_RESOURCE_TYPE**!
+                                          );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, ToStructure() failed: %r\n", __FUNCTION__, Status));
+    return Status;
+  }
+
+!**EDK2_RESOURCE_ASSIGNMENT**!
+
+  //
+  // Check ETAG to see if we need to consume it
+  //
+  if (CheckEtag (Private->Uri, HeaderEtag, !**EDK2_FEATURE_DRIVER_CHECK_ETAG**!)) {
+    //
+    // No change
+    //
+    DEBUG ((DEBUG_INFO, "%a, ETAG: %s has no change, ignore consume action\n", __FUNCTION__, Private->Uri));
+    Status = EFI_ALREADY_STARTED;
+    goto ON_RELEASE;
+  }
+
+!**EDK2_RESOURCE_PROP_HANDLE_CODE**!
+ON_RELEASE:
+
+  //
+  // Release resource.
+  //
+  Private->JsonStructProtocol->DestoryStructure (
+                                 Private->JsonStructProtocol,
+                                 (EFI_REST_JSON_STRUCTURE_HEADER *)!**EDK2_RESOURCE_TYPE**!
+                                 );
+
+  return EFI_SUCCESS;
+}
+
+EFI_STATUS
+Provisioning!**EDK2_RESOURCE_TYPE**!Properties (
+  IN  EFI_REST_JSON_STRUCTURE_PROTOCOL  *JsonStructProtocol,
+  IN  CHAR8                             *InputJson,
+  IN  CHAR8                             *ResourceId,  OPTIONAL
+  IN  EFI_STRING                        ConfigureLang,
+  IN  BOOLEAN                           ProvisionMode,
+  OUT CHAR8                             **ResultJson
+  )
+{
+!**EDK2_RESOURCE_NAMESPACE**!
+  EFI_STATUS                    Status;
+  BOOLEAN                       PropertyChanged;
+!**EDK2_PROVISION_VARIABLE_DECLARATION**!
+
+  if (JsonStructProtocol == NULL || ResultJson == NULL || IS_EMPTY_STRING (InputJson) || IS_EMPTY_STRING (ConfigureLang)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a provision for %s with: %s\n", __FUNCTION__, ConfigureLang, (ProvisionMode ? L"Provision resource" : L"Update resource")));
+
+  *ResultJson = NULL;
+  PropertyChanged = FALSE;
+
+  !**EDK2_RESOURCE_TYPE**! = NULL;
+  Status = JsonStructProtocol->ToStructure (
+                                 JsonStructProtocol,
+                                 NULL,
+                                 InputJson,
+                                 (EFI_REST_JSON_STRUCTURE_HEADER **)&!**EDK2_RESOURCE_TYPE**!
+                                 );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, ToStructure failure: %r\n", __FUNCTION__, Status));
+    return Status;
+  }
+
+!**EDK2_RESOURCE_ASSIGNMENT**!
+
+  //
+  // ID
+  //
+  if (!**EDK2_RESOURCE_TYPE**!Cs->Id == NULL && !IS_EMPTY_STRING (ResourceId)) {
+    !**EDK2_RESOURCE_TYPE**!Cs->Id = AllocateCopyPool (AsciiStrSize (ResourceId), ResourceId);
+  }
+
+!**EDK2_RESOURCE_PROP_PROVISION_CODE**!
+  //
+  // Convert C structure back to JSON text.
+  //
+  Status = JsonStructProtocol->ToJson (
+                                 JsonStructProtocol,
+                                 (EFI_REST_JSON_STRUCTURE_HEADER *)!**EDK2_RESOURCE_TYPE**!,
+                                 ResultJson
+                                 );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, ToJson() failed: %r\n", __FUNCTION__, Status));
+    return Status;
+  }
+
+  //
+  // Release resource.
+  //
+  JsonStructProtocol->DestoryStructure (
+                        JsonStructProtocol,
+                        (EFI_REST_JSON_STRUCTURE_HEADER *)!**EDK2_RESOURCE_TYPE**!
+                        );
+
+  return (PropertyChanged ? EFI_SUCCESS : EFI_NOT_FOUND);
+}
+
+EFI_STATUS
+Provisioning!**EDK2_RESOURCE_TYPE**!Resource (
+  IN  REDFISH_RESOURCE_COMMON_PRIVATE   *Private,
+  IN  UINTN                             Index,
+  IN  EFI_STRING                        ConfigureLang
+  )
+{
+  CHAR8       *Json;
+  EFI_STATUS  Status;
+  EFI_STRING  NewResourceLocation;
+  CHAR8       *EtagStr;
+  CHAR8       ResourceId[16];
+
+  if (IS_EMPTY_STRING (ConfigureLang) || Private == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  EtagStr = NULL;
+  AsciiSPrint (ResourceId, sizeof (ResourceId), "%d", Index);
+
+  Status = Provisioning!**EDK2_RESOURCE_TYPE**!Properties (
+             Private->JsonStructProtocol,
+             !**EDK2_RESOURCE_TYPE**!EmptyJson,
+             ResourceId,
+             ConfigureLang,
+             TRUE,
+             &Json
+             );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, provisioning resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+    return Status;
+  }
+
+  Status = CreatePayloadToPostResource (Private->RedfishService, Private->Payload, Json, &NewResourceLocation, &EtagStr);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, post !**EDK2_RESOURCE_TYPE**! resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+    goto RELEASE_RESOURCE;
+  }
+
+  ASSERT (NewResourceLocation != NULL);
+
+  //
+  // Keep location of new resource.
+  //
+  if (NewResourceLocation != NULL) {
+    RedfisSetRedfishUri (ConfigureLang, NewResourceLocation);
+  }
+
+  //
+  // Handle Etag
+  //
+  if (EtagStr != NULL) {
+    SetEtagWithUri (EtagStr, NewResourceLocation);
+    FreePool (EtagStr);
+  }
+
+RELEASE_RESOURCE:
+
+  if (NewResourceLocation != NULL) {
+    FreePool (NewResourceLocation);
+  }
+
+  if (Json != NULL) {
+    FreePool (Json);
+  }
+
+  return Status;
+}
+
+EFI_STATUS
+Provisioning!**EDK2_RESOURCE_TYPE**!Resources (
+  IN  REDFISH_RESOURCE_COMMON_PRIVATE  *Private
+  )
+{
+  UINTN                                        Index;
+  EFI_STATUS                                   Status;
+  REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST  UnifiedConfigureLangList;
+
+  if (Private == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Status = RedfishFeatureGetUnifiedArrayTypeConfigureLang (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, REDPATH_ARRAY_PATTERN, &UnifiedConfigureLangList);
+  if (EFI_ERROR (Status) || UnifiedConfigureLangList.Count == 0) {
+    DEBUG ((DEBUG_ERROR, "%a, No HII question found with configure language: %s: %r\n", __FUNCTION__, REDPATH_ARRAY_PATTERN, Status));
+    return EFI_NOT_FOUND;
+  }
+  //
+  // Set the configuration language in the RESOURCE_INFORMATION_EXCHANGE.
+  // This information is sent back to the parent resource (e.g. the collection driver).
+  //
+  EdkIIRedfishResourceSetConfigureLang (&UnifiedConfigureLangList);
+
+  for (Index = 0; Index < UnifiedConfigureLangList.Count; Index++) {
+    DEBUG ((DEBUG_INFO, "[%d] create !**EDK2_RESOURCE_TYPE**! resource from: %s\n", UnifiedConfigureLangList.List[Index].Index, UnifiedConfigureLangList.List[Index].ConfigureLang));
+    Provisioning!**EDK2_RESOURCE_TYPE**!Resource (Private, UnifiedConfigureLangList.List[Index].Index, UnifiedConfigureLangList.List[Index].ConfigureLang);
+    FreePool (UnifiedConfigureLangList.List[Index].ConfigureLang);
+  }
+
+  return EFI_SUCCESS;
+}
+
+
+EFI_STATUS
+Provisioning!**EDK2_RESOURCE_TYPE**!ExistResource (
+  IN  REDFISH_RESOURCE_COMMON_PRIVATE  *Private
+  )
+{
+  EFI_STATUS Status;
+  EFI_STRING ConfigureLang;
+  CHAR8      *EtagStr;
+  CHAR8      *Json;
+
+  if (Private == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  EtagStr = NULL;
+  Json = NULL;
+  ConfigureLang = NULL;
+
+  ConfigureLang = RedfishGetConfigLanguage (Private->Uri);
+  if (ConfigureLang == NULL) {
+    return EFI_NOT_FOUND;
+  }
+
+  Status = Provisioning!**EDK2_RESOURCE_TYPE**!Properties (
+             Private->JsonStructProtocol,
+             !**EDK2_RESOURCE_TYPE**!EmptyJson,
+             NULL,
+             ConfigureLang,
+             TRUE,
+             &Json
+             );
+  if (EFI_ERROR (Status)) {
+    if (Status == EFI_NOT_FOUND) {
+      DEBUG ((REDFISH_DEBUG_TRACE, "%a, provisioning existing resource for %s ignored. Nothing changed\n", __FUNCTION__, ConfigureLang));
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, provisioning existing resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+    }
+    goto ON_RELEASE;
+  }
+
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a, provisioning existing resource for %s\n", __FUNCTION__, ConfigureLang));
+  //
+  // PUT back to instance
+  //
+  Status = CreatePayloadToPatchResource (Private->RedfishService, Private->Payload, Json, &EtagStr);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, patch resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+  }
+
+  //
+  // Handle Etag
+  //
+  if (EtagStr != NULL) {
+    SetEtagWithUri (EtagStr, Private->Uri);
+    FreePool (EtagStr);
+  }
+
+ON_RELEASE:
+
+  if (Json != NULL) {
+    FreePool (Json);
+  }
+
+  if (ConfigureLang != NULL) {
+    FreePool (ConfigureLang);
+  }
+
+  return Status;
+}
+
+/**
+  Provisioning redfish resource by given URI.
+
+  @param[in]   This                Pointer to EFI_HP_REDFISH_HII_PROTOCOL instance.
+  @param[in]   ResourceExist       TRUE if resource exists, PUT method will be used.
+                                   FALSE if resource does not exist POST method is used.
+
+  @retval EFI_SUCCESS              Value is returned successfully.
+  @retval Others                   Some error happened.
+
+**/
+EFI_STATUS
+RedfishProvisioningResourceCommon (
+  IN     REDFISH_RESOURCE_COMMON_PRIVATE  *Private,
+  IN     BOOLEAN                          ResourceExist
+  )
+{
+  if (Private == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  return (ResourceExist ? Provisioning!**EDK2_RESOURCE_TYPE**!ExistResource (Private) : Provisioning!**EDK2_RESOURCE_TYPE**!Resources (Private));
+}
+
+/**
+  Check resource from given URI.
+
+  @param[in]   This                Pointer to REDFISH_RESOURCE_COMMON_PRIVATE instance.
+  @param[in]   Json                The JSON to consume.
+
+  @retval EFI_SUCCESS              Value is returned successfully.
+  @retval Others                   Some error happened.
+
+**/
+EFI_STATUS
+RedfishCheckResourceCommon (
+  IN     REDFISH_RESOURCE_COMMON_PRIVATE  *Private,
+  IN     CHAR8                            *Json
+  )
+{
+  UINTN      Index;
+  EFI_STATUS Status;
+  EFI_STRING *ConfigureLangList;
+  UINTN      Count;
+  EFI_STRING Property;
+
+  if (Private == NULL || IS_EMPTY_STRING (Json)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Status = RedfishPlatformConfigGetConfigureLang (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, REDPATH_ARRAY_PATTERN, &ConfigureLangList, &Count);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, BiosConfigToRedfishGetConfigureLangRegex failed: %r\n", __FUNCTION__, Status));
+    return Status;
+  }
+
+  if (Count == 0) {
+    return EFI_NOT_FOUND;
+  }
+
+  Status = EFI_SUCCESS;
+  for (Index = 0; Index < Count; Index++) {
+
+    Property = GetPropertyFromConfigureLang (ConfigureLangList[Index]);
+    if (Property == NULL) {
+      continue;
+    }
+
+    DEBUG ((DEBUG_INFO, "%a, [%d] check attribute for: %s\n", __FUNCTION__, Index, Property));
+    if (!MatchPropertyWithJsonContext (Property, Json)) {
+      DEBUG ((DEBUG_INFO, "%a, property is missing: %s\n", __FUNCTION__, Property));
+      Status = EFI_NOT_FOUND;
+    }
+  }
+
+  FreePool (ConfigureLangList);
+
+  return Status;
+}
+
+/**
+  Update resource to given URI.
+
+  @param[in]   This                Pointer to REDFISH_RESOURCE_COMMON_PRIVATE instance.
+  @param[in]   Json                The JSON to consume.
+
+  @retval EFI_SUCCESS              Value is returned successfully.
+  @retval Others                   Some error happened.
+
+**/
+EFI_STATUS
+RedfishUpdateResourceCommon (
+  IN     REDFISH_RESOURCE_COMMON_PRIVATE  *Private,
+  IN     CHAR8                            *InputJson
+  )
+{
+  EFI_STATUS Status;
+  CHAR8      *Json;
+  EFI_STRING ConfigureLang;
+  CHAR8      *EtagStr;
+
+  if (Private == NULL || IS_EMPTY_STRING (InputJson)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  EtagStr = NULL;
+  Json = NULL;
+  ConfigureLang = NULL;
+
+  ConfigureLang = RedfishGetConfigLanguage (Private->Uri);
+  if (ConfigureLang == NULL) {
+    return EFI_NOT_FOUND;
+  }
+
+  Status = Provisioning!**EDK2_RESOURCE_TYPE**!Properties (
+             Private->JsonStructProtocol,
+             InputJson,
+             NULL,
+             ConfigureLang,
+             FALSE,
+             &Json
+             );
+  if (EFI_ERROR (Status)) {
+    if (Status == EFI_NOT_FOUND) {
+      DEBUG ((REDFISH_DEBUG_TRACE, "%a, update resource for %s ignored. Nothing changed\n", __FUNCTION__, ConfigureLang));
+    } else {
+      DEBUG ((DEBUG_ERROR, "%a, update resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+    }
+    goto ON_RELEASE;
+  }
+
+  DEBUG ((REDFISH_DEBUG_TRACE, "%a, update resource for %s\n", __FUNCTION__, ConfigureLang));
+  //
+  // PUT back to instance
+  //
+  Status = CreatePayloadToPatchResource (Private->RedfishService, Private->Payload, Json, &EtagStr);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a, patch resource for %s failed: %r\n", __FUNCTION__, ConfigureLang, Status));
+  }
+
+  //
+  // Handle Etag
+  //
+  if (EtagStr != NULL) {
+    SetEtagWithUri (EtagStr, Private->Uri);
+    FreePool (EtagStr);
+  }
+
+ON_RELEASE:
+
+  if (Json != NULL) {
+    FreePool (Json);
+  }
+
+  if (ConfigureLang != NULL) {
+    FreePool (ConfigureLang);
+  }
+
+  return Status;
+}
+
+/**
+  Identify resource from given URI.
+
+  @param[in]   This                Pointer to REDFISH_RESOURCE_COMMON_PRIVATE instance.
+  @param[in]   Json                The JSON to consume.
+
+  @retval EFI_SUCCESS              Value is returned successfully.
+  @retval Others                   Some error happened.
+
+**/
+EFI_STATUS
+RedfishIdentifyResourceCommon (
+  IN     REDFISH_RESOURCE_COMMON_PRIVATE  *Private,
+  IN     CHAR8                            *Json
+  )
+{
+  BOOLEAN     Supported;
+  EFI_STATUS  Status;
+  EFI_STRING  EndOfChar;
+  REDFISH_FEATURE_ARRAY_TYPE_CONFIG_LANG_LIST ConfigLangList;
+
+  Supported = RedfishIdentifyResource (Private->Uri, Private->Json);
+  if (Supported) {
+    Status = RedfishFeatureGetUnifiedArrayTypeConfigureLang (RESOURCE_SCHEMA, RESOURCE_SCHEMA_VERSION, REDPATH_ARRAY_PATTERN, &ConfigLangList);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "%a, BiosConfigToRedfishGetConfigureLangRegex failed: %r\n", __FUNCTION__, Status));
+      return Status;
+    }
+
+    if (ConfigLangList.Count == 0) {
+      return EFI_SUCCESS;
+    }
+
+    EndOfChar = StrStr (ConfigLangList.List[0].ConfigureLang, L"}");
+    if (EndOfChar == NULL) {
+      ASSERT (FALSE);
+      return EFI_DEVICE_ERROR;
+    }
+
+    *(++EndOfChar) = '\0';
+
+    //
+    // Keep URI and ConfigLang mapping
+    //
+    RedfisSetRedfishUri (ConfigLangList.List[0].ConfigureLang, Private->Uri);
+    //
+    // Set the configuration language in the RESOURCE_INFORMATION_EXCHANGE.
+    // This information is sent back to the parent resource (e.g. the collection driver).
+    //
+    EdkIIRedfishResourceSetConfigureLang (&ConfigLangList);
+    DestroyConfiglanguageList (&ConfigLangList);
+    return EFI_SUCCESS;
+  }
+
+  return EFI_UNSUPPORTED;
+}

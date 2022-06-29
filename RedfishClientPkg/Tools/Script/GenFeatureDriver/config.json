@@ -1,0 +1,57 @@
+{
+    "import_from": "F:\\OneDrive - Hewlett Packard Enterprise\\AllSpecificaiton\\DMTF\\RedFish\\DSP8010_Schema_2021.4\\json-schema",
+    "output_path":  "D:\\Roms\\RedfishFeatureDrivers" ,
+    "ProxyHost": "proxy.houston.hpecorp.net",
+    "ProxyPort": "8080",
+    "edk2_template_path":  "./_Edk2OpenSourceTempFiles" ,
+    "edk2_component_filelist": [ "Edk2RedfishSchemaCs_Component.dsc",
+                                 "Edk2RedfishSchemaCs_Lib.dsc"],
+    "CacheDatabase":true,
+    "RootSchema": "ServiceRoot.v1_8_0.json",
+    "SkipFeatureDriver": false,
+    "SkipCollectionDriver": false,
+    "GenSelectedFeatureDriver": false,
+    "GenSelectedCollectionDriver": false,    
+    "GenVersionedFeatureDriver": ["ComputerSystem", "Memory", "Bios"],
+    "GenCollectionDriver": ["MemoryCollection", "ComputerSystemCollection"],
+    "Processor": "v1_7_2",
+    "EthernetInterface": "v1_6_1",
+    "FabricAdapter":"v1_0_0",
+    "AccountService": "v1_0_2",
+    "ServiceRoot": "v1_2_4",
+    "Chassis": "v1_13_0",
+    "Fabric": "v1_1_1",
+    "Facility": "v1_0_1",
+    "JsonSchemaFile": "v1_0_8",
+    "Manager": "v1_9_0",
+    "MessageRegistryFile": "v1_1_3",
+    "ResourceBlock": "v1_3_3",
+    "ComputerSystem": "v1_10_2",
+    "Memory": "v1_7_4",
+
+    "excluded_properties": [
+        "@odata.context",
+        "@odata.type",
+        "@odata.id",
+        "@odata.etag",
+        "Name",
+        "Id",
+        "@Redfish.Settings",
+        "Oem",
+        "Links"
+    ],
+    "AdditionalFeatureDriver": [
+        {
+            "driver_fname": "F:\\OneDrive - Hewlett Packard Enterprise\\AllSpecificaiton\\DMTF\\RedFish\\DSP8010_Schema_2021.4\\json-schema\\ComputerSystem.v1_5_0.json",
+            "driver_depex": "ServiceRoot/Systems{}",
+            "exist": false,
+            "type_name": "ComputerSystem"
+        },
+        {
+            "driver_fname": "F:\\OneDrive - Hewlett Packard Enterprise\\AllSpecificaiton\\DMTF\\RedFish\\DSP8010_Schema_2021.4\\json-schema\\Memory.v1_7_1.json",
+            "driver_depex": "ServiceRoot/Systems{}/Memory{}",
+            "exist": false,
+            "type_name": "Memory"
+        }        
+    ]
+}
