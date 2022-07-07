@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------
 
   Copyright (c) 2019, Intel Corporation. All rights reserved.<BR>
-  (C) Copyright 2021 Hewlett Packard Enterprise Development LP<BR>
+  (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -91,8 +91,11 @@ typedef struct {
 #define REDFISH_FLAG_SERVICE_NO_VERSION_DOC 0x00000001 //The Redfish Service lacks the version document (in violation of the Redfish spec)
 redfishService* createServiceEnumerator(REDFISH_CONFIG_SERVICE_INFORMATION *RedfishConfigServiceInfo, const char* rootUri, enumeratorAuthentication* auth, unsigned int flags);
 json_t* getUriFromService(redfishService* service, const char* uri, EFI_HTTP_STATUS_CODE** StatusCode);
+json_t* getUriFromServiceEx(redfishService* service, const char* uri, EFI_HTTP_HEADER **Headers, UINTN *HeaderCount, EFI_HTTP_STATUS_CODE **StatusCode);
 json_t* patchUriFromService(redfishService* service, const char* uri, const char* content, EFI_HTTP_STATUS_CODE** StatusCode);
+json_t* patchUriFromServiceEx(redfishService* service, const char* uri, const char* content, EFI_HTTP_HEADER **Headers, UINTN *HeaderCount, EFI_HTTP_STATUS_CODE** StatusCode);
 json_t* postUriFromService(redfishService* service, const char* uri, const char* content, size_t contentLength, const char* contentType, EFI_HTTP_STATUS_CODE** StatusCode);
+json_t* postUriFromServiceEx(redfishService* service, const char* uri, const char* content, size_t contentLength, const char* contentType, EFI_HTTP_HEADER **Headers, UINTN *HeaderCount, EFI_HTTP_STATUS_CODE** StatusCode);
 json_t* deleteUriFromService(redfishService* service, const char* uri, EFI_HTTP_STATUS_CODE** StatusCode);
 redfishPayload* getRedfishServiceRoot(redfishService* service, const char* version, EFI_HTTP_STATUS_CODE** StatusCode);
 redfishPayload* getPayloadByPath(redfishService* service, const char* path, EFI_HTTP_STATUS_CODE** StatusCode);

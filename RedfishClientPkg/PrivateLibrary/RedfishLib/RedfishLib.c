@@ -3,7 +3,7 @@
   (CRUD) Redfish resources and provide basic query.
 
   Copyright (c) 2019, Intel Corporation. All rights reserved.<BR>
-  (C) Copyright 2021 Hewlett Packard Enterprise Development LP<BR>
+  (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -323,7 +323,7 @@ RedfishGetByUri (
 
   ZeroMem (RedResponse, sizeof (REDFISH_RESPONSE));
 
-  JsonValue = getUriFromService (RedfishService, Uri, &RedResponse->StatusCode);
+  JsonValue = getUriFromServiceEx (RedfishService, Uri, &RedResponse->Headers, &RedResponse->HeaderCount, &RedResponse->StatusCode);
   RedResponse->Payload = createRedfishPayload(JsonValue, RedfishService);
 
   //
@@ -541,9 +541,11 @@ RedfishPatchToPayload (
 
   ZeroMem (RedResponse, sizeof (REDFISH_RESPONSE));
 
-  RedResponse->Payload = (REDFISH_PAYLOAD) patchPayload (
+  RedResponse->Payload = (REDFISH_PAYLOAD) patchPayloadEx (
                                              Target,
                                              Payload,
+                                             &RedResponse->Headers,
+                                             &RedResponse->HeaderCount,
                                              &(RedResponse->StatusCode)
                                              );
 
@@ -607,9 +609,11 @@ RedfishPostToPayload (
 
   ZeroMem (RedResponse, sizeof (REDFISH_RESPONSE));
 
-  RedResponse->Payload = (REDFISH_PAYLOAD) postPayload (
+  RedResponse->Payload = (REDFISH_PAYLOAD) postPayloadEx (
                                              Target,
                                              Payload,
+                                             &RedResponse->Headers,
+                                             &RedResponse->HeaderCount,
                                              &(RedResponse->StatusCode)
                                              );
 
