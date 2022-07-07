@@ -1,7 +1,7 @@
 /** @file
   This file defines the EDKII_REDFISH_PLATFORM_CONFIG_PROTOCOL interface.
 
-  (C) Copyright 2021 Hewlett Packard Enterprise Development LP<BR>
+  (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -19,6 +19,9 @@ typedef union {
   INT64           Integer;
   BOOLEAN         Boolean;
   CHAR8           *Buffer;
+  CHAR8           **StringArray;
+  INT64           *IntegerArray;
+  BOOLEAN         *BooleanArray;
 } EDKII_REDFISH_TYPE_VALUE;
 
 /**
@@ -29,6 +32,9 @@ typedef enum {
   REDFISH_VALUE_TYPE_INTEGER,
   REDFISH_VALUE_TYPE_BOOLEAN,
   REDFISH_VALUE_TYPE_STRING,
+  REDFISH_VALUE_TYPE_STRING_ARRAY,
+  REDFISH_VALUE_TYPE_INTEGER_ARRAY,
+  REDFISH_VALUE_TYPE_BOOLEAN_ARRAY,
   REDFISH_VALUE_TYPE_MAX
 } EDKII_REDFISH_VALUE_TYPES;
 
@@ -38,6 +44,7 @@ typedef enum {
 typedef struct {
   EDKII_REDFISH_VALUE_TYPES Type;
   EDKII_REDFISH_TYPE_VALUE  Value;
+  UINTN                     ArrayCount;
 } EDKII_REDFISH_VALUE;
 
 /**
@@ -87,12 +94,12 @@ EFI_STATUS
   );
 
 /**
-  Get the list of Configure Language from platform configuration by the given Schema and Pattern.
+  Get the list of Configure Language from platform configuration by the given Schema and RegexPattern.
 
   @param[in]   This                Pointer to EDKII_REDFISH_PLATFORM_CONFIG_PROTOCOL instance.
   @param[in]   Schema              The Redfish schema to query.
   @param[in]   Version             The Redfish version to query.
-  @param[in]   Pattern             The target Configure Language pattern.
+  @param[in]   RegexPattern        The target Configure Language pattern. This is used for regular expression matching.
   @param[out]  ConfigureLangList   The list of Configure Language.
   @param[out]  Count               The number of Configure Language in ConfigureLangList.
 
@@ -106,7 +113,7 @@ EFI_STATUS
   IN     EDKII_REDFISH_PLATFORM_CONFIG_PROTOCOL *This,
   IN     CHAR8                                  *Schema,
   IN     CHAR8                                  *Version,
-  IN     EFI_STRING                             Pattern,
+  IN     EFI_STRING                             RegexPattern,
   OUT    EFI_STRING                             **ConfigureLangList,
   OUT    UINTN                                  *Count
   );

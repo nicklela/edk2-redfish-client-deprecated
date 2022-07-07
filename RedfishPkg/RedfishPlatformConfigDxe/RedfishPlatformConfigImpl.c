@@ -2,7 +2,7 @@
 
   The implementation of EDKII Redfidh Platform Config Protocol.
 
-  (C) Copyright 2021 Hewlett Packard Enterprise Development LP<BR>
+  (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -232,6 +232,52 @@ HiiGetRedfishString (
   // Return the Null-terminated Unicode string
   //
   return String;
+}
+
+/**
+  Retrieves a string from a string package in a English language. The
+  returned string is allocated using AllocatePool().  The caller is responsible
+  for freeing the allocated buffer using FreePool().
+
+  If HiiHandle is NULL, then ASSERT().
+  If StringId is 0, then ASSET.
+
+  @param[in]  HiiStringProtocol EFI_HII_STRING_PROTOCOL instance.
+  @param[in]  HiiHandle         A handle that was previously registered in the HII Database.
+  @param[in]  StringId          The identifier of the string to retrieved from the string
+                                package associated with HiiHandle.
+
+  @retval NULL   The string specified by StringId is not present in the string package.
+  @retval Other  The string was returned.
+
+**/
+CHAR8 *
+HiiGetRedfishAsciiString (
+  IN EFI_HII_HANDLE           HiiHandle,
+  IN CHAR8                    *Language,
+  IN EFI_STRING_ID            StringId
+  )
+{
+  EFI_STRING  HiiString;
+  UINTN       StringSize;
+  CHAR8       *AsciiString;
+
+  HiiString = HiiGetRedfishString (HiiHandle, Language, StringId);
+  if (HiiString == NULL) {
+    DEBUG ((DEBUG_ERROR, "%a, Can not find string ID: 0x%x with %a\n", __FUNCTION__, StringId, Language));
+    return NULL;
+  }
+
+  StringSize = (StrLen (HiiString) + 1) * sizeof (CHAR8);
+  AsciiString = AllocatePool (StringSize);
+  if (AsciiString == NULL) {
+    return NULL;
+  }
+
+  UnicodeStrToAsciiStrS (HiiString, AsciiString, StringSize);
+
+  FreePool (HiiString);
+  return AsciiString;
 }
 
 /**
@@ -700,7 +746,9 @@ ReleaseFormset (
     FormsetPrivate->HiiFormSet = NULL;
   }
 
-  FreePool (FormsetPrivate->DevicePathStr);
+  if (FormsetPrivate->DevicePathStr != NULL) {
+    FreePool(FormsetPrivate->DevicePathStr);
+  }
 
   //
   // Release schema list

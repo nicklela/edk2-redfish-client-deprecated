@@ -1,7 +1,7 @@
 /** @file
   This file defines the EDKII Redfish Platform Config Protocol interface.
 
-  (C) Copyright 2021 Hewlett Packard Enterprise Development LP<BR>
+  (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -25,7 +25,6 @@
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiLib.h>
 
-#define REDFISH_PLATFORM_CONFIG_DELETE_EXPIRED_FORMSET   0x00
 #define IS_EMPTY_STRING(a)                               (a == NULL || a[0] == L'\0')
 #define ENGLISH_LANGUAGE_CODE                            "en-US"
 #define X_UEFI_SCHEMA_PREFIX                             "x-uefi-redfish-"
@@ -252,6 +251,30 @@ ProcessPendingList (
 **/
 EFI_STRING
 HiiGetRedfishString (
+  IN EFI_HII_HANDLE           HiiHandle,
+  IN CHAR8                    *Language,
+  IN EFI_STRING_ID            StringId
+  );
+
+/**
+  Retrieves a string from a string package in a English language. The
+  returned string is allocated using AllocatePool().  The caller is responsible
+  for freeing the allocated buffer using FreePool().
+
+  If HiiHandle is NULL, then ASSERT().
+  If StringId is 0, then ASSET.
+
+  @param[in]  HiiStringProtocol EFI_HII_STRING_PROTOCOL instance.
+  @param[in]  HiiHandle         A handle that was previously registered in the HII Database.
+  @param[in]  StringId          The identifier of the string to retrieved from the string
+                                package associated with HiiHandle.
+
+  @retval NULL   The string specified by StringId is not present in the string package.
+  @retval Other  The string was returned.
+
+**/
+CHAR8 *
+HiiGetRedfishAsciiString (
   IN EFI_HII_HANDLE           HiiHandle,
   IN CHAR8                    *Language,
   IN EFI_STRING_ID            StringId
