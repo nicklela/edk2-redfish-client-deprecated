@@ -13,6 +13,113 @@
 
 REDFISH_PLATFORM_CONFIG_PRIVATE *mRedfishPlatformConfigPrivate = NULL;
 
+/**
+  Convert one-of options to string array in Redfish attribute.
+
+  @param[in]  HiiHandle          HII handle.
+  @param[in]  SchemaName         Schema string.
+  @param[in]  HiiStatement       Target HII statement.
+  @param[out] Values             Attribute value array.
+
+  @retval EFI_SUCCESS            Options are converted successfully.
+  @retval Other                  Error occurs.
+
+**/
+EFI_STATUS
+OneOfStatementToAttributeValues (
+  IN  EFI_HII_HANDLE                HiiHandle,
+  IN  CHAR8                         *SchemaName,
+  IN  HII_STATEMENT                 *HiiStatement,
+  OUT EDKII_REDFISH_POSSIBLE_VALUES *Values
+  )
+{
+  LIST_ENTRY            *Link;
+  HII_QUESTION_OPTION   *Option;
+  UINTN                 Index;
+
+  if (HiiHandle == NULL || HiiStatement == NULL || Values == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  if (IsListEmpty (&HiiStatement->OptionListHead)) {
+    return EFI_NOT_FOUND;
+  }
+
+  //
+  // Loop through the option to get count
+  //
+  Values->ValueCount = 0;
+  Link = GetFirstNode (&HiiStatement->OptionListHead);
+  while (!IsNull (&HiiStatement->OptionListHead, Link)) {
+    Values->ValueCount += 1;
+    Link = GetNextNode (&HiiStatement->OptionListHead, Link);
+  }
+
+  Values->ValueArray = AllocateZeroPool (sizeof (EDKII_REDFISH_ATTRIBUTE_VALUE) * Values->ValueCount);
+  if (Values->ValueArray == NULL) {
+    Values->ValueCount = 0;
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Index = 0;
+  Link = GetFirstNode (&HiiStatement->OptionListHead);
+  while (!IsNull (&HiiStatement->OptionListHead, Link)) {
+    Option = HII_QUESTION_OPTION_FROM_LINK (Link);
+
+    if (Option->Text != 0) {
+      Values->ValueArray[Index].ValueName = HiiGetRedfishAsciiString (HiiHandle, SchemaName, Option->Text);
+      Values->ValueArray[Index].ValueName = HiiGetEnglishAsciiString (HiiHandle, Option->Text);
+    }
+
+    Link = GetNextNode (&HiiStatement->OptionListHead, Link);
+  }
+
+  return EFI_SUCCESS;
+}
+
+/**
+  Return Redfish attribute type from given HII statment operand.
+
+  @param[in]  HiiStatement       Target HII statement.
+
+  @retval EDKII_REDFISH_ATTRIBUTE_TYPES    Attribute type.
+
+**/
+EDKII_REDFISH_ATTRIBUTE_TYPES
+HiiStatementToAttributeType (
+  IN  HII_STATEMENT   *HiiStatement
+  )
+{
+  EDKII_REDFISH_ATTRIBUTE_TYPES type;
+
+  if (HiiStatement == NULL) {
+    return REDFISH_ATTRIBUTE_TYPE_UNKNOWN;
+  }
+
+  type = REDFISH_ATTRIBUTE_TYPE_UNKNOWN;
+  switch (HiiStatement->Operand) {
+    case EFI_IFR_ONE_OF_OP:
+    case EFI_IFR_ORDERED_LIST_OP:
+      type = REDFISH_ATTRIBUTE_TYPE_ENUMERATION;
+      break;
+    case EFI_IFR_STRING_OP:
+      type = REDFISH_ATTRIBUTE_TYPE_STRING;
+      break;
+    case EFI_IFR_NUMERIC_OP:
+      type = REDFISH_ATTRIBUTE_TYPE_INTEGER;
+      break;
+    case EFI_IFR_CHECKBOX_OP:
+      type = REDFISH_ATTRIBUTE_TYPE_BOOLEAN;
+      break;
+    case EFI_IFR_DATE_OP:
+    case EFI_IFR_TIME_OP:
+    default:
+      DEBUG ((DEBUG_ERROR, "%a, unsupported operand: 0x%x\n", __FUNCTION__, HiiStatement->Operand));
+      break;
+  }
+
+  return type;
+}
 
 /**
   Zero extend integer/boolean to UINT64 for comparing.
@@ -1434,6 +1541,152 @@ RedfishPlatformConfigProtocolGetSupportedSchema (
 }
 
 /**
+  Get Redfish default value with the given Schema and Configure Language.
+
+  @param[in]   This                Pointer to EDKII_REDFISH_PLATFORM_CONFIG_PROTOCOL instance.
+  @param[in]   Schema              The Redfish schema to query.
+  @param[in]   Version             The Redfish version to query.
+  @param[in]   ConfigureLang       The target value which match this configure Language.
+  @param[in]   DefaultClass        The UEFI defined default class.
+                                   Please refer to UEFI spec. 33.2.5.8 "defaults" for details.
+  @param[out]  Value               The returned value.
+
+  @retval EFI_SUCCESS              Value is returned successfully.
+  @retval Others                   Some error happened.
+
+**/
+EFI_STATUS
+RedfishPlatformConfigProtocolGetDefaultValue (
+  IN     EDKII_REDFISH_PLATFORM_CONFIG_PROTOCOL *This,
+  IN     CHAR8                                  *Schema,
+  IN     CHAR8                                  *Version,
+  IN     EFI_STRING                             ConfigureLang,
+  IN     UINT16                                 DefaultClass,
+  OUT    EDKII_REDFISH_VALUE                    *Value
+  )
+{
+  EFI_STATUS                                Status;
+  REDFISH_PLATFORM_CONFIG_PRIVATE           *RedfishPlatformConfigPrivate;
+  REDFISH_PLATFORM_CONFIG_STATEMENT_PRIVATE *TargetStatement;
+  CHAR8                                     *FullSchema;
+
+  if (This == NULL || IS_EMPTY_STRING (Schema) || IS_EMPTY_STRING (Version) || IS_EMPTY_STRING (ConfigureLang) || Value == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  RedfishPlatformConfigPrivate = REDFISH_PLATFORM_CONFIG_PRIVATE_FROM_THIS (This);
+  Value->Type = REDFISH_VALUE_TYPE_UNKNOWN;
+  Value->ArrayCount = 0;
+
+  FullSchema = NULL;
+  FullSchema = GetFullSchemaString (Schema, Version);
+  if (FullSchema == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Status = RedfishPlatformConfigGetStatementCommon (RedfishPlatformConfigPrivate, FullSchema, ConfigureLang, &TargetStatement);
+  if (EFI_ERROR (Status)) {
+    goto RELEASE_RESOURCE;
+  }
+
+RELEASE_RESOURCE:
+
+  if (FullSchema != NULL) {
+    FreePool (FullSchema);
+  }
+
+  return Status;
+}
+
+/**
+  Get Redfish attribute value with the given Schema and Configure Language.
+
+  @param[in]   This                Pointer to EDKII_REDFISH_PLATFORM_CONFIG_PROTOCOL instance.
+  @param[in]   Schema              The Redfish schema to query.
+  @param[in]   Version             The Redfish version to query.
+  @param[in]   ConfigureLang       The target value which match this configure Language.
+  @param[out]  AttributeValue      The attribute value.
+
+  @retval EFI_SUCCESS              Value is returned successfully.
+  @retval Others                   Some error happened.
+
+**/
+EFI_STATUS
+RedfishPlatformConfigProtocolGetAttribute (
+  IN     EDKII_REDFISH_PLATFORM_CONFIG_PROTOCOL *This,
+  IN     CHAR8                                  *Schema,
+  IN     CHAR8                                  *Version,
+  IN     EFI_STRING                             ConfigureLang,
+  OUT    EDKII_REDFISH_ATTRIBUTE                *AttributeValue
+  )
+{
+  EFI_STATUS                                Status;
+  REDFISH_PLATFORM_CONFIG_PRIVATE           *RedfishPlatformConfigPrivate;
+  REDFISH_PLATFORM_CONFIG_STATEMENT_PRIVATE *TargetStatement;
+  CHAR8                                     *FullSchema;
+
+  if (This == NULL || IS_EMPTY_STRING (Schema) || IS_EMPTY_STRING (Version) || IS_EMPTY_STRING (ConfigureLang) || AttributeValue == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  RedfishPlatformConfigPrivate = REDFISH_PLATFORM_CONFIG_PRIVATE_FROM_THIS (This);
+  ZeroMem (AttributeValue, sizeof (EDKII_REDFISH_ATTRIBUTE));
+  FullSchema = NULL;
+  FullSchema = GetFullSchemaString (Schema, Version);
+  if (FullSchema == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Status = RedfishPlatformConfigGetStatementCommon (RedfishPlatformConfigPrivate, FullSchema, ConfigureLang, &TargetStatement);
+  if (EFI_ERROR (Status)) {
+    goto RELEASE_RESOURCE;
+  }
+
+  if (TargetStatement->Description != 0) {
+    AttributeValue->AttributeName = HiiGetRedfishAsciiString (TargetStatement->ParentForm->ParentFormset->HiiHandle, FullSchema, TargetStatement->Description);
+    AttributeValue->DisplayName = HiiGetEnglishAsciiString (TargetStatement->ParentForm->ParentFormset->HiiHandle, TargetStatement->Description);
+  }
+
+  if (TargetStatement->Help != 0) {
+    AttributeValue->HelpText = HiiGetEnglishAsciiString (TargetStatement->ParentForm->ParentFormset->HiiHandle, TargetStatement->Help);
+  }
+
+  AttributeValue->ReadOnly = ((TargetStatement->Flags & EFI_IFR_FLAG_READ_ONLY) == 0 ? FALSE : TRUE);
+  AttributeValue->ResetRequired = ((TargetStatement->Flags & EFI_IFR_FLAG_RESET_REQUIRED) == 0 ? FALSE : TRUE);
+  AttributeValue->Type = HiiStatementToAttributeType (TargetStatement->HiiStatement);
+
+  //
+  // Deal with maximum and minimum
+  //
+  if (AttributeValue->Type == REDFISH_ATTRIBUTE_TYPE_STRING) {
+    AttributeValue->StrMaxSize = TargetStatement->StatementData.StrMaxSize;
+    AttributeValue->StrMinSize = TargetStatement->StatementData.StrMinSize;
+  } else if (AttributeValue->Type == REDFISH_ATTRIBUTE_TYPE_INTEGER) {
+    AttributeValue->NumMaximum = TargetStatement->StatementData.NumMaximum;
+    AttributeValue->NumMinimum = TargetStatement->StatementData.NumMinimum;
+    AttributeValue->NumStep = TargetStatement->StatementData.NumStep;
+  }
+
+  //
+  // Provide value array if this is enumeration type.
+  //
+  if (TargetStatement->HiiStatement->Operand == EFI_IFR_ONE_OF_OP) {
+    Status = OneOfStatementToAttributeValues (TargetStatement->ParentForm->ParentFormset->HiiHandle, FullSchema, TargetStatement->HiiStatement, &AttributeValue->Values);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "%a, failed to convert one-of options to attribute values: %r\n", __FUNCTION__, Status));
+    }
+  }
+
+RELEASE_RESOURCE:
+
+  if (FullSchema != NULL) {
+    FreePool (FullSchema);
+  }
+
+  return Status;
+}
+
+/**
   Functions which are registered to receive notification of
   database events have this prototype. The actual event is encoded
   in NotifyType. The following table describes how PackageType,
@@ -1715,10 +1968,13 @@ RedfishPlatformConfigDxeEntryPoint (
   // Protocol initialization
   //
   mRedfishPlatformConfigPrivate->ImageHandle = ImageHandle;
+  mRedfishPlatformConfigPrivate->Protocol.Revision = REDFISH_PLATFORM_CONFIG_VERSION;
   mRedfishPlatformConfigPrivate->Protocol.GetValue = RedfishPlatformConfigProtocolGetValue;
   mRedfishPlatformConfigPrivate->Protocol.SetValue = RedfishPlatformConfigProtocolSetValue;
   mRedfishPlatformConfigPrivate->Protocol.GetConfigureLang = RedfishPlatformConfigProtocolGetConfigureLang;
   mRedfishPlatformConfigPrivate->Protocol.GetSupportedSchema = RedfishPlatformConfigProtocolGetSupportedSchema;
+  mRedfishPlatformConfigPrivate->Protocol.GetAttribute = RedfishPlatformConfigProtocolGetAttribute;
+  mRedfishPlatformConfigPrivate->Protocol.GetDefaultValue = RedfishPlatformConfigProtocolGetDefaultValue;
 
   InitializeListHead (&mRedfishPlatformConfigPrivate->FormsetList);
   InitializeListHead (&mRedfishPlatformConfigPrivate->PendingList);

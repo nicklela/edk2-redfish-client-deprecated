@@ -301,6 +301,45 @@ HiiGetEnglishString (
 }
 
 /**
+  Get ASCII string from HII database in English language.
+
+  @param[in]  HiiHandle         A handle that was previously registered in the HII Database.
+  @param[in]  StringId          The identifier of the string to retrieved from the string
+                                package associated with HiiHandle.
+
+  @retval NULL   The string specified by StringId is not present in the string package.
+  @retval Other  The string was returned.
+
+**/
+CHAR8 *
+HiiGetEnglishAsciiString (
+  IN EFI_HII_HANDLE           HiiHandle,
+  IN EFI_STRING_ID            StringId
+  )
+{
+  EFI_STRING  HiiString;
+  UINTN       StringSize;
+  CHAR8       *AsciiString;
+
+  HiiString = HiiGetRedfishString (HiiHandle, ENGLISH_LANGUAGE_CODE, StringId);
+  if (HiiString == NULL) {
+    DEBUG ((DEBUG_ERROR, "%a, Can not find string ID: 0x%x with %a\n", __FUNCTION__, StringId, ENGLISH_LANGUAGE_CODE));
+    return NULL;
+  }
+
+  StringSize = (StrLen (HiiString) + 1) * sizeof (CHAR8);
+  AsciiString = AllocatePool (StringSize);
+  if (AsciiString == NULL) {
+    return NULL;
+  }
+
+  UnicodeStrToAsciiStrS (HiiString, AsciiString, StringSize);
+
+  FreePool (HiiString);
+  return AsciiString;
+}
+
+/**
   Check and see if this is supported schema or not.
 
   @param[in]  SupportedSchema   The list of supported schema.
@@ -888,7 +927,14 @@ LoadFormset (
       HiiStatementPrivate->HiiStatement = HiiStatement;
       HiiStatementPrivate->QuestionId = HiiStatement->QuestionId;
       HiiStatementPrivate->Description = HiiStatement->Prompt;
+      HiiStatementPrivate->Help = HiiStatement->Help;
       HiiStatementPrivate->ParentForm = HiiFormPrivate;
+      HiiStatementPrivate->Flags = HiiStatement->QuestionFlags;
+      HiiStatementPrivate->StatementData.NumMaximum = HiiStatement->ExtraData.NumData.Maximum;
+      HiiStatementPrivate->StatementData.NumMinimum = HiiStatement->ExtraData.NumData.Minimum;
+      HiiStatementPrivate->StatementData.NumStep = HiiStatement->ExtraData.NumData.Step;
+      HiiStatementPrivate->StatementData.StrMaxSize = HiiStatement->ExtraData.StrData.MaxSize;
+      HiiStatementPrivate->StatementData.StrMinSize = HiiStatement->ExtraData.StrData.MinSize;
 
       //
       // Attach to statement list.

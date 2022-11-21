@@ -60,5 +60,6 @@ typedef struct {
 #define REDFISH_PLATFORM_CONFIG_PRIVATE_FROM_THIS(a)  BASE_CR (a, REDFISH_PLATFORM_CONFIG_PRIVATE, Protocol)
 #define REGULAR_EXPRESSION_INCLUDE_ALL                L".*"
 #define CONFIGURE_LANGUAGE_PREFIX                     "x-uefi-redfish-"
+#define REDFISH_PLATFORM_CONFIG_VERSION               0x00010000
 
 #endif

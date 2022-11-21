@@ -187,4 +187,26 @@ PopScope (
   OUT UINT8    *Operand
   );
 
+/**
+  Return the result of the expression list. Check the expression list and
+  return the highest priority express result.
+  Priority: DisableIf > SuppressIf > GrayOutIf > FALSE
+
+  @param  ExpList             The input expression list.
+  @param  Evaluate            Whether need to evaluate the expression first.
+  @param  FormSet             FormSet associated with this expression.
+  @param  Form                Form associated with this expression.
+
+  @retval EXPRESS_RESULT      Return the higher priority express result.
+                              DisableIf > SuppressIf > GrayOutIf > FALSE
+
+**/
+EXPRESS_RESULT
+EvaluateExpressionList (
+  IN HII_EXPRESSION_LIST *ExpList,
+  IN BOOLEAN              Evaluate,
+  IN HII_FORMSET *FormSet, OPTIONAL
+  IN HII_FORM    *Form OPTIONAL
+  );
+
 #endif
