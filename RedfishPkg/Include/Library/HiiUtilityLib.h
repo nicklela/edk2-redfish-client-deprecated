@@ -3,6 +3,7 @@
 
   Copyright (c) 2019, Intel Corporation. All rights reserved.<BR>
   (C) Copyright 2021 Hewlett Packard Enterprise Development LP<BR>
+  Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -1168,28 +1169,24 @@ GetHiiExpressionDependency (
   );
 
 /**
-  Evaluate the result of a HII expression.
+  Get default value of question.
 
-  If Expression is NULL, then ASSERT.
+  @param  FormSet                The form set.
+  @param  Form                   The form.
+  @param  Question               The question.
+  @param  DefaultId              The Class of the default.
+  @param  DefaultValue           The default value of given question.
 
-  @param  FormSet                FormSet associated with this expression.
-  @param  Form                   Form associated with this expression.
-  @param  Expression             Expression to be evaluated.
-
-  @retval EFI_SUCCESS            The expression evaluated successfuly
-  @retval EFI_NOT_FOUND          The Question which referenced by a QuestionId
-                                 could not be found.
-  @retval EFI_OUT_OF_RESOURCES   There is not enough system memory to grow the
-                                 stack.
-  @retval EFI_ACCESS_DENIED      The pop operation underflowed the stack
-  @retval EFI_INVALID_PARAMETER  Syntax error with the Expression
+  @retval EFI_SUCCESS            Question is reset to default value.
 
 **/
 EFI_STATUS
-HpEvaluateHiiExpression (
-  IN     HII_FORMSET       *FormSet,
-  IN     HII_FORM          *Form,
-  IN OUT HII_EXPRESSION    *Expression
+GetQuestionDefault (
+  IN HII_FORMSET             *FormSet,
+  IN HII_FORM                *Form,
+  IN HII_STATEMENT           *Question,
+  IN UINT16                  DefaultId,
+  OUT HII_STATEMENT_VALUE    *DefaultValue
   );
 
 #endif // _HII_UTILITY_LIB_
