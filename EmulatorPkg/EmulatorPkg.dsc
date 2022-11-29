@@ -495,6 +495,7 @@
   EmulatorPkg/Hii2RedfishMemoryDxe/Hii2RedfishMemoryDxe.inf
   EmulatorPkg/Hii2RedfishBootDxe/Hii2RedfishBootDxe.inf
   EmulatorPkg/Hii2RedfishBiosDxe/Hii2RedfishBiosDxe.inf
+  EmulatorPkg/PlatformRedfishBiosDxe/PlatformRedfishBiosDxe.inf
 !endif
 !include RedfishPkg/Redfish.dsc.inc
 !include RedfishClientPkg/RedfishClient.dsc.inc

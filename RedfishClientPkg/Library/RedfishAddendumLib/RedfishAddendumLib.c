@@ -80,7 +80,7 @@ RedfishGetAddendumData (
   )
 {
   REDFISH_RESOURCE_SCHEMA_INFO SchemaInfo;
-  EDKII_JSON_VALUE    *JsonValue;
+  EDKII_JSON_VALUE    JsonValue;
   EFI_STATUS          Status;
   EFI_HANDLE          *HandleBuffer;
   UINTN               NumberOfHandles;
@@ -172,8 +172,8 @@ RedfishGetOemData (
   )
 {
   REDFISH_RESOURCE_SCHEMA_INFO SchemaInfo;
-  EDKII_JSON_VALUE    *JsonValue;
-  EDKII_JSON_VALUE    *JsonValueWithOem;
+  EDKII_JSON_VALUE    JsonValue;
+  EDKII_JSON_VALUE    JsonValueWithOem;
   EFI_STATUS          Status;
   EFI_HANDLE          *HandleBuffer;
   UINTN               NumberOfHandles;
@@ -245,8 +245,8 @@ ON_RELEASE:
     JsonValueFree (JsonValue);
   }
 
-  if (JsonWithOem != NULL) {
-    JsonValueFree (JsonWithOem);
+  if (JsonValueWithOem != NULL) {
+    JsonValueFree (JsonValueWithOem);
   }
 
   if (SchemaInfo.Uri != NULL) {

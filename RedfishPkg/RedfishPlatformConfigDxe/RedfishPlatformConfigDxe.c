@@ -138,7 +138,7 @@ OneOfStatementToAttributeValues (
 
     if (Option->Text != 0) {
       Values->ValueArray[Index].ValueName = HiiGetRedfishAsciiString (HiiHandle, SchemaName, Option->Text);
-      Values->ValueArray[Index].ValueName = HiiGetEnglishAsciiString (HiiHandle, Option->Text);
+      Values->ValueArray[Index].ValueDisplayName = HiiGetEnglishAsciiString (HiiHandle, Option->Text);
     }
 
     Index += 1;
